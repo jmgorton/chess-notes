@@ -38,18 +38,18 @@
 }
 
 .square {
-  /* float: left;
+  /* float: left; */
   font-size: 24px;
-  font-weight: bold; */
-  /* line-height: 34px; */
+  font-weight: bold;
+  text-align: center;
+  line-height: 34px;
   border: 0px;
   padding: 0;
   height: 80px;
   width: 80px;
   vertical-align: top;
-  /* margin-right: 0px;
+  margin-right: 0px;
   margin-top: 0px;
-  text-align: center; */
 }
 
 .square.light {

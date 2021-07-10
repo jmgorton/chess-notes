@@ -3,7 +3,7 @@ import './App.css';
 
 function Square(props) {
   return (
-    <button className={"square " + props.color} onClick={props.onClick}>
+    <button className={"square " + props.color} onClick={props.onClick} key={props.id}>
       {props.value}
     </button>
   );
@@ -14,6 +14,7 @@ function DarkSquare(props) {
     <Square
       value={props.value}
       onClick={props.onClick}
+      id={props.id}
       color="dark"
     />
   );
@@ -24,6 +25,7 @@ function LightSquare(props) {
     <Square
       value={props.value}
       onClick={props.onClick}
+      id={props.id}
       color="light"
     />
   );
@@ -40,6 +42,7 @@ class Board extends React.Component {
         <LightSquare
           value={this.props.squares[i]}
           onClick={() => this.props.onClick(i)}
+          id={i}
         />
       );
     } else {
@@ -47,6 +50,7 @@ class Board extends React.Component {
         <DarkSquare
           value={this.props.squares[i]}
           onClick={() => this.props.onClick(i)}
+          id={i}
         />
       );
     }
@@ -82,9 +86,25 @@ class Board extends React.Component {
 class Game extends React.Component {
   constructor(props) {
     super(props);
+
+    let startingConfig = Array(64).fill("P", 8, 16);
+    startingConfig[0] = startingConfig[7] = "R";
+    startingConfig[1] = startingConfig[6] = "N";
+    startingConfig[2] = startingConfig[5] = "B";
+    startingConfig[3] = "Q";
+    startingConfig[4] = "K";
+
+    startingConfig.fill("P", 48, 56);
+    startingConfig[56] = startingConfig[63] = "R";
+    startingConfig[57] = startingConfig[62] = "N";
+    startingConfig[58] = startingConfig[61] = "B";
+    startingConfig[59] = "Q";
+    startingConfig[60] = "K";
+
     this.state = {
       history: [{
-        squares: Array(64).fill(null),
+        // squares: Array(64).fill(null),
+        squares: startingConfig,
       }],
       xIsNext: true,
       stepNumber: 0,
@@ -92,8 +112,8 @@ class Game extends React.Component {
   }
 
   handleClick(i) {
-    alert(i);
     const history = this.state.history.slice(0, this.state.stepNumber + 1);
+    console.log(history);
     const current = history[history.length - 1];
     const squares = current.squares.slice();
     // if (calculateWinner(squares) || squares[i]) {
@@ -136,7 +156,7 @@ class Game extends React.Component {
     if (winner) {
       status = 'Winner: ' + winner;
     } else {
-      status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+      status = 'Next player: ' + (this.state.xIsNext ? 'White' : 'Black');
     }
 
     return (
