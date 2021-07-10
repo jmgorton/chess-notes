@@ -36,3 +36,32 @@
     transform: rotate(360deg);
   }
 }
+
+.square {
+  /* float: left;
+  font-size: 24px;
+  font-weight: bold; */
+  /* line-height: 34px; */
+  border: 0px;
+  padding: 0;
+  height: 80px;
+  width: 80px;
+  vertical-align: top;
+  /* margin-right: 0px;
+  margin-top: 0px;
+  text-align: center; */
+}
+
+.square.light {
+  background: #F0DDDE;
+}
+
+.square.dark {
+  background: #674343;
+}
+
+.game-board {
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+}
