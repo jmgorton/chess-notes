@@ -1,10 +1,30 @@
 import React from 'react';
 import './App.css';
 
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Link
+} from "react-router-dom";
+
+// eslint-disable-next-line
+import rook from './rook.png';
+
+function Piece(props) {
+  return (
+    // <img src={rook} alt="Rook" />
+    // <img className="piece" src="./rook.png" alt="Rook" />
+    <img src={require('./rook.png')} alt="Rook" />
+  );
+}
+
 function Square(props) {
   return (
     <button className={"square " + props.color} onClick={props.onClick} key={props.id}>
-      {props.value}
+      {/* {props.value} */}
+      {/* <img src={require("./rook.png")} alt="Rook"/> */}
+      <Piece />
     </button>
   );
 }
@@ -43,7 +63,11 @@ class Board extends React.Component {
           value={this.props.squares[i]}
           onClick={() => this.props.onClick(i)}
           id={i}
-        />
+        >
+          {/* if (this.props.squares[i] === "R") {
+            <img src={rook} alt="rook"/>
+          } */}
+        </LightSquare>
       );
     } else {
       return (
@@ -113,7 +137,7 @@ class Game extends React.Component {
 
   handleClick(i) {
     const history = this.state.history.slice(0, this.state.stepNumber + 1);
-    console.log(history);
+    // console.log(history);
     const current = history[history.length - 1];
     const squares = current.squares.slice();
     // if (calculateWinner(squares) || squares[i]) {
@@ -194,8 +218,58 @@ function App() {
     //     </a>
     //   </header>
     // </div>
-    <Game />
+
+
+
+
+    // <Game />
+
+
+
+    <Router>
+      <div>
+        <nav>
+          <ul>
+            <li>
+              <Link to="/">Home</Link>
+            </li>
+            <li>
+              <Link to="/about">About</Link>
+            </li>
+            <li>
+              <Link to="/users">Users</Link>
+            </li>
+          </ul>
+        </nav>
+
+        {/* A <Switch> looks through its children <Route>s and
+            renders the first one that matches the current URL. */}
+        <Switch>
+          <Route path="/about">
+            <About />
+          </Route>
+          <Route path="/users">
+            <Users />
+          </Route>
+          <Route path="/">
+            <Home />
+          </Route>
+        </Switch>
+      </div>
+    </Router>
   );
 }
 
 export default App;
+
+function Home() {
+  return <h2>Home</h2>;
+}
+
+function About() {
+  return <h2>About</h2>;
+}
+
+function Users() {
+  return <h2>Users</h2>;
+}
