@@ -3,7 +3,7 @@ import './App.css';
 
 import {
   BrowserRouter as Router,
-  Switch,
+  Routes,
   Route,
   Link
 } from "react-router-dom";
@@ -195,9 +195,43 @@ class Game extends React.Component {
           <div>{status}</div>
           <ol>{moves}</ol>
         </div>
+        <div id="navbar">
+          <Nav />
+        </div>
       </div>
     );
   }
+}
+
+function Nav() {
+  return (
+    <Router>
+      <div>
+        <nav>
+          <ul>
+            <li>
+              <Link to="/">Home</Link>
+            </li>
+            <li>
+              <Link to="/about">About</Link>
+            </li>
+            <li>
+              <Link to="/users">Users</Link>
+            </li>
+          </ul>
+        </nav>
+
+        {/* A <Switch> looks through its children <Route>s and
+            renders the first one that matches the current URL. 
+            Updated <Switch> to <Routes> in React Router v6. */}
+        <Routes>
+          <Route path="/about" element={<About />} />
+          <Route path="/users" element={<Users />} />
+          <Route path="/" element={<Home />} />
+        </Routes>
+      </div>
+    </Router>
+  );
 }
 
 function App() {
@@ -222,41 +256,36 @@ function App() {
 
 
 
-    // <Game />
+    <Game />
 
 
 
-    <Router>
-      <div>
-        <nav>
-          <ul>
-            <li>
-              <Link to="/">Home</Link>
-            </li>
-            <li>
-              <Link to="/about">About</Link>
-            </li>
-            <li>
-              <Link to="/users">Users</Link>
-            </li>
-          </ul>
-        </nav>
+    // <Router>
+    //   <div>
+    //     <nav>
+    //       <ul>
+    //         <li>
+    //           <Link to="/">Home</Link>
+    //         </li>
+    //         <li>
+    //           <Link to="/about">About</Link>
+    //         </li>
+    //         <li>
+    //           <Link to="/users">Users</Link>
+    //         </li>
+    //       </ul>
+    //     </nav>
 
-        {/* A <Switch> looks through its children <Route>s and
-            renders the first one that matches the current URL. */}
-        <Switch>
-          <Route path="/about">
-            <About />
-          </Route>
-          <Route path="/users">
-            <Users />
-          </Route>
-          <Route path="/">
-            <Home />
-          </Route>
-        </Switch>
-      </div>
-    </Router>
+    //     {/* A <Switch> looks through its children <Route>s and
+    //         renders the first one that matches the current URL. 
+    //         Updated <Switch> to <Routes> in React Router v6. */}
+    //     <Routes>
+    //       <Route path="/about" element={<About />} />
+    //       <Route path="/users" element={<Users />} />
+    //       <Route path="/" element={<Home />} />
+    //     </Routes>
+    //   </div>
+    // </Router>
   );
 }
 
