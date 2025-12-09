@@ -3,6 +3,7 @@ frontend:
   phases:
     preBuild:
       commands:
+        - sudo apt install libatomic1
         - npm ci
     build:
       commands:
