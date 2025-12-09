@@ -9,18 +9,18 @@ import {
 } from "react-router-dom";
 
 // eslint-disable-next-line
-import lightPawn from './plt60.png';
-import darkPawn from './pdt60.png';
-import lightBishop from './blt60.png';
-import darkBishop from './bdt60.png';
-import lightKnight from './nlt60.png';
-import darkKnight from './ndt60.png';
-import lightRook from './rlt60.png';
-import darkRook from './rdt60.png';
-import lightQueen from './qlt60.png';
-import darkQueen from './qdt60.png';
-import lightKing from './klt60.png';
-import darkKing from './kdt60.png';
+import lightPawn from './resources/plt60.png';
+import darkPawn from './resources/pdt60.png';
+import lightBishop from './resources/blt60.png';
+import darkBishop from './resources/bdt60.png';
+import lightKnight from './resources/nlt60.png';
+import darkKnight from './resources/ndt60.png';
+import lightRook from './resources/rlt60.png';
+import darkRook from './resources/rdt60.png';
+import lightQueen from './resources/qlt60.png';
+import darkQueen from './resources/qdt60.png';
+import lightKing from './resources/klt60.png';
+import darkKing from './resources/kdt60.png';
 
 const keycodeToIcon = {
   'R': lightRook,
