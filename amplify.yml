@@ -3,7 +3,7 @@ frontend:
   phases:
     preBuild:
       commands:
-        - sudo yum install libatomic
+        - sudo yum install -y libatomic
         - npm ci
     build:
       commands:
