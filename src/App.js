@@ -19,6 +19,12 @@ const keycodeToIcon = {
   'N': PUBLIC + '/resources/nlt60.png',
   'Q': PUBLIC + '/resources/qlt60.png',
   'K': PUBLIC + '/resources/klt60.png',
+  'DR': PUBLIC + '/resources/rdt60.png',
+  'DP': PUBLIC + '/resources/pdt60.png',
+  'DB': PUBLIC + '/resources/bdt60.png',
+  'DN': PUBLIC + '/resources/ndt60.png',
+  'DQ': PUBLIC + '/resources/qdt60.png',
+  'DK': PUBLIC + '/resources/kdt60.png',
 }
 
 const keycodeToComponent = {
