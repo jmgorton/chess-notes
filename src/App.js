@@ -8,27 +8,17 @@ import {
   Link
 } from "react-router-dom";
 
-// eslint-disable-next-line
-import lightPawn from './resources/plt60.png';
-import darkPawn from './resources/pdt60.png';
-import lightBishop from './resources/blt60.png';
-import darkBishop from './resources/bdt60.png';
-import lightKnight from './resources/nlt60.png';
-import darkKnight from './resources/ndt60.png';
-import lightRook from './resources/rlt60.png';
-import darkRook from './resources/rdt60.png';
-import lightQueen from './resources/qlt60.png';
-import darkQueen from './resources/qdt60.png';
-import lightKing from './resources/klt60.png';
-import darkKing from './resources/kdt60.png';
+// Use public resources so filenames remain predictable in production.
+// Put the PNGs in `public/resources` and reference them via PUBLIC_URL.
+const PUBLIC = process.env.PUBLIC_URL || '';
 
 const keycodeToIcon = {
-  'R': lightRook,
-  'P': lightPawn,
-  'B': lightBishop,
-  'N': lightKnight,
-  'Q': lightQueen,
-  'K': lightKing,
+  'R': PUBLIC + '/resources/rlt60.png',
+  'P': PUBLIC + '/resources/plt60.png',
+  'B': PUBLIC + '/resources/blt60.png',
+  'N': PUBLIC + '/resources/nlt60.png',
+  'Q': PUBLIC + '/resources/qlt60.png',
+  'K': PUBLIC + '/resources/klt60.png',
 }
 
 const keycodeToComponent = {
