@@ -9,14 +9,106 @@ import {
 } from "react-router-dom";
 
 // eslint-disable-next-line
-import rook from './rook.png';
+import lightPawn from './plt60.png';
+import darkPawn from './pdt60.png';
+import lightBishop from './blt60.png';
+import darkBishop from './bdt60.png';
+import lightKnight from './nlt60.png';
+import darkKnight from './ndt60.png';
+import lightRook from './rlt60.png';
+import darkRook from './rdt60.png';
+import lightQueen from './qlt60.png';
+import darkQueen from './qdt60.png';
+import lightKing from './klt60.png';
+import darkKing from './kdt60.png';
+
+const keycodeToIcon = {
+  'R': lightRook,
+  'P': lightPawn,
+  'B': lightBishop,
+  'N': lightKnight,
+  'Q': lightQueen,
+  'K': lightKing,
+}
+
+const keycodeToComponent = {
+  'R': Rook,
+  'N': Knight,
+  'B': Bishop,
+  'Q': Queen,
+  'K': King,
+  'P': Pawn,
+};
+
+const validPieces = ['R','N','B','Q','K','P'];
 
 function Piece(props) {
   return (
     // <img src={rook} alt="Rook" />
     // <img className="piece" src="./rook.png" alt="Rook" />
-    <img src={require('./rook.png')} alt="Rook" />
+    <img src={keycodeToIcon[props.keycode]} alt={props.alt} className="piece" />
   );
+}
+
+function King(props) {
+  return (
+    <Piece
+      // icon="./pawn.jpeg"
+      alt="King"
+      keycode="K"
+    />
+  )
+}
+
+function Queen(props) {
+  return (
+    <Piece
+      // icon="./pawn.jpeg"
+      alt="Queen"
+      keycode="Q"
+    />
+  )
+}
+
+function Rook(props) {
+  return (
+    // <img src={require("./rook.png")} alt="Rook" className="piece" />
+    <Piece
+      // icon="./rook.png"
+      alt="Rook"
+      keycode="R"
+    />
+  );
+}
+
+function Bishop(props) {
+  return (
+    <Piece
+      // icon="./pawn.jpeg"
+      alt="Bishop"
+      keycode="B"
+    />
+  )
+}
+
+function Knight(props) {
+  return (
+    <Piece
+      // icon="./pawn.jpeg"
+      alt="Knight"
+      keycode="N"
+    />
+  )
+}
+
+function Pawn(props) {
+  return (
+    <Piece
+      // icon="./pawn.jpeg"
+      alt="Pawn"
+      keycode="P"
+    />
+  )
 }
 
 function Square(props) {
@@ -24,7 +116,8 @@ function Square(props) {
     <button className={"square " + props.color} onClick={props.onClick} key={props.id}>
       {/* {props.value} */}
       {/* <img src={require("./rook.png")} alt="Rook"/> */}
-      <Piece />
+      {/* {props.value ? <Piece value={props.value}/> : null} */}
+      {props.value && validPieces.includes(props.value) ? React.createElement(keycodeToComponent[props.value], props) : null}
     </button>
   );
 }
