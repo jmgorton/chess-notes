@@ -13,12 +13,12 @@ import {
 const PUBLIC = process.env.PUBLIC_URL || '';
 
 const keycodeToIcon = {
-  'R': PUBLIC + '/resources/rlt60.png',
-  'P': PUBLIC + '/resources/plt60.png',
-  'B': PUBLIC + '/resources/blt60.png',
-  'N': PUBLIC + '/resources/nlt60.png',
-  'Q': PUBLIC + '/resources/qlt60.png',
-  'K': PUBLIC + '/resources/klt60.png',
+  'LR': PUBLIC + '/resources/rlt60.png',
+  'LP': PUBLIC + '/resources/plt60.png',
+  'LB': PUBLIC + '/resources/blt60.png',
+  'LN': PUBLIC + '/resources/nlt60.png',
+  'LQ': PUBLIC + '/resources/qlt60.png',
+  'LK': PUBLIC + '/resources/klt60.png',
   'DR': PUBLIC + '/resources/rdt60.png',
   'DP': PUBLIC + '/resources/pdt60.png',
   'DB': PUBLIC + '/resources/bdt60.png',
@@ -42,7 +42,15 @@ function Piece(props) {
   return (
     // <img src={rook} alt="Rook" />
     // <img className="piece" src="./rook.png" alt="Rook" />
-    <img src={keycodeToIcon[props.keycode]} alt={props.alt} className="piece" />
+    // <img src={keycodeToIcon[props.keycode]} alt={props.alt} className="piece" />
+    <img 
+      src={keycodeToIcon[props.playercode + props.piececode]} 
+      alt={props.alt} 
+      className="piece" 
+      // onClick={() => props.onClick(props.id)} // commented out to avoid piece click interfering with square click for now ...
+      // both Piece and Square have the same onClick prop passed down from Board via Square
+      // onClick={props.onClick} // i think this would pass the event object, not the square id ...
+    />
   );
 }
 
@@ -50,8 +58,9 @@ function King(props) {
   return (
     <Piece
       // icon="./pawn.jpeg"
+      {... props}
       alt="King"
-      keycode="K"
+      // keycode="K"
     />
   )
 }
@@ -60,8 +69,9 @@ function Queen(props) {
   return (
     <Piece
       // icon="./pawn.jpeg"
+      {... props}
       alt="Queen"
-      keycode="Q"
+      // keycode="Q"
     />
   )
 }
@@ -71,8 +81,9 @@ function Rook(props) {
     // <img src={require("./rook.png")} alt="Rook" className="piece" />
     <Piece
       // icon="./rook.png"
+      {... props}
       alt="Rook"
-      keycode="R"
+      // keycode="R"
     />
   );
 }
@@ -81,8 +92,9 @@ function Bishop(props) {
   return (
     <Piece
       // icon="./pawn.jpeg"
+      {... props}
       alt="Bishop"
-      keycode="B"
+      // keycode="B"
     />
   )
 }
@@ -91,8 +103,9 @@ function Knight(props) {
   return (
     <Piece
       // icon="./pawn.jpeg"
+      {... props}
       alt="Knight"
-      keycode="N"
+      // keycode="N"
     />
   )
 }
@@ -101,19 +114,39 @@ function Pawn(props) {
   return (
     <Piece
       // icon="./pawn.jpeg"
+      {... props}
       alt="Pawn"
-      keycode="P"
+      // keycode="P"
     />
   )
 }
 
 function Square(props) {
+
+  // let onClick = () => {
+  //   alert("Square " + props.id + " clicked.");
+  // }
+
   return (
-    <button className={"square " + props.color} onClick={props.onClick} key={props.id}>
+    <button 
+      className={"square " + props.color + (props.isHighlighted ? " highlighted" : "")} 
+      // onClick={(props.playercode && props.piececode) ? () => onClick() : () => {}} 
+      // onClick={props.onClick}
+      onClick={() => props.onClick(props.id)}
+      key={props.id}
+    >
+
       {/* {props.value} */}
       {/* <img src={require("./rook.png")} alt="Rook"/> */}
       {/* {props.value ? <Piece value={props.value}/> : null} */}
-      {props.value && validPieces.includes(props.value) ? React.createElement(keycodeToComponent[props.value], props) : null}
+      {/* {props.value && validPieces.includes(props.value) ? React.createElement(keycodeToComponent[props.value], props) : null} */}
+      {
+        props.playercode && props.piececode && ['L','D'].includes(props.playercode) && validPieces.includes(props.piececode) 
+          // ? React.createElement(Piece, props)
+          ? React.createElement(keycodeToComponent[props.piececode], props)
+          : null
+      }
+      
     </button>
   );
 }
@@ -121,9 +154,12 @@ function Square(props) {
 function DarkSquare(props) {
   return (
     <Square
-      value={props.value}
-      onClick={props.onClick}
-      id={props.id}
+      // value={props.value}
+      {...props}
+      // playercode={props.playercode}
+      // piececode={props.piececode}
+      // onClick={props.onClick}
+      // id={props.id}
       color="dark"
     />
   );
@@ -132,9 +168,12 @@ function DarkSquare(props) {
 function LightSquare(props) {
   return (
     <Square
-      value={props.value}
-      onClick={props.onClick}
-      id={props.id}
+      // value={props.value}
+      {...props}
+      // playercode={props.playercode}
+      // piececode={props.piececode}
+      // onClick={props.onClick}
+      // id={props.id}
       color="light"
     />
   );
@@ -146,27 +185,42 @@ class Board extends React.Component {
     let file = i % 8;
     let rank = Math.floor(i / 8);
 
-    if ((file + rank) % 2 === 0) {
-      return (
-        <LightSquare
-          value={this.props.squares[i]}
-          onClick={() => this.props.onClick(i)}
-          id={i}
-        >
-          {/* if (this.props.squares[i] === "R") {
-            <img src={rook} alt="rook"/>
-          } */}
-        </LightSquare>
-      );
-    } else {
-      return (
-        <DarkSquare
-          value={this.props.squares[i]}
-          onClick={() => this.props.onClick(i)}
-          id={i}
-        />
-      );
+    let props = {
+      playercode: this.props.squares[i]?.charAt(0),
+      piececode: this.props.squares[i]?.charAt(1),
+      // isHighlighted: this.props.squares[i]?.includes("X"),
+      isHighlighted: this.state?.squares[i]?.includes("X"),
+      onClick: (i) => this.props.onClick(i), // only place the onClick Board prop is passed down as a prop to LightSquare/DarkSquare 
+      id: i,
     }
+
+    return ((file + rank) % 2 === 0) ? <LightSquare {...props} /> : <DarkSquare {...props} />; 
+
+    // if ((file + rank) % 2 === 0) {
+    //   return (
+    //     <LightSquare
+    //       // value={this.props.squares[i]}
+    //       playercode={this.props.squares[i].charAt(0)}
+    //       piececode={this.props.squares[i].charAt(1)}
+    //       onClick={() => this.props.onClick(i)}
+    //       id={i}
+    //     >
+    //       {/* if (this.props.squares[i] === "R") {
+    //         <img src={rook} alt="rook"/>
+    //       } */}
+    //     </LightSquare>
+    //   );
+    // } else {
+    //   return (
+    //     <DarkSquare
+    //       // value={this.props.squares[i]}
+    //       playercode={this.props.squares[i].charAt(0)}
+    //       piececode={this.props.squares[i].charAt(1)}
+    //       onClick={() => this.props.onClick(i)}
+    //       id={i}
+    //     />
+    //   );
+    // }
   }
 
   renderRank(squares) {
@@ -200,60 +254,86 @@ class Game extends React.Component {
   constructor(props) {
     super(props);
 
-    let startingConfig = Array(64).fill("P", 8, 16);
-    startingConfig[0] = startingConfig[7] = "R";
-    startingConfig[1] = startingConfig[6] = "N";
-    startingConfig[2] = startingConfig[5] = "B";
-    startingConfig[3] = "Q";
-    startingConfig[4] = "K";
+    let startingConfig = Array(64).fill("");
+    startingConfig.fill("DP", 8, 16);
+    startingConfig[0] = startingConfig[7] = "DR";
+    startingConfig[1] = startingConfig[6] = "DN";
+    startingConfig[2] = startingConfig[5] = "DB";
+    startingConfig[3] = "DQ";
+    startingConfig[4] = "DK";
 
-    startingConfig.fill("P", 48, 56);
-    startingConfig[56] = startingConfig[63] = "R";
-    startingConfig[57] = startingConfig[62] = "N";
-    startingConfig[58] = startingConfig[61] = "B";
-    startingConfig[59] = "Q";
-    startingConfig[60] = "K";
+    startingConfig.fill("LP", 48, 56);
+    startingConfig[56] = startingConfig[63] = "LR";
+    startingConfig[57] = startingConfig[62] = "LN";
+    startingConfig[58] = startingConfig[61] = "LB";
+    startingConfig[59] = "LQ";
+    startingConfig[60] = "LK";
 
     this.state = {
       history: [{
         // squares: Array(64).fill(null),
         squares: startingConfig,
       }],
-      xIsNext: true,
+      squares: startingConfig,
+      whiteToPlay: true,
       stepNumber: 0,
     }
   }
 
+  // const [] = React.useState
+
   handleClick(i) {
-    const history = this.state.history.slice(0, this.state.stepNumber + 1);
-    // console.log(history);
-    const current = history[history.length - 1];
-    const squares = current.squares.slice();
-    // if (calculateWinner(squares) || squares[i]) {
+    alert("Prop handler click on square " + i);
+
+    const squares = this.state.squares;
+
+    // also don't really know what i was doing here much ... 
+    // const history = this.state.history.slice(0, this.state.stepNumber + 1);
+    // // console.log(history);
+    // const current = history[history.length - 1];
+    // const squares = current.squares.slice();
+    // // if (calculateWinner(squares) || squares[i]) {
+
     if (squares[i]) {
-      squares[i] = null;
+      squares[i] = "X";
     } else {
-      squares[i] = this.state.xIsNext ? 'X' : 'O';
+      // squares[i] = this.state.whiteToPlay ? 'X' : 'O';
+      // test highlighting/selecting an empty square 
+      squares[i] = "X"; // temporary placeholder to mean highlighted 
     }
+
+
+    // this.setState({
+    //   history: history.concat([{
+    //     squares: squares,
+    //   }]),
+    //   squares: squares,
+    //   stepNumber: history.length,
+    //   whiteToPlay: !this.state.whiteToPlay,
+    // });
+
     this.setState({
-      history: history.concat([{
+      ...this.state,
+      history: this.state.history.concat([{
         squares: squares,
       }]),
-      stepNumber: history.length,
-      xIsNext: !this.state.xIsNext,
-    });
+      squares: squares,
+      stepNumber: this.state.history.length,
+      whiteToPlay: !this.state.whiteToPlay,
+    })
   }
 
   jumpTo(step) {
     this.setState({
       stepNumber: step,
-      xIsNext: (step % 2) === 0,
+      whiteToPlay: (step % 2) === 0,
     });
   }
 
   render() {
     const history = this.state.history;
     const current = history[this.state.stepNumber];
+    // const squares = current.squares;
     const winner = null; //calculateWinner(current.squares);
 
     const moves = history.map((step, move) => {
@@ -269,15 +349,16 @@ class Game extends React.Component {
     if (winner) {
       status = 'Winner: ' + winner;
     } else {
-      status = 'Next player: ' + (this.state.xIsNext ? 'White' : 'Black');
+      status = 'Next player: ' + (this.state.whiteToPlay ? 'White' : 'Black');
     }
 
     return (
       <div className="game">
         <div className="game-board">
           <Board 
-            squares={current.squares}
-            onClick={(i) => this.handleClick(i)}
+            // squares={current.squares}
+            squares={this.state.squares}
+            onClick={(i) => this.handleClick(i)} // only place we pass down handleClick into onClick prop 
           />
         </div>
         <div className="game-info">
