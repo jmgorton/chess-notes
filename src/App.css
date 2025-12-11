@@ -68,6 +68,11 @@
 }
 
 .square.highlighted {
+  border: 4px solid yellow;
+  box-sizing: border-box;
+}
+
+.square.selected {
   border: 4px solid red;
   box-sizing: border-box;
 }
@@ -92,4 +97,9 @@
   align-items: center;
 
   /* align-items: center; */
+}
+
+.game {
+  display: flex;
+  flex-direction: row;
 }
