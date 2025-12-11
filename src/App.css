@@ -82,7 +82,14 @@
 }
 
 .game-board {
-  margin-left: auto;
+  margin-left: auto; 
+  /* auto; 0px; */
   margin-right: auto;
-  width: 50%;
+  /* width: 50%; */
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  /* align-items: center; */
 }

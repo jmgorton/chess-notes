@@ -27,111 +27,8 @@ const keycodeToIcon = {
   'DK': PUBLIC + '/resources/kdt60.png',
 }
 
-// const keycodeToComponent = {
-//   'R': Rook,
-//   'N': Knight,
-//   'B': Bishop,
-//   'Q': Queen,
-//   'K': King,
-//   'P': Pawn,
-//   'LP': LightPawn,
-//   'LN': LightKnight,
-//   'LB': LightBishop,
-//   'LR': LightRook,
-//   'LQ': LightQueen,
-//   'LK': LightKing,
-//   'DP': DarkPawn,
-//   'DN': DarkKnight,
-//   'DB': DarkBishop,
-//   'DR': DarkRook,
-//   'DQ': DarkQueen,
-//   'DK': DarkKing,
-// };
-
 const validPieces = ['R','N','B','Q','K','P'];
-
-// function Piece(props) {
-//   return (
-//     // <img src={rook} alt="Rook" />
-//     // <img className="piece" src="./rook.png" alt="Rook" />
-//     // <img src={keycodeToIcon[props.keycode]} alt={props.alt} className="piece" />
-//     <img 
-//       src={keycodeToIcon[props.playercode + props.piececode]} 
-//       alt={props.alt} 
-//       className="piece" 
-//       // onClick={() => props.onClick(props.id)} // commented out to avoid piece click interfering with square click for now ...
-//       // both Piece and Square have the same onClick prop passed down from Board via Square
-//       // onClick={props.onClick} // i think this would pass the event object, not the square id ...
-//     />
-//   );
-// }
-
-// function King(props) {
-//   return (
-//     <Piece
-//       // icon="./pawn.jpeg"
-//       {... props}
-//       alt="King"
-//       // keycode="K"
-//     />
-//   )
-// }
-
-// function Queen(props) {
-//   return (
-//     <Piece
-//       // icon="./pawn.jpeg"
-//       {... props}
-//       alt="Queen"
-//       // keycode="Q"
-//     />
-//   )
-// }
-
-// function Rook(props) {
-//   return (
-//     // <img src={require("./rook.png")} alt="Rook" className="piece" />
-//     <Piece
-//       // icon="./rook.png"
-//       {... props}
-//       alt="Rook"
-//       // keycode="R"
-//     />
-//   );
-// }
-
-// function Bishop(props) {
-//   return (
-//     <Piece
-//       // icon="./pawn.jpeg"
-//       {... props}
-//       alt="Bishop"
-//       // keycode="B"
-//     />
-//   )
-// }
-
-// function Knight(props) {
-//   return (
-//     <Piece
-//       // icon="./pawn.jpeg"
-//       {... props}
-//       alt="Knight"
-//       // keycode="N"
-//     />
-//   )
-// }
-
-// function Pawn(props) {
-//   return (
-//     <Piece
-//       // icon="./pawn.jpeg"
-//       {... props}
-//       alt="Pawn"
-//       // keycode="P"
-//     />
-//   )
-// }
+const validPlayers = ['L','D'];
 
 class Piece extends React.Component {
   constructor(props) {
@@ -321,44 +218,46 @@ class DarkRook extends Rook {
 }
 
 class Queen extends Piece {
-  constructor(props) {
-    // alert("Queen constructor");
-    super(props);
-    this.state = {
-      ...this.state,
-      alt: "Queen", // overridden in child 
-      piececode: "Q",
-    }
-    // super(props);
-  }
+  alt = "Queen";
+  piececode = "Q";
+
+  // constructor(props) {
+  //   super(props);
+  //   this.state = {
+  //     ...this.state,
+  //     isSelected: false, // this.props.isSelected || false,
+  //   }
+  // }
 }
 
 class LightQueen extends Queen {
-  constructor(props) {
-    // alert("LightQueen constructor");
-    super(props);
-    this.state = {
-      ...this.state,
-      playercode: "L",
-      // piececode: "Q",
-      icon: keycodeToIcon["LQ"],
-      alt: "Light Queen",
-    }
-    // super(props);
-  }
+  alt = "Light Queen";
+  playercode = "L";
+  icon = keycodeToIcon["LQ"];
+
+  // constructor(props) {
+  //   super(props);
+  //   this.state = {
+  //     ...this.state,
+  //   }
+  // }
 }
 
 class DarkQueen extends Queen {
-  constructor(props) {
-    super(props);
-    this.state = {
-      ...this.state,
-      playercode: "D",
-      // piececode: "Q",
-      icon: keycodeToIcon["DQ"],
-      alt: "Dark Queen",
-    }
-  }
+  alt = "Dark Queen";
+  playercode = "D";
+  icon = keycodeToIcon["DQ"];
+
+  // constructor(props) {
+  //   super(props);
+  //   this.state = {
+  //     ...this.state,
+  //     playercode: "D",
+  //     // piececode: "Q",
+  //     icon: keycodeToIcon["DQ"],
+  //     alt: "Dark Queen",
+  //   }
+  // }
 }
 
 class King extends Piece {
