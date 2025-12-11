@@ -27,6 +27,431 @@ const keycodeToIcon = {
   'DK': PUBLIC + '/resources/kdt60.png',
 }
 
+// const keycodeToComponent = {
+//   'R': Rook,
+//   'N': Knight,
+//   'B': Bishop,
+//   'Q': Queen,
+//   'K': King,
+//   'P': Pawn,
+//   'LP': LightPawn,
+//   'LN': LightKnight,
+//   'LB': LightBishop,
+//   'LR': LightRook,
+//   'LQ': LightQueen,
+//   'LK': LightKing,
+//   'DP': DarkPawn,
+//   'DN': DarkKnight,
+//   'DB': DarkBishop,
+//   'DR': DarkRook,
+//   'DQ': DarkQueen,
+//   'DK': DarkKing,
+// };
+
+const validPieces = ['R','N','B','Q','K','P'];
+
+// function Piece(props) {
+//   return (
+//     // <img src={rook} alt="Rook" />
+//     // <img className="piece" src="./rook.png" alt="Rook" />
+//     // <img src={keycodeToIcon[props.keycode]} alt={props.alt} className="piece" />
+//     <img 
+//       src={keycodeToIcon[props.playercode + props.piececode]} 
+//       alt={props.alt} 
+//       className="piece" 
+//       // onClick={() => props.onClick(props.id)} // commented out to avoid piece click interfering with square click for now ...
+//       // both Piece and Square have the same onClick prop passed down from Board via Square
+//       // onClick={props.onClick} // i think this would pass the event object, not the square id ...
+//     />
+//   );
+// }
+
+// function King(props) {
+//   return (
+//     <Piece
+//       // icon="./pawn.jpeg"
+//       {... props}
+//       alt="King"
+//       // keycode="K"
+//     />
+//   )
+// }
+
+// function Queen(props) {
+//   return (
+//     <Piece
+//       // icon="./pawn.jpeg"
+//       {... props}
+//       alt="Queen"
+//       // keycode="Q"
+//     />
+//   )
+// }
+
+// function Rook(props) {
+//   return (
+//     // <img src={require("./rook.png")} alt="Rook" className="piece" />
+//     <Piece
+//       // icon="./rook.png"
+//       {... props}
+//       alt="Rook"
+//       // keycode="R"
+//     />
+//   );
+// }
+
+// function Bishop(props) {
+//   return (
+//     <Piece
+//       // icon="./pawn.jpeg"
+//       {... props}
+//       alt="Bishop"
+//       // keycode="B"
+//     />
+//   )
+// }
+
+// function Knight(props) {
+//   return (
+//     <Piece
+//       // icon="./pawn.jpeg"
+//       {... props}
+//       alt="Knight"
+//       // keycode="N"
+//     />
+//   )
+// }
+
+// function Pawn(props) {
+//   return (
+//     <Piece
+//       // icon="./pawn.jpeg"
+//       {... props}
+//       alt="Pawn"
+//       // keycode="P"
+//     />
+//   )
+// }
+
+class Piece extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      ...this.state,
+    }
+    this.handleClick = this.handleClick.bind(this);
+    // if (this.state.piececode === 'Q') alert("Piece constructor"); 
+  }
+
+  handleClick() {
+    // alert("Clicked on a piece: " + this.state.playercode + this.state.piececode + 
+    //   " (icon: " + this.state.icon + " | " + keycodeToIcon[this.state.playercode + this.state.piececode]);
+  }
+
+  render() {
+    return (
+      <img 
+        // src={this.state.icon} 
+        src={keycodeToIcon[this.state.playercode + this.state.piececode]}
+        // alt={this.state.alt} 
+        alt={this.state.playercode + this.state.piececode}
+        className="piece" 
+        onClick={this.handleClick} 
+        zIndex="10"
+        // onClick={() => props.onClick(props.id)} // commented out to avoid piece click interfering with square click for now ...
+        // both Piece and Square have the same onClick prop passed down from Board via Square
+        // onClick={props.onClick} // i think this would pass the event object, not the square id ...
+      />
+    );
+  }
+}
+
+class Pawn extends Piece {
+  constructor(props) {
+    super(props);
+    this.state = {
+      ...this.state,
+      alt: "Pawn", // not mutable, don't put in state ?? 
+      piececode: "P",
+    }
+    // this.handleClick = this.handleClick.bind(this);
+  }
+}
+
+class LightPawn extends Pawn {
+  constructor(props) {
+    super(props);
+    this.state = {
+      ...this.state,
+      playercode: "L",
+      keycode: "LP",
+      icon: keycodeToIcon["LP"],
+    }
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  handleClick() {
+    // highlight two squares in front, if legal moves 
+    // get id of this piece
+    // set isHighlighted state of pieces with id-8, id-16 to true
+  }
+}
+
+class DarkPawn extends Pawn {
+  constructor(props) {
+    super(props);
+    this.state = {
+      ...this.state,
+      playercode: "D",
+      icon: keycodeToIcon["DP"],
+    }
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  handleClick() {
+    // highlight two squares in front, if legal moves, considering orientation of board 
+    // get id of this piece
+    // set isHighlighted state of pieces with id+8, id+16 to true
+  }
+}
+
+class Knight extends Piece {
+  constructor(props) {
+    super(props);
+    this.state = {
+      ...this.state,
+      alt: "Knight",
+      piececode: "N",
+    }
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  handleClick() {
+    super.handleClick();
+    // alert("Clicked on a Knight");
+  }
+}
+
+class LightKnight extends Knight {
+  constructor(props) {
+    super(props);
+    this.state = {
+      ...this.state,
+      playercode: "L",
+      icon: keycodeToIcon["LN"],
+    }
+  }
+}
+
+class DarkKnight extends Knight {
+  constructor(props) {
+    super(props);
+    this.state = {
+      ...this.state,
+      playercode: "D",
+      icon: keycodeToIcon["DN"],
+    }
+  }
+}
+
+class Bishop extends Piece {
+  constructor(props) {
+    super(props);
+    this.state = {
+      ...this.state,
+      alt: "Bishop",
+      piececode: "B",
+    }
+  }
+}
+
+class LightBishop extends Bishop {
+  constructor(props) {
+    super(props);
+    this.state = {
+      ...this.state,
+      playercode: "L",
+      icon: keycodeToIcon["LB"],
+    }
+  }
+}
+
+class DarkBishop extends Bishop {
+  constructor(props) {
+    super(props);
+    this.state = {
+      ...this.state,
+      playercode: "D",
+      icon: keycodeToIcon["DB"],
+    }
+  }
+}
+
+class Rook extends Piece {
+  constructor(props) {
+    super(props);
+    this.state = {
+      ...this.state,
+      alt: "Rook",
+      piececode: "R",
+    }
+  }
+}
+
+class LightRook extends Rook {
+  constructor(props) {
+    super(props);
+    this.state = {
+      ...this.state,
+      playercode: "L",
+      icon: keycodeToIcon["LR"],
+    }
+  }
+}
+
+class DarkRook extends Rook {
+  constructor(props) {
+    super(props);
+    this.state = {
+      ...this.state,
+      playercode: "D",
+      icon: keycodeToIcon["DR"],
+    }
+  }
+}
+
+class Queen extends Piece {
+  constructor(props) {
+    // alert("Queen constructor");
+    super(props);
+    this.state = {
+      ...this.state,
+      alt: "Queen", // overridden in child 
+      piececode: "Q",
+    }
+    // super(props);
+  }
+}
+
+class LightQueen extends Queen {
+  constructor(props) {
+    // alert("LightQueen constructor");
+    super(props);
+    this.state = {
+      ...this.state,
+      playercode: "L",
+      // piececode: "Q",
+      icon: keycodeToIcon["LQ"],
+      alt: "Light Queen",
+    }
+    // super(props);
+  }
+}
+
+class DarkQueen extends Queen {
+  constructor(props) {
+    super(props);
+    this.state = {
+      ...this.state,
+      playercode: "D",
+      // piececode: "Q",
+      icon: keycodeToIcon["DQ"],
+      alt: "Dark Queen",
+    }
+  }
+}
+
+class King extends Piece {
+  constructor(props) {
+    super(props);
+    this.state = {
+      ...this.state,
+      alt: "King",
+      piececode: "K",
+    }
+  }
+}
+
+class LightKing extends King {
+  constructor(props) {
+    super(props);
+    this.state = {
+      ...this.state,
+      playercode: "L",
+      icon: keycodeToIcon["LK"],
+    }
+  }
+}
+
+class DarkKing extends King {
+  constructor(props) {
+    super(props);
+    this.state = {
+      ...this.state,
+      playercode: "D",
+      icon: keycodeToIcon["DK"],
+    }
+  }
+}
+
+// function Square(props) {
+
+//   // let onClick = () => {
+//   //   alert("Square " + props.id + " clicked.");
+//   // }
+
+//   return (
+//     <button 
+//       className={"square " + props.color + (props.isHighlighted ? " highlighted" : "")} 
+//       // onClick={(props.playercode && props.piececode) ? () => onClick() : () => {}} 
+//       // onClick={props.onClick}
+//       onClick={() => props.onClick(props.id)}
+//       key={props.id}
+//     >
+
+//       {/* {props.value} */}
+//       {/* <img src={require("./rook.png")} alt="Rook"/> */}
+//       {/* {props.value ? <Piece value={props.value}/> : null} */}
+//       {/* {props.value && validPieces.includes(props.value) ? React.createElement(keycodeToComponent[props.value], props) : null} */}
+//       {
+//         props.playercode && props.piececode && ['L','D'].includes(props.playercode) && validPieces.includes(props.piececode) 
+//           // ? React.createElement(Piece, props)
+//           ? React.createElement(keycodeToComponent[props.piececode], props)
+//           : null
+//       }
+      
+//     </button>
+//   );
+// }
+
+// function DarkSquare(props) {
+//   return (
+//     <Square
+//       // value={props.value}
+//       {...props}
+//       // playercode={props.playercode}
+//       // piececode={props.piececode}
+//       // onClick={props.onClick}
+//       // id={props.id}
+//       color="dark"
+//     />
+//   );
+// }
+
+// function LightSquare(props) {
+//   return (
+//     <Square
+//       // value={props.value}
+//       {...props}
+//       // playercode={props.playercode}
+//       // piececode={props.piececode}
+//       // onClick={props.onClick}
+//       // id={props.id}
+//       color="light"
+//     />
+//   );
+// }
+
 const keycodeToComponent = {
   'R': Rook,
   'N': Knight,
@@ -34,149 +459,71 @@ const keycodeToComponent = {
   'Q': Queen,
   'K': King,
   'P': Pawn,
+  'LP': LightPawn,
+  'LN': LightKnight,
+  'LB': LightBishop,
+  'LR': LightRook,
+  'LQ': LightQueen,
+  'LK': LightKing,
+  'DP': DarkPawn,
+  'DN': DarkKnight,
+  'DB': DarkBishop,
+  'DR': DarkRook,
+  'DQ': DarkQueen,
+  'DK': DarkKing,
 };
 
-const validPieces = ['R','N','B','Q','K','P'];
+class Square extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      ...this.state,
+    }
+    this.handleClick = this.handleClick.bind(this);
+  }
 
-function Piece(props) {
-  return (
-    // <img src={rook} alt="Rook" />
-    // <img className="piece" src="./rook.png" alt="Rook" />
-    // <img src={keycodeToIcon[props.keycode]} alt={props.alt} className="piece" />
-    <img 
-      src={keycodeToIcon[props.playercode + props.piececode]} 
-      alt={props.alt} 
-      className="piece" 
-      // onClick={() => props.onClick(props.id)} // commented out to avoid piece click interfering with square click for now ...
-      // both Piece and Square have the same onClick prop passed down from Board via Square
-      // onClick={props.onClick} // i think this would pass the event object, not the square id ...
-    />
-  );
+  handleClick() {
+    this.setState(prevState => ({
+      ...prevState,
+      isHighlighted: !prevState.isHighlighted,
+    }));
+  }
+
+  render() {
+    return (
+      <button 
+        className={"square " + this.state.color + (this.state.isHighlighted ? " highlighted" : "")} 
+        // onClick={() => props.onClick(props.id)} // prop onClick 
+        onClick={() => this.handleClick()} 
+        key={this.props.id}
+      >
+        {
+          this.props.playercode && this.props.piececode && ['L','D'].includes(this.props.playercode) && validPieces.includes(this.props.piececode) 
+            // ? React.createElement(Piece, props)
+            ? React.createElement(keycodeToComponent[this.props.playercode + this.props.piececode], this.props)
+            : null
+        }
+      </button>
+    );
+  }
 }
 
-function King(props) {
-  return (
-    <Piece
-      // icon="./pawn.jpeg"
-      {... props}
-      alt="King"
-      // keycode="K"
-    />
-  )
+class LightSquare extends Square {
+  constructor(props) {
+    super(props);
+    this.state = {
+      color: "light",
+    }
+  }
 }
 
-function Queen(props) {
-  return (
-    <Piece
-      // icon="./pawn.jpeg"
-      {... props}
-      alt="Queen"
-      // keycode="Q"
-    />
-  )
-}
-
-function Rook(props) {
-  return (
-    // <img src={require("./rook.png")} alt="Rook" className="piece" />
-    <Piece
-      // icon="./rook.png"
-      {... props}
-      alt="Rook"
-      // keycode="R"
-    />
-  );
-}
-
-function Bishop(props) {
-  return (
-    <Piece
-      // icon="./pawn.jpeg"
-      {... props}
-      alt="Bishop"
-      // keycode="B"
-    />
-  )
-}
-
-function Knight(props) {
-  return (
-    <Piece
-      // icon="./pawn.jpeg"
-      {... props}
-      alt="Knight"
-      // keycode="N"
-    />
-  )
-}
-
-function Pawn(props) {
-  return (
-    <Piece
-      // icon="./pawn.jpeg"
-      {... props}
-      alt="Pawn"
-      // keycode="P"
-    />
-  )
-}
-
-function Square(props) {
-
-  // let onClick = () => {
-  //   alert("Square " + props.id + " clicked.");
-  // }
-
-  return (
-    <button 
-      className={"square " + props.color + (props.isHighlighted ? " highlighted" : "")} 
-      // onClick={(props.playercode && props.piececode) ? () => onClick() : () => {}} 
-      // onClick={props.onClick}
-      onClick={() => props.onClick(props.id)}
-      key={props.id}
-    >
-
-      {/* {props.value} */}
-      {/* <img src={require("./rook.png")} alt="Rook"/> */}
-      {/* {props.value ? <Piece value={props.value}/> : null} */}
-      {/* {props.value && validPieces.includes(props.value) ? React.createElement(keycodeToComponent[props.value], props) : null} */}
-      {
-        props.playercode && props.piececode && ['L','D'].includes(props.playercode) && validPieces.includes(props.piececode) 
-          // ? React.createElement(Piece, props)
-          ? React.createElement(keycodeToComponent[props.piececode], props)
-          : null
-      }
-      
-    </button>
-  );
-}
-
-function DarkSquare(props) {
-  return (
-    <Square
-      // value={props.value}
-      {...props}
-      // playercode={props.playercode}
-      // piececode={props.piececode}
-      // onClick={props.onClick}
-      // id={props.id}
-      color="dark"
-    />
-  );
-}
-
-function LightSquare(props) {
-  return (
-    <Square
-      // value={props.value}
-      {...props}
-      // playercode={props.playercode}
-      // piececode={props.piececode}
-      // onClick={props.onClick}
-      // id={props.id}
-      color="light"
-    />
-  );
+class DarkSquare extends Square {
+  constructor(props) {
+    super(props);
+    this.state = {
+      color: "dark"
+    }
+  }
 }
 
 class Board extends React.Component {
