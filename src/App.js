@@ -490,7 +490,7 @@ class Square extends React.Component {
     }));
 
     if (this.props.keycode === "LP") {
-      alert("This is a pawn square, id: " + this.props.id);
+      // alert("This is a pawn square, id: " + this.props.id);
       this.props.onPawnClick(this.props.id);
     }
   }
@@ -498,7 +498,7 @@ class Square extends React.Component {
   render() {
     return (
       <button 
-        className={"square " + this.state.color + (this.state.isHighlighted ? " highlighted" : "")} 
+        className={"square " + this.state.color + ((this.state.isHighlighted || this.props.isHighlighted) ? " highlighted" : "")} 
         // onClick={() => props.onClick(props.id)} // prop onClick 
         onClick={() => this.handleClick()} 
         key={this.props.id}
@@ -571,13 +571,13 @@ class Board extends React.Component {
   }
 
   handlePawnClick = (squareId) => {
-    alert("Pawn clicked on square " + squareId);
+    // alert("Pawn clicked on square " + squareId);
     const oneSquareAhead = squareId - 8;
     const twoSquaresAhead = squareId - 16;
 
-    alert("Should update props for squares:\n\t" + 
-      oneSquareAhead + " (props: " + JSON.stringify(this.state.squareComponents[oneSquareAhead]?.props) + ")" + 
-      "\n\t" + twoSquaresAhead + " (props: " + JSON.stringify(this.state.squareComponents[twoSquaresAhead]?.props) + ")");
+    // alert("Should update props for squares:\n\t" + 
+    //   oneSquareAhead + " (props: " + JSON.stringify(this.state.squareComponents[oneSquareAhead]?.props) + ")" + 
+    //   "\n\t" + twoSquaresAhead + " (props: " + JSON.stringify(this.state.squareComponents[twoSquaresAhead]?.props) + ")");
 
     // Clone each square element, set `isHighlighted` true for the two target squares,
     // clear highlights for others. Change the element `key` so Square remounts and
@@ -586,7 +586,7 @@ class Board extends React.Component {
       const shouldHighlight = (idx === oneSquareAhead) || (idx === twoSquaresAhead);
       if (shouldHighlight) {
         const newKey = `${el.props.id}-${shouldHighlight ? '1' : '0'}`;
-        return React.cloneElement(el, {...el.props, isHighlighted: true, key: newKey, keycode: "LP" });
+        return React.cloneElement(el, {...el.props, isHighlighted: true, key: newKey });
       } else {
         return el;
       }
@@ -599,9 +599,9 @@ class Board extends React.Component {
       squareComponents: newSquareComponents,
     });
 
-    alert("Should have updated props for squares:\n\t" + 
-      oneSquareAhead + " (props: " + JSON.stringify(this.state.squareComponents[oneSquareAhead]?.props) + ")" + 
-      "\n\t" + twoSquaresAhead + " (props: " + JSON.stringify(this.state.squareComponents[twoSquaresAhead]?.props) + ")");
+    // alert("Should have updated props for squares:\n\t" + 
+    //   oneSquareAhead + " (props: " + JSON.stringify(this.state.squareComponents[oneSquareAhead]?.props) + ")" + 
+    //   "\n\t" + twoSquaresAhead + " (props: " + JSON.stringify(this.state.squareComponents[twoSquaresAhead]?.props) + ")");
   }
 
   // handlePawnClick(squareId) {
