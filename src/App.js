@@ -27,6 +27,17 @@ const keycodeToIcon = {
   'DK': PUBLIC + '/resources/kdt60.png',
 }
 
+const DIR = {
+  N: -8,
+  S: 8,
+  E: 1,
+  W: -1,
+  NW: -9,
+  NE: -7,
+  SW: 7,
+  SE: 9,
+}
+
 // const validPieces = ['R','N','B','Q','K','P'];
 // const validPlayers = ['L','D'];
 
@@ -66,20 +77,20 @@ class Piece extends React.Component {
 class Pawn extends Piece {
   alt = "Pawn";
   piececode = "P";
+
   constructor(props) {
     super(props);
-    // this.state = {
-    //   ...this.state,
-    //   alt: "Pawn", 
-    //   piececode: "P",
-    // }
+    this.state = {
+      ...this.state,
+      hasMoved: false,
+    }
     this.handleClick = this.handleClick.bind(this);
   }
 
-  handleClick() {
-    const squareId = this.props.id;
-    this.props.onPawnClick(squareId);
-  }
+  // handleClick() {
+  //   const squareId = this.props.id;
+  //   this.props.onPawnClick(squareId);
+  // }
 }
 
 class LightPawn extends Pawn {
@@ -88,7 +99,11 @@ class LightPawn extends Pawn {
   // keycode = "LP";
   icon = keycodeToIcon["LP"];
 
-  legalMoves = [-8, -16, -7, -9];
+  // legalMoves = [-8, -16, -7, -9];
+
+  moveDirections = [-8];
+  moveDistance = 2;
+  captureDirections = [-7, -9];
 
   constructor(props) {
     super(props);
@@ -114,7 +129,10 @@ class DarkPawn extends Pawn {
   playercode = "D";
   icon = keycodeToIcon["DP"];
 
-  legalMoves = [8, 16, 7, 9];
+  // legalMoves = [8, 16, 7, 9];
+  moveDirections = [8];
+  moveDistance = 2; // put in state and alter after first move 
+  captureDirections = [7, 9]; // also use state to handle en passant 
 
   constructor(props) {
     super(props);
@@ -188,6 +206,9 @@ class Bishop extends Piece {
   alt = "Bishop";
   piececode = "B";
 
+  moveDirections = [-9, -7, 7, 9];
+  moveDistance = 7; // or length of board
+
   // constructor(props) {
   //   super(props);
   //   // this.state = {
@@ -231,6 +252,9 @@ class DarkBishop extends Bishop {
 class Rook extends Piece {
   alt = "Rook";
   piececode = "R";
+
+  moveDirections = [-8, -1, 1, 8];
+  moveDistance = 7; // or length of board 
 
   // constructor(props) {
   //   super(props);
@@ -276,6 +300,16 @@ class Queen extends Piece {
   alt = "Queen";
   piececode = "Q";
 
+  moveDirections = [-9, -8, -7, -1, 1, 7, 8, 9];
+  moveDistance = 7; // or length of board 
+
+  // possibleMoves = [-63, -56, -54, -49, -45, -36, -35, -28, -27, -21, -18, -14, -9, -7, 7, ]
+  // possibleMoves = [
+  //   [-63, -54, -45, -36, -27, -18, -9],
+  //   [-56, -48, -40, -32, -24, -16, -8],
+  //   [-49, -42, -35, -28, -21, -14, -7],
+  // ]
+
   // constructor(props) {
   //   super(props);
   //   // this.state = {
@@ -318,6 +352,10 @@ class King extends Piece {
   alt = "King";
   piececode = "K";
 
+  // possibleMoves = [-9, -8, -7, -1, 1, 7, 8, 9];
+  moveDirections = [-9, -8, -7, -1, 1, 7, 8, 9];
+  moveDistance = 1;
+
   // constructor(props) {
   //   super(props);
   //   // this.state = {
@@ -348,11 +386,11 @@ class DarkKing extends King {
   playercode = "D";
   icon = keycodeToIcon["DK"];
 
-  legalMoves = [-9, -8, -7, -1, 1, 7, 8, 9];
+  // possibleMoves = [-9, -8, -7, -1, 1, 7, 8, 9];
   // hmm... some of the validators need to know the layout of the other pieces on the board 
-  moveValidators = [
-    (target) => target >= 0 && target < 64, // on board
-  ];
+  // moveValidators = [
+  //   (target) => target >= 0 && target < 64, // on board
+  // ];
 
   // constructor(props) {
   //   super(props);
@@ -365,6 +403,7 @@ class DarkKing extends King {
 }
 
 const keycodeToComponent = {
+  // '': div => <div></div>,
   // 'R': Rook,
   // 'N': Knight,
   // 'B': Bishop,
@@ -407,7 +446,7 @@ class Square extends React.Component {
     //   this.props.onPawnClick(this.props.id);
     // }
 
-    this.props.onPawnClick(this.props.id);
+    this.props.onSquareClick(this.props.id);
   }
 
   render() {
@@ -421,15 +460,16 @@ class Square extends React.Component {
         key={this.props.id}
       >
         {
-          this.props.keycode && this.props.keycode in keycodeToComponent 
-          // this.props.playercode && this.props.piececode && ['L','D'].includes(this.props.playercode) && validPieces.includes(this.props.piececode) 
-            // ? React.createElement(Piece, props)
-            // ? React.createElement(keycodeToComponent[this.props.playercode + this.props.piececode], {
-            ? React.createElement(keycodeToComponent[this.props.keycode], {
-                ...this.props,
-                // onPawnClick: this.props.onPawnClick,
-              })
-            : null
+          // this.props.keycode && this.props.keycode in keycodeToComponent 
+          // // this.props.playercode && this.props.piececode && ['L','D'].includes(this.props.playercode) && validPieces.includes(this.props.piececode) 
+          //   // ? React.createElement(Piece, props)
+          //   // ? React.createElement(keycodeToComponent[this.props.playercode + this.props.piececode], {
+          //   ? React.createElement(keycodeToComponent[this.props.keycode], {
+          //       ...this.props,
+          //       // onPawnClick: this.props.onPawnClick,
+          //     })
+          //   : null
+          this.props.children
         }
       </button>
     );
@@ -438,105 +478,147 @@ class Square extends React.Component {
 
 class LightSquare extends Square {
   color = "light";
-
-  // constructor(props) {
-  //   super(props);
-  //   this.state = {
-  //     color: "light",
-  //   }
-  // }
 }
 
 class DarkSquare extends Square {
   color = "dark";
-
-  // constructor(props) {
-  //   super(props);
-  //   this.state = {
-  //     color: "dark"
-  //   }
-  // }
 }
 
 class Board extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      squareComponents: this.props.squares.map((square, index) => {
-        // keycodeToComponent[square]
-        const rank = Math.floor(index / 8);
-        const file = index % 8; 
+  // constructor(props) {
+  //   super(props);
+  //   this.state = {
+  //     squareComponents: this.props.squares.map((square, index) => {
+  //       // keycodeToComponent[square]
+  //       const rank = Math.floor(index / 8);
+  //       const file = index % 8; 
 
-        let squareProps = {
-          keycode: square,
-          id: index,
-          key: index,
-          // onPawnClick: this.handlePawnClick,
-          onPawnClick: this.handleSquareClick, // TODO refactor this name 
-          // onPawnClick: this.handlePawnClick.bind(this),
-          // include props to a square about the squares it can move to or might find relevant?? or all squares??? 
+  //       let squareProps = {
+  //         keycode: square,
+  //         id: index,
+  //         key: index,
+  //         // onPawnClick: this.handlePawnClick,
+  //         onSquareClick: this.handleSquareClick, 
+  //         // onPawnClick: this.handlePawnClick.bind(this),
+  //         // include props to a square about the squares it can move to or might find relevant?? or all squares??? 
+  //       }
+
+  //       return ((rank + file) % 2 === 0) ? <LightSquare {...squareProps} /> : <DarkSquare {...squareProps} />;
+  //     }),
+  //     boardSize: Math.sqrt(this.props.squares.length),
+  //     squareSelected: null,
+  //   }
+  // }
+
+  render() {
+    return (
+      <div>
+        {
+          Array.from({ length: this.props.boardSize }, (_, rankIndex) => (
+            <div className="board-row" key={rankIndex}>
+              {
+                this.props.squareComponents.slice(
+                  rankIndex * this.props.boardSize, // start
+                  rankIndex * this.props.boardSize + this.props.boardSize // end
+                )
+              }
+            </div>
+          ))
         }
+      </div>
+    )
+  }
+}
 
-        return ((rank + file) % 2 === 0) ? <LightSquare {...squareProps} /> : <DarkSquare {...squareProps} />;
-      }),
-      boardRanks: Math.sqrt(this.props.squares.length),
-      squareSelected: null,
+class Game extends React.Component {
+  backrankStartingPositions = ['R','N','B','Q','K','B','N','R']; // can make chess960 later 
+  boardSize = this.backrankStartingPositions.length;
+  numSquares = this.boardSize ** 2;
+
+  constructor(props) {
+    // move the board state up here to more easily track history and handle moves like en passant, castling, etc. 
+    super(props);
+
+    let startingConfig = Array(64).fill("");
+    startingConfig.fill("DP", 8, 16);
+    startingConfig.splice(0, 8, ...this.backrankStartingPositions.map((piece) => "D" + piece));
+
+    startingConfig.fill("LP", 48, 56);
+    startingConfig.splice(56, 8, ...this.backrankStartingPositions.map((piece) => "L" + piece));
+
+    const squareProps = {
+      // keycode: square,
+      // id: index,
+      // key: index,
+      // onPawnClick: this.handlePawnClick,
+      onSquareClick: this.handleSquareClick, 
+      // onPawnClick: this.handlePawnClick.bind(this),
+      // include props to a square about the squares it can move to or might find relevant?? or all squares??? 
     }
 
-    // let ranks = []
-    // for (let i = 0; i < 64; i+=8) {
-    //   ranks.push(this.props.squares.slice(i, i+8));
-    // }
-
-    // this.setState(prevState => ({
-    //   ...prevState,
-    //   boardRanks: ranks,
-    // }))
+    this.state = {
+      pieceKeys: startingConfig,
+      squareComponents: startingConfig.map((square, index) => {
+        // keycodeToComponent[square]
+        const rank = Math.floor(index / 8);
+        const file = index % 8;
+        return ((rank + file) % 2 === 0) 
+          ? <LightSquare {...squareProps} keycode={square} id={index} key={index} children={square === '' ? null : React.createElement(keycodeToComponent[square])} /> 
+          : <DarkSquare {...squareProps} keycode={square} id={index} key={index} children={square === '' ? null : React.createElement(keycodeToComponent[square])} />;
+      }),
+      // boardSize: this.boardSize,
+      squareSelected: null,
+      whiteToPlay: true,
+      history: [{
+        // squares: Array(64).fill(null),
+        pieceKeys: startingConfig,
+        AN: null,
+        INN: null,
+      }],
+      // historyAN: [], // Algebraic Notation 
+      // historyINN: [], // International Numeric Notation (Computer Notation, e.g. 5254 == e2->e4) 
+      stepNumber: 0,
+    }
   }
 
   getLegalMoves = (squareId) => {
-    if (this.props.squares[squareId] === undefined || this.props.squares[squareId] === "") return [];
+    if (this.state.pieceKeys[squareId] === undefined || this.state.pieceKeys[squareId] === "") return [];
 
-    const pieceCode = this.props.squares[squareId].charAt(1);
+    const square = this.state.squareComponents[squareId];
+    const playerCode = this.state.pieceKeys[squareId].charAt(0);
+    const pieceCode = this.state.pieceKeys[squareId].charAt(1);
 
     switch (pieceCode) {
       case 'P':
-        // Pawn legal moves
-        // const direction = this.props.squares[squareId].charAt(0) === 'L' ? 1 : -1;
-        // const oneSquareAhead = squareId - (8 * direction);
-        // const twoSquaresAhead = squareId - (16 * direction);
+        // Legal pawn moves 
         let pawnMoves = [-8, -16, -7, -9];
-        if (this.props.squares[squareId].charAt(0) === 'D') pawnMoves = pawnMoves.map(move => -move);
-        let legalMoves = [];
+        if (playerCode === 'D') pawnMoves = pawnMoves.map(move => -move);
         let pawnValidators = [
           (target) => target >= 0 && target < 64, // on board
-          (target) => ![8, 16].includes(Math.abs(squareId - target)) || this.props.squares[target] === "", // not occupied
-          (target) => ![7, 9].includes(Math.abs(squareId - target)) || (this.props.squares[target] !== "" && this.props.squares[target].charAt(0) !== this.props.squares[squareId].charAt(0)), // capture move (not counting en passant)
+          (target) => ![8, 16].includes(Math.abs(squareId - target)) || this.state.pieceKeys[target] === "", // not occupied
+          (target) => ![7, 9].includes(Math.abs(squareId - target)) || (this.state.pieceKeys[target] !== "" && this.state.pieceKeys[target]?.charAt(0) !== this.state.pieceKeys[squareId].charAt(0)), // capture move (not counting en passant, need move history for that)
         ];
-        // if (oneSquareAhead >= 0 && oneSquareAhead < 64) {
-        //   legalMoves.push(oneSquareAhead);
-        // }
-        // if (twoSquaresAhead >= 0 && twoSquaresAhead < 64) {
-        //   legalMoves.push(twoSquaresAhead);
-        // }
-        pawnMoves.forEach(move => {
-          const targetSquare = squareId + move;
-          const legalMove = pawnValidators.every(validator => validator(targetSquare));
-          if (legalMove) {
-            legalMoves.push(targetSquare);
-          }
-        })
-        return legalMoves;
-      // Add cases for other pieces (R, N, B, Q, K) as needed
+        // let legalMoves = [];
+        // pawnMoves.forEach(move => {
+        //   const targetSquare = squareId + move;
+        //   const legalMove = pawnValidators.every(validator => validator(targetSquare));
+        //   if (legalMove) {
+        //     legalMoves.push(targetSquare);
+        //   }
+        // })
+        // return legalMoves;
+        return pawnMoves
+          .map((move) => move + squareId)
+          .filter((target) => pawnValidators.every(validator => validator(target)));
       case 'N':
-        // Knight legal moves
+        // Legal knight moves
         const knightMoves = [-17, -15, -10, -6, 6, 10, 15, 17];
         const knightValidators = [
           (target) => target >= 0 && target < 64, // on board
           (target) => Math.abs((target % 8) - (squareId % 8)) <= 2, // file difference <= 2
           (target) => Math.abs(Math.floor(target / 8) - Math.floor(squareId / 8)) <= 2, // rank difference <= 2
+          (target) => this.state.pieceKeys[target] === "" || this.state.pieceKeys[target]?.charAt(0) !== this.state.pieceKeys[squareId].charAt(0),
         ];
-        // const legalMove = knightValidators.every(validator => validator(squareId, squareId + move);
         let knightLegalMoves = [];
         knightMoves.forEach(move => {
           const targetSquare = squareId + move;
@@ -546,6 +628,8 @@ class Board extends React.Component {
           }
         });
         return knightLegalMoves;
+      // case 'B':
+
       default:
         return [];
     }    
@@ -559,7 +643,10 @@ class Board extends React.Component {
         // Move piece to clicked square
         const squareMovedFrom = this.state.squareSelected;
         const squareMovedTo = squareToSelect;
-        const pieceMoving = this.props.squares[squareMovedFrom];
+        const pieceMoving = this.state.pieceKeys[squareMovedFrom];
+        let newPieceKeys = this.state.pieceKeys;
+        newPieceKeys[squareMovedFrom] = "";
+        newPieceKeys[squareMovedTo] = pieceMoving;
         this.setState({
           ...this.state,
           squareSelected: null,
@@ -571,6 +658,7 @@ class Board extends React.Component {
             } 
             return React.cloneElement(el, {...el.props, isHighlighted: false, isSelected: false, key: `${el.props.id}-0` });
           }),
+          pieceKeys: newPieceKeys,
         })
       } else {
         const squaresToHighlight = this.getLegalMoves(squareId);
@@ -588,7 +676,7 @@ class Board extends React.Component {
             // }
             const newKey = `${el.props.id}-${shouldHighlight ? '1' : '0'}`;
             return React.cloneElement(el, { ...el.props, isHighlighted: shouldHighlight, isSelected: shouldSelect, key: newKey });
-          })
+          }),
         })
       }
     } else if (this.state.squareSelected === squareToSelect) {
@@ -599,196 +687,11 @@ class Board extends React.Component {
         ...this.state,
         squareSelected: null,
         squareComponents: this.state.squareComponents.map((el, idx) => {
-          return React.cloneElement(el, {...el.props, isHighlighted: false, isSelected: false,key: `${el.props.id}-0` });
+          return React.cloneElement(el, {...el.props, isHighlighted: false, isSelected: false, key: `${el.props.id}-0` });
         }),
       });
     } else {
 
-    }
-  }
-
-  handlePawnClick = (squareId) => {
-    // alert("Pawn clicked on square " + squareId);
-    const direction = this.props.squares[squareId].charAt(0) === 'L' ? 1 : -1;
-    // const operator = [Math.add, Math.subtract];
-
-    const oneSquareAhead = squareId - (8 * direction);
-    const twoSquaresAhead = squareId - (16 * direction);
-
-    // alert("Should update props for squares:\n\t" + 
-    //   oneSquareAhead + " (props: " + JSON.stringify(this.state.squareComponents[oneSquareAhead]?.props) + ")" + 
-    //   "\n\t" + twoSquaresAhead + " (props: " + JSON.stringify(this.state.squareComponents[twoSquaresAhead]?.props) + ")");
-
-    // Clone each square element, set `isHighlighted` true for the two target squares,
-    // clear highlights for others. Change the element `key` so Square remounts and
-    // picks up the `isHighlighted` prop in its constructor.
-    const newSquareComponents = this.state.squareComponents.map((el, idx) => {
-      const shouldHighlight = (idx === oneSquareAhead) || (idx === twoSquaresAhead);
-      if (shouldHighlight) {
-        const newKey = `${el.props.id}-${shouldHighlight ? '1' : '0'}`;
-        return React.cloneElement(el, {...el.props, isHighlighted: !el.props.isHighlighted, key: newKey });
-      } else {
-        return el;
-      }
-      // const newKey = `${el.props.id}-${shouldHighlight ? '1' : '0'}`;
-      // return React.cloneElement(el, { ...el.props, isHighlighted: shouldHighlight, key: newKey });
-    });
-
-    this.setState({
-      ...this.state,
-      squareComponents: newSquareComponents,
-    });
-
-    // alert("Should have updated props for squares:\n\t" + 
-    //   oneSquareAhead + " (props: " + JSON.stringify(this.state.squareComponents[oneSquareAhead]?.props) + ")" + 
-    //   "\n\t" + twoSquaresAhead + " (props: " + JSON.stringify(this.state.squareComponents[twoSquaresAhead]?.props) + ")");
-  }
-
-  // handlePawnClick(squareId) {
-  //   const squares = this.state.squares.slice();
-  //   // Clear all previous highlights
-  //   squares.forEach((square, index) => {
-  //     if (square.includes("X")) {
-  //       squares[index] = square.replace("X", "");
-  //     }
-  //   });
-    
-  //   // For light pawn moving forward: subtract 8 for one square, subtract 16 for two squares
-  //   const oneSquareAhead = squareId - 8;
-  //   const twoSquaresAhead = squareId - 16;
-    
-  //   // // Mark the two possible destination squares
-  //   // if (oneSquareAhead >= 0) {
-  //   //   squares[oneSquareAhead] = (squares[oneSquareAhead] || "") + "X";
-  //   // }
-  //   // if (twoSquaresAhead >= 0) {
-  //   //   squares[twoSquaresAhead] = (squares[twoSquaresAhead] || "") + "X";
-  //   // }
-    
-  //   this.setState({
-  //     ...this.state,
-  //     squares: squares,
-  //   });
-  // }
-
-  // renderSquare(i) {
-  //   return this.state.squareComponents[i];
-  //   // let file = i % 8;
-  //   // let rank = Math.floor(i / 8);
-
-  //   // let props = {
-  //   //   playercode: this.props.squares[i]?.charAt(0),
-  //   //   piececode: this.props.squares[i]?.charAt(1),
-  //   //   // isHighlighted: this.props.squares[i]?.includes("X"),
-  //   //   // isHighlighted: this.state?.squares[i]?.includes("X"),
-  //   //   // onClick: (i) => this.props.onClick(i), // only place the onClick Board prop is passed down as a prop to LightSquare/DarkSquare 
-  //   //   id: i,
-  //   //   // onPawnClick: this.handlePawnClick,
-  //   // }
-
-  //   // return ((file + rank) % 2 === 0) ? <LightSquare {...props} /> : <DarkSquare {...props} />; 
-
-  //   // if ((file + rank) % 2 === 0) {
-  //   //   return (
-  //   //     <LightSquare
-  //   //       // value={this.props.squares[i]}
-  //   //       playercode={this.props.squares[i].charAt(0)}
-  //   //       piececode={this.props.squares[i].charAt(1)}
-  //   //       onClick={() => this.props.onClick(i)}
-  //   //       id={i}
-  //   //     >
-  //   //       {/* if (this.props.squares[i] === "R") {
-  //   //         <img src={rook} alt="rook"/>
-  //   //       } */}
-  //   //     </LightSquare>
-  //   //   );
-  //   // } else {
-  //   //   return (
-  //   //     <DarkSquare
-  //   //       // value={this.props.squares[i]}
-  //   //       playercode={this.props.squares[i].charAt(0)}
-  //   //       piececode={this.props.squares[i].charAt(1)}
-  //   //       onClick={() => this.props.onClick(i)}
-  //   //       id={i}
-  //   //     />
-  //   //   );
-  //   // }
-  // }
-
-  // renderRank(squares) {
-  //   return (
-  //     <div className="board-row">
-  //       {squares}
-  //     </div>
-  //   );
-  // }
-
-  render() {
-    // var board = [];
-    // var rank = [];
-    // for (var i = 0; i < 8; i++) {
-    //   for (var j = 0; j < 8; j++) {
-    //     rank.push(this.renderSquare((8 * i) + j));
-    //   }
-    //   board.push(this.renderRank(rank));
-    //   rank = [];
-    // }
-
-    // return (
-    //   <div>
-    //     {board}
-    //   </div>
-    // );
-
-    return (
-      <div>
-        {
-          // this.state.boardRanks.map((squares, rankIndex) => (
-          //   <div className="board-row" key={rankIndex}>
-          //     {squares}
-          //   </div>
-          // ))
-          // let boardLength = Math.sqrt(this.state.squareComponents.length);
-          Array.from({ length: this.state.boardRanks }, (_, rankIndex) => (
-            <div className="board-row" key={rankIndex}>
-              {
-                this.state.squareComponents.slice(rankIndex * this.state.boardRanks, rankIndex * this.state.boardRanks + this.state.boardRanks)
-              }
-            </div>
-          ))
-        }
-      </div>
-    )
-  }
-}
-
-class Game extends React.Component {
-  constructor(props) {
-    super(props);
-
-    let startingConfig = Array(64).fill("");
-    startingConfig.fill("DP", 8, 16);
-    startingConfig[0] = startingConfig[7] = "DR";
-    startingConfig[1] = startingConfig[6] = "DN";
-    startingConfig[2] = startingConfig[5] = "DB";
-    startingConfig[3] = "DQ";
-    startingConfig[4] = "DK";
-
-    startingConfig.fill("LP", 48, 56);
-    startingConfig[56] = startingConfig[63] = "LR";
-    startingConfig[57] = startingConfig[62] = "LN";
-    startingConfig[58] = startingConfig[61] = "LB";
-    startingConfig[59] = "LQ";
-    startingConfig[60] = "LK";
-
-    this.state = {
-      history: [{
-        // squares: Array(64).fill(null),
-        squares: startingConfig,
-      }],
-      squares: startingConfig,
-      whiteToPlay: true,
-      stepNumber: 0,
     }
   }
 
@@ -806,15 +709,6 @@ class Game extends React.Component {
   //   // const current = history[history.length - 1];
   //   // const squares = current.squares.slice();
   //   // // if (calculateWinner(squares) || squares[i]) {
-
-  //   if (squares[i]) {
-  //     squares[i] = "X";
-  //   } else {
-  //     // squares[i] = this.state.whiteToPlay ? 'X' : 'O';
-  //     // test highlighting/selecting an empty square 
-  //     squares[i] = "X"; // temporary placeholder to mean highlighted 
-  //   }
-
 
   //   // this.setState({
   //   //   history: history.concat([{
@@ -844,46 +738,64 @@ class Game extends React.Component {
   }
 
   render() {
-    const history = this.state.history;
-    // const current = history[this.state.stepNumber];
-    // const squares = current.squares;
-    const winner = null; //calculateWinner(current.squares);
-
-    const moves = history.map((step, move) => {
-      const desc = move ? 'Go to move #' + move : 'Go to game start';
-      return (
-        <li key={move}>
-          <button onClick={() => this.jumpTo(move)}>{desc}</button>
-        </li>
-      );
-    });
-
-    let status;
-    if (winner) {
-      status = 'Winner: ' + winner;
-    } else {
-      status = 'Next player: ' + (this.state.whiteToPlay ? 'White' : 'Black');
-    }
-
     return (
       <div className="game">
         <div className="game-board">
           <Board 
             // squares={current.squares}
-            squares={this.state.squares}
+            pieceKeys={this.state.pieceKeys}
+            squareComponents={this.state.squareComponents}
+            boardSize={this.boardSize}
             // onClick={(i) => this.handleClick(i)} // only place we pass down handleClick into onClick prop 
             // onPawnClick={(squareId) => this.handlePawnClick(squareId)}
           />
         </div>
-        <div className="game-info">
-          <div>{status}</div>
-          <ol>{moves}</ol>
-        </div>
+        <GameStatus 
+          whiteToPlay={this.state.whiteToPlay}
+          history={this.state.history}
+        />
         {/* <div id="navbar">
           <Nav />
         </div> */}
       </div>
     );
+  }
+}
+
+class GameStatus extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+
+  // gameHistory = this.props.history;
+  // const current = history[this.state.stepNumber];
+  // const squares = current.squares;
+
+  moves = this.props.history.map((step, move) => {
+    const desc = move ? 'Go to move #' + move : 'Go to game start';
+    return (
+      <li key={move}>
+        <button onClick={() => this.jumpTo(move)}>{desc}</button>
+      </li>
+    );
+  });
+
+  render() {
+    const winner = null; //calculateWinner(current.squares);
+
+    let status;
+    if (winner) {
+      status = 'Winner: ' + winner;
+    } else {
+      status = 'Next player: ' + (this.props.whiteToPlay ? 'White' : 'Black');
+    }
+
+    return (
+      <div className="game-info">
+        <div>{status}</div>
+        <ol>{this.moves}</ol>
+      </div>
+    )
   }
 }
 
