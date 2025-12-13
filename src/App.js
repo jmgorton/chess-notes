@@ -80,10 +80,10 @@ class Pawn extends Piece {
 
   constructor(props) {
     super(props);
-    this.state = {
-      ...this.state,
-      hasMoved: false,
-    }
+    // this.state = {
+    //   ...this.state,
+    //   hasMoved: false,
+    // }
     this.handleClick = this.handleClick.bind(this);
   }
 
@@ -102,16 +102,19 @@ class LightPawn extends Pawn {
   // legalMoves = [-8, -16, -7, -9];
 
   moveDirections = [-8];
-  moveDistance = 2;
+  // moveDistance = 2;
   captureDirections = [-7, -9];
 
   constructor(props) {
     super(props);
     // this.state = {
     //   ...this.state,
-    //   playercode: "L",
-    //   keycode: "LP",
-    //   icon: keycodeToIcon["LP"],
+    //   // hasMoved: false,
+    //   // moveDistance: 2,
+    //   moves: [-8],
+    //   // playercode: "L",
+    //   // keycode: "LP",
+    //   // icon: keycodeToIcon["LP"],
     // }
     this.handleClick = this.handleClick.bind(this);
   }
@@ -131,8 +134,8 @@ class DarkPawn extends Pawn {
 
   // legalMoves = [8, 16, 7, 9];
   moveDirections = [8];
-  moveDistance = 2; // put in state and alter after first move 
-  captureDirections = [7, 9]; // also use state to handle en passant 
+  // moveDistance = 2; // put in state and alter after first move 
+  captureDirections = [7, 9]; // also use state to handle en passant ?? No, but we do need history of moves 
 
   constructor(props) {
     super(props);
@@ -469,6 +472,7 @@ class Square extends React.Component {
           //       // onPawnClick: this.props.onPawnClick,
           //     })
           //   : null
+          // // this.props.children
           this.props.children
         }
       </button>
@@ -520,7 +524,11 @@ class Board extends React.Component {
                 this.props.squareComponents.slice(
                   rankIndex * this.props.boardSize, // start
                   rankIndex * this.props.boardSize + this.props.boardSize // end
-                )
+                )// .map((squareComponent) => squareComponent)
+                // .map((squareComponent) => {
+                //   // squareComponent.children = this.props.children;
+                //   return React.cloneElement(squareComponent, { ...squareComponent.props, children: this.props.children }); // , key: `${squareComponent.props.keycode}` });
+                // })
               }
             </div>
           ))
@@ -546,15 +554,15 @@ class Game extends React.Component {
     startingConfig.fill("LP", 48, 56);
     startingConfig.splice(56, 8, ...this.backrankStartingPositions.map((piece) => "L" + piece));
 
-    const squareProps = {
-      // keycode: square,
-      // id: index,
-      // key: index,
-      // onPawnClick: this.handlePawnClick,
-      onSquareClick: this.handleSquareClick, 
-      // onPawnClick: this.handlePawnClick.bind(this),
-      // include props to a square about the squares it can move to or might find relevant?? or all squares??? 
-    }
+    // const squareProps = {
+    //   // keycode: square,
+    //   // id: index,
+    //   // key: index,
+    //   // onPawnClick: this.handlePawnClick,
+    //   onSquareClick: this.handleSquareClick, 
+    //   // onPawnClick: this.handlePawnClick.bind(this),
+    //   // include props to a square about the squares it can move to or might find relevant?? or all squares??? 
+    // }
 
     this.state = {
       pieceKeys: startingConfig,
@@ -562,9 +570,18 @@ class Game extends React.Component {
         // keycodeToComponent[square]
         const rank = Math.floor(index / 8);
         const file = index % 8;
+        const squareProps = {
+          keycode: square,
+          id: index,
+          key: `${index}-${square}`,
+          onSquareClick: this.handleSquareClick,
+          // children: null,
+        }
+        let children = null;
+        if (square !== "") children = React.createElement(keycodeToComponent[square], squareProps);
         return ((rank + file) % 2 === 0) 
-          ? <LightSquare {...squareProps} keycode={square} id={index} key={index} children={square === '' ? null : React.createElement(keycodeToComponent[square])} /> 
-          : <DarkSquare {...squareProps} keycode={square} id={index} key={index} children={square === '' ? null : React.createElement(keycodeToComponent[square])} />;
+          ? <LightSquare {...squareProps} children={children} /> 
+          : <DarkSquare {...squareProps} children={children} /> 
       }),
       // boardSize: this.boardSize,
       squareSelected: null,
@@ -585,13 +602,18 @@ class Game extends React.Component {
     if (this.state.pieceKeys[squareId] === undefined || this.state.pieceKeys[squareId] === "") return [];
 
     const square = this.state.squareComponents[squareId];
+    const piece = square.props.children;
+    // alert(`Square: ${JSON.stringify(square)}\nPiece: ${JSON.stringify(piece)}`);
     const playerCode = this.state.pieceKeys[squareId].charAt(0);
     const pieceCode = this.state.pieceKeys[squareId].charAt(1);
 
     switch (pieceCode) {
       case 'P':
         // Legal pawn moves 
-        let pawnMoves = [-8, -16, -7, -9];
+        let pawnMoves = [-8, -7, -9];
+        if (playerCode === 'L' && Math.floor(squareId / 8) === 6) pawnMoves.push(-16);
+        if (playerCode === 'D' && Math.floor(squareId / 8) === 1) pawnMoves.push(16);
+        // let pawnMoves = piece.state.moves;
         if (playerCode === 'D') pawnMoves = pawnMoves.map(move => -move);
         let pawnValidators = [
           (target) => target >= 0 && target < 64, // on board
@@ -651,12 +673,35 @@ class Game extends React.Component {
           ...this.state,
           squareSelected: null,
           squareComponents: this.state.squareComponents.map((el, idx) => {
+            // let children = null;
+            // if (newPie !== "") children = React.createElement(keycodeToComponent[square], squareProps);
+            let newKeycode = el.keycode;
+            // let newChildren = el.children; 
             if (idx === squareMovedFrom || idx === squareMovedTo) {
               const newKey = `${el.props.id}-0`;
-              const newKeycode = (idx === squareMovedTo) ? pieceMoving : "";
-              return React.cloneElement(el, {...el.props, keycode: newKeycode, isHighlighted: false, isSelected: false, key: newKey });
+              newKeycode = (idx === squareMovedTo) ? pieceMoving : "";
+              const newChildren = (idx === squareMovedTo) ? React.createElement(keycodeToComponent[pieceMoving], el.props) : null; // TODO el.props is the props from the square that previously had no piece on it
+              return React.cloneElement(el, 
+                {
+                  ...el.props, 
+                  keycode: newKeycode, 
+                  isHighlighted: false, 
+                  isSelected: false, 
+                  key: newKey,
+                  children: newChildren,
+                }
+              );
             } 
-            return React.cloneElement(el, {...el.props, isHighlighted: false, isSelected: false, key: `${el.props.id}-0` });
+            return React.cloneElement(el, 
+              {
+                ...el.props, 
+                keycode: newKeycode, 
+                isHighlighted: false, 
+                isSelected: false, 
+                key: `${el.props.id}-0`, 
+                // children: {newChildren} 
+              }
+            );
           }),
           pieceKeys: newPieceKeys,
         })
