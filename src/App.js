@@ -461,6 +461,7 @@ class Square extends React.Component {
         // onClick={() => props.onClick(props.id)} // prop onClick 
         onClick={() => this.handleClick()} 
         key={this.props.id}
+        // key={`${this.props.id}-${this.props.pieceCode}-0`} // update this key??? 
       >
         {
           // this.props.keycode && this.props.keycode in keycodeToComponent 
@@ -566,6 +567,8 @@ class Game extends React.Component {
 
     this.state = {
       pieceKeys: startingConfig,
+      // TODO refactor this state again, don't store components in state, just store full data context 
+      //   and generate components in render method 
       squareComponents: startingConfig.map((square, index) => {
         // keycodeToComponent[square]
         const rank = Math.floor(index / 8);
@@ -573,7 +576,7 @@ class Game extends React.Component {
         const squareProps = {
           keycode: square,
           id: index,
-          key: `${index}-${square}`,
+          key: `${index}-${square}-0`,
           onSquareClick: this.handleSquareClick,
           // children: null,
         }
@@ -588,9 +591,9 @@ class Game extends React.Component {
       whiteToPlay: true,
       history: [{
         // squares: Array(64).fill(null),
-        pieceKeys: startingConfig,
-        AN: null,
-        INN: null,
+        pieceKeys: startingConfig, // full state of keycodes on board at this move
+        AN: null, // Algebraic Notation
+        INN: null, // International Numeric Notation (Computer Notation, e.g. 5254 == e2->e4)
       }],
       // historyAN: [], // Algebraic Notation 
       // historyINN: [], // International Numeric Notation (Computer Notation, e.g. 5254 == e2->e4) 
@@ -598,8 +601,35 @@ class Game extends React.Component {
     }
   }
 
+  generatePawnLegalMoves = (squareId) => {
+    if (this.state.pieceKeys[squareId] === undefined || this.state.pieceKeys[squareId] === "") return [];
+    const [playerCode, pieceCode] = this.state.pieceKeys[squareId].split('');
+    if (this.state.whiteToPlay && playerCode === 'D') return []; // not this player's turn
+    if (pieceCode !== 'P') return []; // not a pawn 
+
+    const pawnMultiplier = playerCode === 'L' ? 1 : -1;
+    const pawnStartingRank = playerCode === 'L' ? 6 : 1;
+    const currRank = Math.floor(squareId / 8);
+    const currFile = squareId % 8;
+    let pawnMoves = [];
+
+    if (this.state.pieceKeys[squareId + DIR.N * pawnMultiplier] === "") pawnMoves.push(squareId + DIR.N * pawnMultiplier); // one square forward
+    if (currRank === pawnStartingRank && this.state.pieceKeys[squareId + DIR.N * pawnMultiplier * 2] === "") pawnMoves.push(squareId + DIR.N * pawnMultiplier * 2); // two squares forward from starting position
+    if (currFile !== 0) { // pawn is not on a file
+      if (this.state.pieceKeys[squareId + DIR.N * pawnMultiplier + DIR.W] !== "" && this.state.pieceKeys[squareId + DIR.N * pawnMultiplier + DIR.W].charAt(0) !== playerCode) pawnMoves.push(squareId + DIR.N * pawnMultiplier + DIR.W); // capture to the north/south west
+      if (this.state.history.length > 0 && this.state.history[this.state.history.length - 1].INN === `${squareId + DIR.N * pawnMultiplier * 2 + DIR.W}${squareId + DIR.W}`) pawnMoves.push(squareId + DIR.N * pawnMultiplier + DIR.W); // en passant capture to the north/sout west
+    }
+    if (currFile !== 7) { // pawn is not on h file 
+      if (this.state.pieceKeys[squareId + DIR.N * pawnMultiplier + DIR.E] !== "" && this.state.pieceKeys[squareId + DIR.N * pawnMultiplier + DIR.E].charAt(0) !== playerCode) pawnMoves.push(squareId + DIR.N * pawnMultiplier + DIR.E); // capture to the north/south east
+      if (this.state.history.length > 0 && this.state.history[this.state.history.length - 1].INN === `${squareId + DIR.N * pawnMultiplier * 2 + DIR.E}${squareId + DIR.E}`) pawnMoves.push(squareId + DIR.N * pawnMultiplier + DIR.E); // en passant capture to the north/south east
+    }
+
+    return pawnMoves;
+  }
+
   getLegalMoves = (squareId) => {
     if (this.state.pieceKeys[squareId] === undefined || this.state.pieceKeys[squareId] === "") return [];
+    if (this.state.whiteToPlay && this.state.pieceKeys[squareId]?.charAt(0) === 'D') return []; // not this player's turn 
 
     const square = this.state.squareComponents[squareId];
     const piece = square.props.children;
@@ -609,29 +639,31 @@ class Game extends React.Component {
 
     switch (pieceCode) {
       case 'P':
-        // Legal pawn moves 
-        let pawnMoves = [-8, -7, -9];
-        if (playerCode === 'L' && Math.floor(squareId / 8) === 6) pawnMoves.push(-16);
-        if (playerCode === 'D' && Math.floor(squareId / 8) === 1) pawnMoves.push(16);
-        // let pawnMoves = piece.state.moves;
-        if (playerCode === 'D') pawnMoves = pawnMoves.map(move => -move);
-        let pawnValidators = [
-          (target) => target >= 0 && target < 64, // on board
-          (target) => ![8, 16].includes(Math.abs(squareId - target)) || this.state.pieceKeys[target] === "", // not occupied
-          (target) => ![7, 9].includes(Math.abs(squareId - target)) || (this.state.pieceKeys[target] !== "" && this.state.pieceKeys[target]?.charAt(0) !== this.state.pieceKeys[squareId].charAt(0)), // capture move (not counting en passant, need move history for that)
-        ];
-        // let legalMoves = [];
-        // pawnMoves.forEach(move => {
-        //   const targetSquare = squareId + move;
-        //   const legalMove = pawnValidators.every(validator => validator(targetSquare));
-        //   if (legalMove) {
-        //     legalMoves.push(targetSquare);
-        //   }
-        // })
-        // return legalMoves;
-        return pawnMoves
-          .map((move) => move + squareId)
-          .filter((target) => pawnValidators.every(validator => validator(target)));
+        // // Legal pawn moves 
+        // let pawnMoves = [-8, -7, -9];
+        // // let pawnMoves = piece.state.moves;
+        // if (playerCode === 'L' && Math.floor(squareId / 8) === 6 || playerCode === 'D' && Math.floor(squareId / 8) === 1) pawnMoves.push(-16); // two-square opening move
+        // if (playerCode === 'D') pawnMoves = pawnMoves.map(move => -move);
+        // let pawnValidators = [
+        //   (target) => target >= 0 && target < 64, // on board
+        //   (target) => ![8, 16].includes(Math.abs(squareId - target)) || this.state.pieceKeys[target] === "", // not occupied
+        //   (target) => ![7, 9].includes(Math.abs(squareId - target)) 
+        //     || (this.state.pieceKeys[target] !== "" && this.state.pieceKeys[target]?.charAt(0) !== this.state.pieceKeys[squareId].charAt(0))
+        //     // || (this.state.history[-1].INN === `${squareId-17}${squareId-1}` || this.state.history[-1].INN === `${squareId-15}${squareId+1}`),
+        // ];
+        // // let legalMoves = [];
+        // // pawnMoves.forEach(move => {
+        // //   const targetSquare = squareId + move;
+        // //   const legalMove = pawnValidators.every(validator => validator(targetSquare));
+        // //   if (legalMove) {
+        // //     legalMoves.push(targetSquare);
+        // //   }
+        // // })
+        // // return legalMoves;
+        // return pawnMoves
+        //   .map((move) => move + squareId)
+        //   .filter((target) => pawnValidators.every(validator => validator(target)));
+        return this.generatePawnLegalMoves(squareId);
       case 'N':
         // Legal knight moves
         const knightMoves = [-17, -15, -10, -6, 6, 10, 15, 17];
@@ -663,22 +695,36 @@ class Game extends React.Component {
     if (this.state.squareSelected === null || this.state.squareSelected !== squareToSelect) { // disallow multi-piece selection for now 
       if (this.state.squareComponents[squareToSelect].props.isHighlighted) {
         // Move piece to clicked square
+        // TODO here we also need to handle en passant captures, where the piece being captured is not on the square
+        //   that the pawn ends up on ... 
         const squareMovedFrom = this.state.squareSelected;
         const squareMovedTo = squareToSelect;
         const pieceMoving = this.state.pieceKeys[squareMovedFrom];
+        let squareIdOfPawnCapturedViaEnPassant = null;
         let newPieceKeys = this.state.pieceKeys;
         newPieceKeys[squareMovedFrom] = "";
         newPieceKeys[squareMovedTo] = pieceMoving;
+        if (pieceMoving.charAt(1) === 'P' // piece moving is a pawn
+          && squareMovedFrom % 8 !== squareMovedTo % 8 // signifies that the pawn performed a capture (changed files) 
+          && this.state.pieceKeys[squareMovedTo] === '' // signifies that the capture was an en passant 
+        ) {
+          squareIdOfPawnCapturedViaEnPassant = squareMovedTo + DIR.N * (pieceMoving.charAt(0) === 'L' ? 1 : -1);
+          newPieceKeys[squareIdOfPawnCapturedViaEnPassant] = "";
+        }
         this.setState({
           ...this.state,
           squareSelected: null,
+          whiteToPlay: !this.state.whiteToPlay,
           squareComponents: this.state.squareComponents.map((el, idx) => {
             // let children = null;
             // if (newPie !== "") children = React.createElement(keycodeToComponent[square], squareProps);
             let newKeycode = el.keycode;
+            const [oldSquareId, oldPieceId, oldChangeCode] = el.key?.split('-');
+            // console.log(`oldSquareId: ${oldSquareId}\toldPieceId: ${oldPieceId}\t${oldChangeCode}\n`);
             // let newChildren = el.children; 
-            if (idx === squareMovedFrom || idx === squareMovedTo) {
-              const newKey = `${el.props.id}-0`;
+            if (idx === squareMovedFrom || idx === squareMovedTo || idx === squareIdOfPawnCapturedViaEnPassant) {
+              // const [oldSquareId, oldPieceId, oldChangeCode] = el.props.key?.split('-');
+              const newKey = `${oldSquareId}-${newKeycode}-${oldChangeCode ? oldChangeCode + 1 : 0}`;
               newKeycode = (idx === squareMovedTo) ? pieceMoving : "";
               const newChildren = (idx === squareMovedTo) ? React.createElement(keycodeToComponent[pieceMoving], el.props) : null; // TODO el.props is the props from the square that previously had no piece on it
               return React.cloneElement(el, 
@@ -698,15 +744,24 @@ class Game extends React.Component {
                 keycode: newKeycode, 
                 isHighlighted: false, 
                 isSelected: false, 
-                key: `${el.props.id}-0`, 
+                // key: `${el.props.id}-0`, 
+                key: `${idx}-${newKeycode}-${oldChangeCode ? oldChangeCode + 1 : 0}`
                 // children: {newChildren} 
               }
             );
           }),
           pieceKeys: newPieceKeys,
+          history: this.state.history.concat([{
+            pieceKeys: newPieceKeys,
+            AN: null, // TODO generate Algebraic Notation for this move 
+            INN: `${squareMovedFrom}${squareMovedTo}`, // International Numeric Notation (Computer Notation, e.g. 5254 == e2->e4)
+          }]),
         })
       } else {
-        const squaresToHighlight = this.getLegalMoves(squareId);
+        // select an unselected square and highlight the legal moves for that piece on this turn 
+        // const isThisPlayersMove = this.state.whiteToPlay ^ this.state.pieceKeys[squareToSelect]?.charAt(0) === 'D';
+        // const squaresToHighlight = isThisPlayersMove ? this.getLegalMoves(squareId) : [];
+        const squaresToHighlight = this.getLegalMoves(squareToSelect);
         this.setState({
           ...this.state,
           squareSelected: squareToSelect,
@@ -719,7 +774,7 @@ class Game extends React.Component {
             // } else {
             //   return el;
             // }
-            const newKey = `${el.props.id}-${shouldHighlight ? '1' : '0'}`;
+            const newKey = `${idx}-${el.props.id}-${shouldHighlight ? '1' : '0'}`;
             return React.cloneElement(el, { ...el.props, isHighlighted: shouldHighlight, isSelected: shouldSelect, key: newKey });
           }),
         })
@@ -732,7 +787,7 @@ class Game extends React.Component {
         ...this.state,
         squareSelected: null,
         squareComponents: this.state.squareComponents.map((el, idx) => {
-          return React.cloneElement(el, {...el.props, isHighlighted: false, isSelected: false, key: `${el.props.id}-0` });
+          return React.cloneElement(el, {...el.props, isHighlighted: false, isSelected: false, key: `${idx}-${el.props.id}-0` });
         }),
       });
     } else {
