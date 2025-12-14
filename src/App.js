@@ -1,31 +1,17 @@
 import React from 'react';
 import './App.css';
 
+import GameStatus from './GameStatus.jsx';
+import { keycodeToComponent } from './Piece.jsx';
+import Square from './Square.jsx';
+import Board from './Board.jsx';
+
 // import {
 //   BrowserRouter as Router,
 //   Routes,
 //   Route,
 //   Link
 // } from "react-router-dom";
-
-// Use public resources so filenames remain predictable in production.
-// Put the PNGs in `public/resources` and reference them via PUBLIC_URL.
-const PUBLIC = process.env.PUBLIC_URL || '';
-
-const keycodeToIcon = {
-  'LR': PUBLIC + '/resources/rlt60.png',
-  'LP': PUBLIC + '/resources/plt60.png',
-  'LB': PUBLIC + '/resources/blt60.png',
-  'LN': PUBLIC + '/resources/nlt60.png',
-  'LQ': PUBLIC + '/resources/qlt60.png',
-  'LK': PUBLIC + '/resources/klt60.png',
-  'DR': PUBLIC + '/resources/rdt60.png',
-  'DP': PUBLIC + '/resources/pdt60.png',
-  'DB': PUBLIC + '/resources/bdt60.png',
-  'DN': PUBLIC + '/resources/ndt60.png',
-  'DQ': PUBLIC + '/resources/qdt60.png',
-  'DK': PUBLIC + '/resources/kdt60.png',
-}
 
 const DIR = {
   N: -8,
@@ -40,504 +26,6 @@ const DIR = {
 
 // const validPieces = ['R','N','B','Q','K','P'];
 // const validPlayers = ['L','D'];
-
-class Piece extends React.Component {
-  constructor(props) {
-    super(props);
-    // this.state = {
-    //   ...this.state,
-    // }
-    this.handleClick = this.handleClick.bind(this);
-    // if (this.state.piececode === 'Q') alert("Piece constructor"); 
-  }
-
-  handleClick() {
-    // alert("Clicked on a piece: " + this.state.playercode + this.state.piececode + 
-    //   " (icon: " + this.state.icon + " | " + keycodeToIcon[this.state.playercode + this.state.piececode]);
-  }
-
-  render() {
-    return (
-      <img 
-        src={this.icon} 
-        // src={keycodeToIcon[this.state.playercode + this.state.piececode]}
-        alt={this.alt} 
-        // alt={this.state.playercode + this.state.piececode}
-        className="piece" 
-        onClick={this.handleClick} 
-        zIndex="10"
-        // onClick={() => props.onClick(props.id)} // commented out to avoid piece click interfering with square click for now ...
-        // both Piece and Square have the same onClick prop passed down from Board via Square
-        // onClick={props.onClick} // i think this would pass the event object, not the square id ...
-      />
-    );
-  }
-}
-
-class Pawn extends Piece {
-  alt = "Pawn";
-  piececode = "P";
-
-  constructor(props) {
-    super(props);
-    // this.state = {
-    //   ...this.state,
-    //   hasMoved: false,
-    // }
-    this.handleClick = this.handleClick.bind(this);
-  }
-
-  // handleClick() {
-  //   const squareId = this.props.id;
-  //   this.props.onPawnClick(squareId);
-  // }
-}
-
-class LightPawn extends Pawn {
-  alt = "Light Pawn";
-  playercode = "L";
-  // keycode = "LP";
-  icon = keycodeToIcon["LP"];
-
-  // legalMoves = [-8, -16, -7, -9];
-
-  moveDirections = [-8];
-  // moveDistance = 2;
-  captureDirections = [-7, -9];
-
-  constructor(props) {
-    super(props);
-    // this.state = {
-    //   ...this.state,
-    //   // hasMoved: false,
-    //   // moveDistance: 2,
-    //   moves: [-8],
-    //   // playercode: "L",
-    //   // keycode: "LP",
-    //   // icon: keycodeToIcon["LP"],
-    // }
-    this.handleClick = this.handleClick.bind(this);
-  }
-
-  handleClick() {
-    // // highlight two squares in front, if legal moves 
-    // const squareId = this.props.id;
-    // this.props.onPawnClick(squareId);
-    super.handleClick();
-  }
-}
-
-class DarkPawn extends Pawn {
-  alt = "Dark Pawn";
-  playercode = "D";
-  icon = keycodeToIcon["DP"];
-
-  // legalMoves = [8, 16, 7, 9];
-  moveDirections = [8];
-  // moveDistance = 2; // put in state and alter after first move 
-  captureDirections = [7, 9]; // also use state to handle en passant ?? No, but we do need history of moves 
-
-  constructor(props) {
-    super(props);
-    // this.state = {
-    //   ...this.state,
-    //   playercode: "D",
-    //   icon: keycodeToIcon["DP"],
-    // }
-    this.handleClick = this.handleClick.bind(this);
-  }
-
-  handleClick() {
-    // highlight two squares in front, if legal moves, considering orientation of board 
-    // get id of this piece
-    // set isHighlighted state of pieces with id+8, id+16 to true
-    super.handleClick();
-  }
-}
-
-class Knight extends Piece {
-  alt = "Knight";
-  piececode = "N";
-
-  constructor(props) {
-    super(props);
-    // this.state = {
-    //   ...this.state,
-    //   alt: "Knight",
-    //   piececode: "N",
-    // }
-    this.handleClick = this.handleClick.bind(this);
-  }
-
-  handleClick() {
-    super.handleClick();
-    // alert("Clicked on a Knight");
-  }
-}
-
-class LightKnight extends Knight {
-  alt = "Light Knight";
-  playercode = "L";
-  icon = keycodeToIcon["LN"];
-
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   playercode: "L",
-  //   //   icon: keycodeToIcon["LN"],
-  //   // }
-  // }
-}
-
-class DarkKnight extends Knight {
-  alt = "Dark Knight";
-  playercode = "D";
-  icon = keycodeToIcon["DN"];
-  
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   playercode: "D",
-  //   //   icon: keycodeToIcon["DN"],
-  //   // }
-  // }
-}
-
-class Bishop extends Piece {
-  alt = "Bishop";
-  piececode = "B";
-
-  moveDirections = [-9, -7, 7, 9];
-  moveDistance = 7; // or length of board
-
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   alt: "Bishop",
-  //   //   piececode: "B",
-  //   // }
-  // }
-}
-
-class LightBishop extends Bishop {
-  alt = "Light Bishop";
-  playercode = "L";
-  icon = keycodeToIcon["LB"];
-
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   playercode: "L",
-  //   //   icon: keycodeToIcon["LB"],
-  //   // }
-  // }
-}
-
-class DarkBishop extends Bishop {
-  alt = "Dark Bishop";
-  playercode = "D";
-  icon = keycodeToIcon["DB"];
-
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   playercode: "D",
-  //   //   icon: keycodeToIcon["DB"],
-  //   // }
-  // }
-}
-
-class Rook extends Piece {
-  alt = "Rook";
-  piececode = "R";
-
-  moveDirections = [-8, -1, 1, 8];
-  moveDistance = 7; // or length of board 
-
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   alt: "Rook",
-  //   //   piececode: "R",
-  //   // }
-  // }
-}
-
-class LightRook extends Rook {
-  alt = "Light Rook";
-  playercode = "L";
-  icon = keycodeToIcon["LR"];
-
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   playercode: "L",
-  //   //   icon: keycodeToIcon["LR"],
-  //   // }
-  // }
-}
-
-class DarkRook extends Rook {
-  alt = "Dark Rook";
-  playercode = "D";
-  icon = keycodeToIcon["DR"];
-
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   playercode: "D",
-  //   //   icon: keycodeToIcon["DR"],
-  //   // }
-  // }
-}
-
-class Queen extends Piece {
-  alt = "Queen";
-  piececode = "Q";
-
-  moveDirections = [-9, -8, -7, -1, 1, 7, 8, 9];
-  moveDistance = 7; // or length of board 
-
-  // possibleMoves = [-63, -56, -54, -49, -45, -36, -35, -28, -27, -21, -18, -14, -9, -7, 7, ]
-  // possibleMoves = [
-  //   [-63, -54, -45, -36, -27, -18, -9],
-  //   [-56, -48, -40, -32, -24, -16, -8],
-  //   [-49, -42, -35, -28, -21, -14, -7],
-  // ]
-
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   isSelected: false, // this.props.isSelected || false,
-  //   // }
-  // }
-}
-
-class LightQueen extends Queen {
-  alt = "Light Queen";
-  playercode = "L";
-  icon = keycodeToIcon["LQ"];
-
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   // }
-  // }
-}
-
-class DarkQueen extends Queen {
-  alt = "Dark Queen";
-  playercode = "D";
-  icon = keycodeToIcon["DQ"];
-
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   playercode: "D",
-  //   //   icon: keycodeToIcon["DQ"],
-  //   //   alt: "Dark Queen",
-  //   // }
-  // }
-}
-
-class King extends Piece {
-  alt = "King";
-  piececode = "K";
-
-  // possibleMoves = [-9, -8, -7, -1, 1, 7, 8, 9];
-  moveDirections = [-9, -8, -7, -1, 1, 7, 8, 9];
-  moveDistance = 1;
-
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   alt: "King",
-  //   //   piececode: "K",
-  //   // }
-  // }
-}
-
-class LightKing extends King {
-  alt = "Light King";
-  playercode = "L";
-  icon = keycodeToIcon["LK"];
-
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   playercode: "L",
-  //   //   icon: keycodeToIcon["LK"],
-  //   // }
-  // }
-}
-
-class DarkKing extends King {
-  alt = "Dark King";
-  playercode = "D";
-  icon = keycodeToIcon["DK"];
-
-  // possibleMoves = [-9, -8, -7, -1, 1, 7, 8, 9];
-  // hmm... some of the validators need to know the layout of the other pieces on the board 
-  // moveValidators = [
-  //   (target) => target >= 0 && target < 64, // on board
-  // ];
-
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   playercode: "D",
-  //   //   icon: keycodeToIcon["DK"],
-  //   // }
-  // }
-}
-
-const keycodeToComponent = {
-  // '': div => <div></div>,
-  // 'R': Rook,
-  // 'N': Knight,
-  // 'B': Bishop,
-  // 'Q': Queen,
-  // 'K': King,
-  // 'P': Pawn,
-  'LP': LightPawn,
-  'LN': LightKnight,
-  'LB': LightBishop,
-  'LR': LightRook,
-  'LQ': LightQueen,
-  'LK': LightKing,
-  'DP': DarkPawn,
-  'DN': DarkKnight,
-  'DB': DarkBishop,
-  'DR': DarkRook,
-  'DQ': DarkQueen,
-  'DK': DarkKing,
-};
-
-class Square extends React.Component {
-  constructor(props) {
-    super(props);
-    // this.state = {
-    //   ...this.state,
-    //   isHighlighted: this.props.isHighlighted || false,
-    //   isSelected: this.props.isSelected || false,
-    // }
-    this.handleClick = this.handleClick.bind(this);
-  }
-
-  handleClick() {
-    // this.setState(prevState => ({
-    //   ...prevState,
-    //   isSelected: !prevState.isSelected,
-    // }));
-
-    // if (this.props.keycode === "LP") {
-    //   // alert("This is a pawn square, id: " + this.props.id);
-    //   this.props.onPawnClick(this.props.id);
-    // }
-
-    this.props.onSquareClick(this.props.id);
-  }
-
-  render() {
-    return (
-      <button 
-        className={"square " + this.color + 
-          ((this.props.isHighlighted) ? " highlighted" : "") + 
-          (this.props.isSelected ? " selected" : "")} // this.state.isSelected
-        // onClick={() => props.onClick(props.id)} // prop onClick 
-        onClick={() => this.handleClick()} 
-        key={this.props.id}
-        // key={`${this.props.id}-${this.props.pieceCode}-0`} // update this key??? 
-      >
-        {
-          // this.props.keycode && this.props.keycode in keycodeToComponent 
-          // // this.props.playercode && this.props.piececode && ['L','D'].includes(this.props.playercode) && validPieces.includes(this.props.piececode) 
-          //   // ? React.createElement(Piece, props)
-          //   // ? React.createElement(keycodeToComponent[this.props.playercode + this.props.piececode], {
-          //   ? React.createElement(keycodeToComponent[this.props.keycode], {
-          //       ...this.props,
-          //       // onPawnClick: this.props.onPawnClick,
-          //     })
-          //   : null
-          // // this.props.children
-          this.props.children
-        }
-      </button>
-    );
-  }
-}
-
-class LightSquare extends Square {
-  color = "light";
-}
-
-class DarkSquare extends Square {
-  color = "dark";
-}
-
-class Board extends React.Component {
-  // constructor(props) {
-  //   super(props);
-  //   this.state = {
-  //     squareComponents: this.props.squares.map((square, index) => {
-  //       // keycodeToComponent[square]
-  //       const rank = Math.floor(index / 8);
-  //       const file = index % 8; 
-
-  //       let squareProps = {
-  //         keycode: square,
-  //         id: index,
-  //         key: index,
-  //         // onPawnClick: this.handlePawnClick,
-  //         onSquareClick: this.handleSquareClick, 
-  //         // onPawnClick: this.handlePawnClick.bind(this),
-  //         // include props to a square about the squares it can move to or might find relevant?? or all squares??? 
-  //       }
-
-  //       return ((rank + file) % 2 === 0) ? <LightSquare {...squareProps} /> : <DarkSquare {...squareProps} />;
-  //     }),
-  //     boardSize: Math.sqrt(this.props.squares.length),
-  //     squareSelected: null,
-  //   }
-  // }
-
-  render() {
-    return (
-      <div>
-        {
-          Array.from({ length: this.props.boardSize }, (_, rankIndex) => (
-            <div className="board-row" key={rankIndex}>
-              {
-                this.props.squareComponents.slice(
-                  rankIndex * this.props.boardSize, // start
-                  rankIndex * this.props.boardSize + this.props.boardSize // end
-                )// .map((squareComponent) => squareComponent)
-                // .map((squareComponent) => {
-                //   // squareComponent.children = this.props.children;
-                //   return React.cloneElement(squareComponent, { ...squareComponent.props, children: this.props.children }); // , key: `${squareComponent.props.keycode}` });
-                // })
-              }
-            </div>
-          ))
-        }
-      </div>
-    )
-  }
-}
 
 class Game extends React.Component {
   backrankStartingPositions = ['R','N','B','Q','K','B','N','R']; // can make chess960 later 
@@ -574,6 +62,7 @@ class Game extends React.Component {
         const rank = Math.floor(index / 8);
         const file = index % 8;
         const squareProps = {
+          color: ((rank + file) % 2 === 0) ? "light" : "dark",
           keycode: square,
           id: index,
           key: `${index}-${square}-0`,
@@ -582,19 +71,21 @@ class Game extends React.Component {
         }
         let children = null;
         if (square !== "") children = React.createElement(keycodeToComponent[square], squareProps);
-        return ((rank + file) % 2 === 0) 
-          ? <LightSquare {...squareProps} children={children} /> 
-          : <DarkSquare {...squareProps} children={children} /> 
+        // return ((rank + file) % 2 === 0) 
+        //   ? <LightSquare {...squareProps} children={children} /> 
+        //   : <DarkSquare {...squareProps} children={children} /> 
+        return <Square {...squareProps} children={children} />
       }),
       // boardSize: this.boardSize,
       squareSelected: null,
       whiteToPlay: true,
-      history: [{
-        // squares: Array(64).fill(null),
-        pieceKeys: startingConfig, // full state of keycodes on board at this move
-        AN: null, // Algebraic Notation
-        INN: null, // International Numeric Notation (Computer Notation, e.g. 5254 == e2->e4)
-      }],
+      history: [], // don't store the initial state 
+      // history: [{
+      //   // squares: Array(64).fill(null),
+      //   pieceKeys: startingConfig, // full state of keycodes on board at this move
+      //   AN: null, // Algebraic Notation
+      //   INN: null, // International Numeric Notation (Computer Notation, e.g. 5254 == e2->e4)
+      // }],
       // historyAN: [], // Algebraic Notation 
       // historyINN: [], // International Numeric Notation (Computer Notation, e.g. 5254 == e2->e4) 
       stepNumber: 0,
@@ -604,7 +95,7 @@ class Game extends React.Component {
   generatePawnLegalMoves = (squareId) => {
     if (this.state.pieceKeys[squareId] === undefined || this.state.pieceKeys[squareId] === "") return [];
     const [playerCode, pieceCode] = this.state.pieceKeys[squareId].split('');
-    if (this.state.whiteToPlay && playerCode === 'D') return []; // not this player's turn
+    if (this.state.whiteToPlay && playerCode !== 'L') return []; // not this player's turn
     if (pieceCode !== 'P') return []; // not a pawn 
 
     const pawnMultiplier = playerCode === 'L' ? 1 : -1;
@@ -629,12 +120,12 @@ class Game extends React.Component {
 
   getLegalMoves = (squareId) => {
     if (this.state.pieceKeys[squareId] === undefined || this.state.pieceKeys[squareId] === "") return [];
-    if (this.state.whiteToPlay && this.state.pieceKeys[squareId]?.charAt(0) === 'D') return []; // not this player's turn 
+    if (this.state.whiteToPlay && this.state.pieceKeys[squareId]?.charAt(0) !== 'L') return []; // not this player's turn 
 
-    const square = this.state.squareComponents[squareId];
-    const piece = square.props.children;
+    // const square = this.state.squareComponents[squareId];
+    // const piece = square.props.children;
     // alert(`Square: ${JSON.stringify(square)}\nPiece: ${JSON.stringify(piece)}`);
-    const playerCode = this.state.pieceKeys[squareId].charAt(0);
+    // const playerCode = this.state.pieceKeys[squareId].charAt(0);
     const pieceCode = this.state.pieceKeys[squareId].charAt(1);
 
     switch (pieceCode) {
@@ -701,16 +192,21 @@ class Game extends React.Component {
         const squareMovedTo = squareToSelect;
         const pieceMoving = this.state.pieceKeys[squareMovedFrom];
         let squareIdOfPawnCapturedViaEnPassant = null;
-        let newPieceKeys = this.state.pieceKeys;
-        newPieceKeys[squareMovedFrom] = "";
-        newPieceKeys[squareMovedTo] = pieceMoving;
+        let newPieceKeys = this.state.pieceKeys; // this is a copy by reference, same array as what's in state ... TODO verify 
+        // newPieceKeys[squareMovedFrom] = "";
+        // newPieceKeys[squareMovedTo] = pieceMoving;
+        // alert(`piece moving: ${pieceMoving}\nsquare moved from: ${squareMovedFrom}\nsquare moved to: ${squareMovedTo}\npiece key in state: ${this.state.pieceKeys[squareMovedTo]}`)
         if (pieceMoving.charAt(1) === 'P' // piece moving is a pawn
           && squareMovedFrom % 8 !== squareMovedTo % 8 // signifies that the pawn performed a capture (changed files) 
           && this.state.pieceKeys[squareMovedTo] === '' // signifies that the capture was an en passant 
         ) {
-          squareIdOfPawnCapturedViaEnPassant = squareMovedTo + DIR.N * (pieceMoving.charAt(0) === 'L' ? 1 : -1);
+          // alert("An en passant occurred...");
+          squareIdOfPawnCapturedViaEnPassant = squareMovedTo + DIR.N * (pieceMoving.charAt(0) === 'L' ? -1 : 1);
           newPieceKeys[squareIdOfPawnCapturedViaEnPassant] = "";
         }
+        newPieceKeys[squareMovedFrom] = "";
+        newPieceKeys[squareMovedTo] = pieceMoving;
+        // if (squareIdOfPawnCapturedViaEnPassant) alert(`Square ID of pawn to remove after en passant: ${squareIdOfPawnCapturedViaEnPassant}`);
         this.setState({
           ...this.state,
           squareSelected: null,
@@ -719,6 +215,7 @@ class Game extends React.Component {
             // let children = null;
             // if (newPie !== "") children = React.createElement(keycodeToComponent[square], squareProps);
             let newKeycode = el.keycode;
+            // eslint-disable-next-line no-unused-vars
             const [oldSquareId, oldPieceId, oldChangeCode] = el.key?.split('-');
             // console.log(`oldSquareId: ${oldSquareId}\toldPieceId: ${oldPieceId}\t${oldChangeCode}\n`);
             // let newChildren = el.children; 
@@ -759,9 +256,9 @@ class Game extends React.Component {
         })
       } else {
         // select an unselected square and highlight the legal moves for that piece on this turn 
-        // const isThisPlayersMove = this.state.whiteToPlay ^ this.state.pieceKeys[squareToSelect]?.charAt(0) === 'D';
-        // const squaresToHighlight = isThisPlayersMove ? this.getLegalMoves(squareId) : [];
-        const squaresToHighlight = this.getLegalMoves(squareToSelect);
+        const isThisPlayersMove = this.state.whiteToPlay ^ this.state.pieceKeys[squareToSelect]?.charAt(0) === 'D';
+        const squaresToHighlight = isThisPlayersMove ? this.getLegalMoves(squareId) : [];
+        // const squaresToHighlight = this.getLegalMoves(squareToSelect);
         this.setState({
           ...this.state,
           squareSelected: squareToSelect,
@@ -859,43 +356,6 @@ class Game extends React.Component {
         </div> */}
       </div>
     );
-  }
-}
-
-class GameStatus extends React.Component {
-  constructor(props) {
-    super(props);
-  }
-
-  // gameHistory = this.props.history;
-  // const current = history[this.state.stepNumber];
-  // const squares = current.squares;
-
-  moves = this.props.history.map((step, move) => {
-    const desc = move ? 'Go to move #' + move : 'Go to game start';
-    return (
-      <li key={move}>
-        <button onClick={() => this.jumpTo(move)}>{desc}</button>
-      </li>
-    );
-  });
-
-  render() {
-    const winner = null; //calculateWinner(current.squares);
-
-    let status;
-    if (winner) {
-      status = 'Winner: ' + winner;
-    } else {
-      status = 'Next player: ' + (this.props.whiteToPlay ? 'White' : 'Black');
-    }
-
-    return (
-      <div className="game-info">
-        <div>{status}</div>
-        <ol>{this.moves}</ol>
-      </div>
-    )
   }
 }
 

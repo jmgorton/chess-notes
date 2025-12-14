@@ -1,0 +1,66 @@
+import React from 'react';
+
+class Square extends React.Component {
+  constructor(props) {
+    super(props);
+    // this.state = {
+    //   ...this.state,
+    //   isHighlighted: this.props.isHighlighted || false,
+    //   isSelected: this.props.isSelected || false,
+    // }
+    this.handleClick = this.handleClick.bind(this);
+  }
+
+  handleClick() {
+    // this.setState(prevState => ({
+    //   ...prevState,
+    //   isSelected: !prevState.isSelected,
+    // }));
+
+    // if (this.props.keycode === "LP") {
+    //   // alert("This is a pawn square, id: " + this.props.id);
+    //   this.props.onPawnClick(this.props.id);
+    // }
+
+    this.props.onSquareClick(this.props.id);
+  }
+
+  render() {
+    return (
+      <button 
+        className={"square " + this.props.color + 
+          ((this.props.isHighlighted) ? " highlighted" : "") + 
+          (this.props.isSelected ? " selected" : "")} // this.state.isSelected
+        // onClick={() => props.onClick(props.id)} // prop onClick 
+        onClick={() => this.handleClick()} 
+        // key={this.props.id}
+        // key={`${this.props.id}-${this.props.pieceCode}-0`} // update this key??? 
+        // key={this.props.key}
+      >
+        {
+          // this.props.keycode && this.props.keycode in keycodeToComponent 
+          // // this.props.playercode && this.props.piececode && ['L','D'].includes(this.props.playercode) && validPieces.includes(this.props.piececode) 
+          //   // ? React.createElement(Piece, props)
+          //   // ? React.createElement(keycodeToComponent[this.props.playercode + this.props.piececode], {
+          //   ? React.createElement(keycodeToComponent[this.props.keycode], {
+          //       ...this.props,
+          //       // onPawnClick: this.props.onPawnClick,
+          //     })
+          //   : null
+          // // this.props.children
+          this.props.children
+        }
+      </button>
+    );
+  }
+}
+
+// class LightSquare extends Square {
+//   color = "light";
+// }
+
+// class DarkSquare extends Square {
+//   color = "dark";
+// }
+
+export default Square;

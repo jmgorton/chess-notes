@@ -86,11 +86,22 @@
   margin-right: 10px; */
 }
 
+.game-info {
+  margin-top: 20px;
+  background-color: gray;
+  margin-right: auto;
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 10px;
+}
+
 .game-board {
   margin-left: auto; 
   /* auto; 0px; */
   margin-right: auto;
   /* width: 50%; */
+
+  margin-top: 20px;
 
   display: flex;
   justify-content: center;
