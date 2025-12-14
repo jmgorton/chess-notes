@@ -412,7 +412,9 @@ function App() {
 
 
 
-    <Game />
+    <div className="App">
+      <Game />
+    </div>
 
 
 
