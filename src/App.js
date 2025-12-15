@@ -286,8 +286,10 @@ class Game extends React.Component {
     ];
     const directions = [-9, -8, -7, -1, 1, 7, 8, 9];
     const legalMoves = this.generatePieceLegalMoves(squareId, directions, {distance: 1, validators: validators});
+
     // check for castling ... start by verifying that the king never moved, could store this info in state for a minor speedup 
-    const kingStartingSquare = this.state.whiteToPlay ? 60 : 4;
+    const playerCode = this.state.pieceKeys[squareId].charAt(0);
+    const kingStartingSquare = this.state.whiteToPlay ? 60 : 4; // TODO remove this assumption, just get the king legal moves for this square 
     if (this.state.history.every(pastMove => !pastMove.INN.startsWith(kingStartingSquare.toString()))) {
       // check short and long castling 
       // need to verify for each side that the rook also never moved, that we have no pieces in between the king and rook, and
@@ -299,7 +301,11 @@ class Game extends React.Component {
       if (this.state.pieceKeys.slice(kingStartingSquare + 1, shortCastleRookStartingSquare).every(pieceKey => pieceKey === '')
         && this.state.history.every(pastMove => !pastMove.INN.startsWith(shortCastleRookStartingSquare.toString()))
       ) {
-        if (shortCastleKRLandingSquares.every(square => this.getSquaresWithPiecesThatCanAttackThisSquare(square).length === 0)) {
+        if (shortCastleKRLandingSquares
+            .every(square => this.getSquaresWithPiecesThatCanAttackThisSquare(square)
+              .filter((square) => this.state.pieceKeys[square].charAt(0) !== playerCode).length === 0
+            )
+        ) {
           legalMoves.push(shortCastleRookStartingSquare);
         }
       }
@@ -308,7 +314,11 @@ class Game extends React.Component {
       if (this.state.pieceKeys.slice(longCastleRookStartingSquare + 1, kingStartingSquare).every(pieceKey => pieceKey === '')
         && this.state.history.every(pastMove => !pastMove.INN.startsWith(longCastleRookStartingSquare.toString()))
       ) {
-        if (longCastleKRLandingSquares.every(square => this.getSquaresWithPiecesThatCanAttackThisSquare(square).length === 0)) {
+        if (longCastleKRLandingSquares
+            .every(square => this.getSquaresWithPiecesThatCanAttackThisSquare(square)
+              .filter((square) => this.state.pieceKeys[square].charAt(0) !== playerCode).length === 0
+            )
+        ) {
           legalMoves.push(longCastleRookStartingSquare);
         }
       }
@@ -363,6 +373,30 @@ class Game extends React.Component {
 
   getSquaresWithPiecesThatCanAttackThisSquare = (squareId) => {
     let squaresTargetingThisOne = [];
+
+    // see if a pawn can attack this square separately ... 
+    if (squareId - 7 >= 0 && this.state.pieceKeys[squareId - 7] === "DP") squaresTargetingThisOne.push(squareId - 7);
+    if (squareId - 9 >= 0 && this.state.pieceKeys[squareId - 9] === "DP") squaresTargetingThisOne.push(squareId - 9);
+    if (squareId + 7 < 64 && this.state.pieceKeys[squareId + 7] === "LP") squaresTargetingThisOne.push(squareId + 7);
+    if (squareId + 9 < 64 && this.state.pieceKeys[squareId + 9] === "LP") squaresTargetingThisOne.push(squareId + 9);
+
+    // this is going to return a list of *any* piece that can attack this square currently, not just the opponent's pieces 
+    squaresTargetingThisOne.concat(this.generateKnightLegalMoves(squareId)
+      .filter((square) => this.state.pieceKeys[square].charAt(1) === "N"))
+      // .forEach((square) => squaresTargetingThisOne.push(square));
+
+    squaresTargetingThisOne.concat(this.generateBishopLegalMoves(squareId)
+      .filter((square) => this.state.pieceKeys[square].charAt(1) in ["B","Q"]))
+      // .forEach((square) => squaresTargetingThisOne.push(square));
+
+    squaresTargetingThisOne.concat(this.generateRookLegalMoves(squareId)
+      .filter((square) => this.state.pieceKeys[square].charAt(1) in ["R","Q"]))
+      // .forEach((square) => squaresTargetingThisOne.push(square));
+    
+    squaresTargetingThisOne.concat(this.generateKingLegalMoves(squareId)
+      .filter((square) => this.state.pieceKeys[square].charAt(1) === "K"))
+      // .forEach((square) => squaresTargetingThisOne.push(square));
+
     return squaresTargetingThisOne;
   }
 
@@ -576,6 +610,38 @@ class Game extends React.Component {
     }
   }
 
+  handleSquareRightClick = (event, squareId) => {
+    if (event && typeof event.preventDefault === 'function') event.preventDefault();
+    // squareId provided from Square component
+    // console.log('Right-click on square:', squareId, event);
+    // If you need to call any DOM/test helpers, do so here. e.g. event.target.testEvent();
+   
+    
+    // select an unselected square and highlight the legal moves for that piece on this turn 
+    const squaresToAltHighlight = this.getSquaresWithPiecesThatCanAttackThisSquare(squareId);
+    alert(`Squares that can attack this square (squareId: ${squareId}): ${squaresToAltHighlight.toString()}`)
+    this.setState({
+      ...this.state,
+      // squareSelected: squareToSelect,
+
+      squareProps: this.state.squareProps.map((oldProps, squareId) => {
+        const shouldAltHighlight = squaresToAltHighlight.includes(squareId);
+        let newKey = oldProps.key;
+        if (shouldAltHighlight) {
+          const [oldSquareId, oldPieceId, oldChangeCode] = newKey.split('-');
+          newKey = `${oldSquareId}-${oldPieceId}-${oldChangeCode + 1}`;
+        }
+        return {
+          ...oldProps,
+          isAltHighlighted: shouldAltHighlight,
+          key: newKey,
+        }
+      }),
+    })
+
+
+  }
+
   // const [] = React.useState
 
   // TODO take this logic and put it somewhere else... was being used, not anymore 
@@ -628,6 +694,7 @@ class Game extends React.Component {
             // squareComponents={this.state.squareComponents}
             squareProps={this.state.squareProps}
             handleSquareClick={this.handleSquareClick}
+            handleSquareRightClick={this.handleSquareRightClick}
             boardSize={this.boardSize}
             // onClick={(i) => this.handleClick(i)} // only place we pass down handleClick into onClick prop 
             // onPawnClick={(squareId) => this.handlePawnClick(squareId)}

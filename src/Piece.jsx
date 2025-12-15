@@ -34,6 +34,10 @@ class Piece extends React.Component {
     //   " (icon: " + this.state.icon + " | " + keycodeToIcon[this.state.playercode + this.state.piececode]);
   }
 
+  testEvent() {
+    alert("This is a test event from Piece");
+  }
+
   render() {
     return (
       <img 
@@ -74,7 +78,7 @@ class Pawn extends Piece {
 class LightPawn extends Pawn {
   alt = "Light Pawn";
   playercode = "L";
-  // keycode = "LP";
+  keycode = "LP";
   icon = keycodeToIcon["LP"];
 
   // legalMoves = [-8, -16, -7, -9];
@@ -108,6 +112,7 @@ class LightPawn extends Pawn {
 class DarkPawn extends Pawn {
   alt = "Dark Pawn";
   playercode = "D";
+  keycode = "DP";
   icon = keycodeToIcon["DP"];
 
   // legalMoves = [8, 16, 7, 9];
@@ -156,6 +161,7 @@ class Knight extends Piece {
 class LightKnight extends Knight {
   alt = "Light Knight";
   playercode = "L";
+  keycode = "LN";
   icon = keycodeToIcon["LN"];
 
   // constructor(props) {
@@ -171,6 +177,7 @@ class LightKnight extends Knight {
 class DarkKnight extends Knight {
   alt = "Dark Knight";
   playercode = "D";
+  keycode = "DN";
   icon = keycodeToIcon["DN"];
   
   // constructor(props) {
@@ -203,6 +210,7 @@ class Bishop extends Piece {
 class LightBishop extends Bishop {
   alt = "Light Bishop";
   playercode = "L";
+  keycode = "LB";
   icon = keycodeToIcon["LB"];
 
   // constructor(props) {
@@ -218,6 +226,7 @@ class LightBishop extends Bishop {
 class DarkBishop extends Bishop {
   alt = "Dark Bishop";
   playercode = "D";
+  keycode = "DP";
   icon = keycodeToIcon["DB"];
 
   // constructor(props) {
@@ -250,6 +259,7 @@ class Rook extends Piece {
 class LightRook extends Rook {
   alt = "Light Rook";
   playercode = "L";
+  keycode = "LR";
   icon = keycodeToIcon["LR"];
 
   // constructor(props) {
@@ -265,6 +275,7 @@ class LightRook extends Rook {
 class DarkRook extends Rook {
   alt = "Dark Rook";
   playercode = "D";
+  keycode = "DR";
   icon = keycodeToIcon["DR"];
 
   // constructor(props) {
@@ -303,6 +314,7 @@ class Queen extends Piece {
 class LightQueen extends Queen {
   alt = "Light Queen";
   playercode = "L";
+  keycode = "LQ";
   icon = keycodeToIcon["LQ"];
 
   // constructor(props) {
@@ -316,6 +328,7 @@ class LightQueen extends Queen {
 class DarkQueen extends Queen {
   alt = "Dark Queen";
   playercode = "D";
+  keycode = "DQ";
   icon = keycodeToIcon["DQ"];
 
   // constructor(props) {
@@ -350,6 +363,7 @@ class King extends Piece {
 class LightKing extends King {
   alt = "Light King";
   playercode = "L";
+  keycode = "LK";
   icon = keycodeToIcon["LK"];
 
   // constructor(props) {
@@ -365,6 +379,7 @@ class LightKing extends King {
 class DarkKing extends King {
   alt = "Dark King";
   playercode = "D";
+  keycode = "DK";
   icon = keycodeToIcon["DK"];
 
   // possibleMoves = [-9, -8, -7, -1, 1, 7, 8, 9];

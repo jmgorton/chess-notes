@@ -55,6 +55,7 @@ class Board extends React.Component {
                             {...squareProp} 
                             color={(rankIndex + fileIndex) % 2 === 0 ? "light" : "dark"} 
                             onSquareClick={this.props.handleSquareClick}
+                            onContextMenu={this.props.handleSquareRightClick}
                         />
                     )
                 })

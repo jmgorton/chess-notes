@@ -10,6 +10,7 @@ class Square extends React.Component {
     //   isSelected: this.props.isSelected || false,
     // }
     this.handleClick = this.handleClick.bind(this);
+    this.handleRightClick = this.handleRightClick.bind(this);
   }
 
   handleClick() {
@@ -26,14 +27,37 @@ class Square extends React.Component {
     this.props.onSquareClick(this.props.id);
   }
 
+  handleRightClick(event) {
+    if (event && typeof event.preventDefault === 'function') {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    // pass both the event and the square id to the parent handler
+    if (this.props.onContextMenu) this.props.onContextMenu(event, this.props.id);
+  }
+
+  testEvent() {
+    alert("This is a test event from Square");
+  }
+
   render() {
     return (
       <button 
-        className={"square " + this.props.color + 
-          ((this.props.isHighlighted) ? " highlighted" : "") + 
-          (this.props.isSelected ? " selected" : "")} // this.state.isSelected
+        className={
+            "square " + 
+            this.props.color + 
+            (this.props.isHighlighted ? " highlighted" : "") + 
+            (this.props.isAltHighlighted ? " altHighlighted" : "") + 
+            (this.props.isSelected ? " selected" : "")
+        } // this.state.isSelected
         // onClick={() => props.onClick(props.id)} // prop onClick 
         onClick={() => this.handleClick()} 
+        onContextMenu={this.handleRightClick}
+        // testevent={() => this.testEvent()}
+        // testevent={this.testEvent}
+        // onContextMenu={() => this.handleRightClick()}
+
+
         // key={this.props.id}
         // key={`${this.props.id}-${this.props.pieceCode}-0`} // update this key??? 
         // key={this.props.key} // key is stripped from props in React -- can't do this here 
