@@ -1,4 +1,5 @@
 import React from 'react';
+import { keycodeToComponent } from './Piece';
 
 class Square extends React.Component {
   constructor(props) {
@@ -35,20 +36,23 @@ class Square extends React.Component {
         onClick={() => this.handleClick()} 
         // key={this.props.id}
         // key={`${this.props.id}-${this.props.pieceCode}-0`} // update this key??? 
-        // key={this.props.key}
+        // key={this.props.key} // key is stripped from props in React -- can't do this here 
       >
         {
-          // this.props.keycode && this.props.keycode in keycodeToComponent 
-          // // this.props.playercode && this.props.piececode && ['L','D'].includes(this.props.playercode) && validPieces.includes(this.props.piececode) 
-          //   // ? React.createElement(Piece, props)
-          //   // ? React.createElement(keycodeToComponent[this.props.playercode + this.props.piececode], {
-          //   ? React.createElement(keycodeToComponent[this.props.keycode], {
-          //       ...this.props,
-          //       // onPawnClick: this.props.onPawnClick,
-          //     })
-          //   : null
-          // // this.props.children
-          this.props.children
+        //   this.props.keycode && this.props.keycode in keycodeToComponent 
+        //   // this.props.playercode && this.props.piececode && ['L','D'].includes(this.props.playercode) && validPieces.includes(this.props.piececode) 
+        //     // ? React.createElement(Piece, props)
+        //     // ? React.createElement(keycodeToComponent[this.props.playercode + this.props.piececode], {
+        //     ? React.createElement(keycodeToComponent[this.props.keycode], {
+        //         ...this.props,
+        //         // onPawnClick: this.props.onPawnClick,
+        //       })
+        //     : null
+        //   // // this.props.children
+
+        //   this.props.children
+
+            this.props.keycode && this.props.keycode in keycodeToComponent && React.createElement(keycodeToComponent[this.props.keycode], this.props)
         }
       </button>
     );

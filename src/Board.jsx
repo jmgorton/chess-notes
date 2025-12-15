@@ -1,5 +1,9 @@
 import React from 'react';
 
+import Square from './Square.jsx';
+
+// import { keycodeToComponent } from './Piece';
+
 class Board extends React.Component {
   // constructor(props) {
   //   super(props);
@@ -33,14 +37,27 @@ class Board extends React.Component {
           Array.from({ length: this.props.boardSize }, (_, rankIndex) => (
             <div className="board-row" key={rankIndex}>
               {
-                this.props.squareComponents.slice(
-                  rankIndex * this.props.boardSize, // start
-                  rankIndex * this.props.boardSize + this.props.boardSize // end
-                )// .map((squareComponent) => squareComponent)
-                // .map((squareComponent) => {
-                //   // squareComponent.children = this.props.children;
-                //   return React.cloneElement(squareComponent, { ...squareComponent.props, children: this.props.children }); // , key: `${squareComponent.props.keycode}` });
-                // })
+                // this.props.squareComponents.slice(
+                //   rankIndex * this.props.boardSize, // start
+                //   rankIndex * this.props.boardSize + this.props.boardSize // end
+                // )// .map((squareComponent) => squareComponent)
+                // // .map((squareComponent) => {
+                // //   // squareComponent.children = this.props.children;
+                // //   return React.cloneElement(squareComponent, { ...squareComponent.props, children: this.props.children }); // , key: `${squareComponent.props.keycode}` });
+                // // })
+
+                this.props.squareProps.slice(
+                    rankIndex * this.props.boardSize,
+                    rankIndex * this.props.boardSize + this.props.boardSize
+                ).map((squareProp, fileIndex) => {
+                    return (
+                        <Square 
+                            {...squareProp} 
+                            color={(rankIndex + fileIndex) % 2 === 0 ? "light" : "dark"} 
+                            onSquareClick={this.props.handleSquareClick}
+                        />
+                    )
+                })
               }
             </div>
           ))

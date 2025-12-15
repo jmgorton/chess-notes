@@ -2,8 +2,8 @@ import React from 'react';
 import './App.css';
 
 import GameStatus from './GameStatus.jsx';
-import { keycodeToComponent } from './Piece.jsx';
-import Square from './Square.jsx';
+// import { keycodeToComponent } from './Piece.jsx';
+// import Square from './Square.jsx';
 import Board from './Board.jsx';
 
 // import {
@@ -54,28 +54,54 @@ class Game extends React.Component {
     // }
 
     this.state = {
-      pieceKeys: startingConfig,
+      pieceKeys: startingConfig, // we could get rid of this state entirely as well
+      squareProps: startingConfig.map((pieceKey, squareId) => {
+        return {
+          keycode: pieceKey, // pieceId 
+          id: squareId, // squareId
+          key: `${squareId}-${pieceKey}-0`, // element key, must be unique, and change to force re-render 
+          // TODO  don't use the reserved React keyword `key` as it gets stripped from component props. Use another name
+          isHighlighted: false,
+          isSelected: false,
+        }
+      }),
+      // props:
+      //   color: not necessary, doesn't change, just use rank + file data in Board render method 
+      //   keycode: the pieceKey ... if you think about it, this is not necessary either, data already in the pieceKeys state
+      //   id: squareId [0-63] ... same with this one, data already stored in pieceKeys state by definition of their locations
+      //   key: `${squareId}-${pieceKey}-${changeKey}`
+      //     squareId is the id from 0-63 of the square
+      //     pieceKey is the piece id, e.g. "LK" or "DP" ... it's also not necessary to make this a part of the key since we have the changeCode/changeKey
+      //     changeKey is the number of times the square has been re-rendered, increments throughout the game 
+      //       (each re-render also may or may not change the pieceKey)
+      //   onSquareClick: the callback function for when the square is clicked
+      //   children: not necessary? we don't need to access the piece's props or inner state up here...? 
+      //   isHighlighted: is the square highlighted (valid moves from squareSelected, if any) 
+      //   isSelected: the square selected after the last click 
+
       // TODO refactor this state again, don't store components in state, just store full data context 
       //   and generate components in render method 
-      squareComponents: startingConfig.map((square, index) => {
-        // keycodeToComponent[square]
-        const rank = Math.floor(index / 8);
-        const file = index % 8;
-        const squareProps = {
-          color: ((rank + file) % 2 === 0) ? "light" : "dark",
-          keycode: square,
-          id: index,
-          key: `${index}-${square}-0`,
-          onSquareClick: this.handleSquareClick,
-          // children: null,
-        }
-        let children = null;
-        if (square !== "") children = React.createElement(keycodeToComponent[square], squareProps);
-        // return ((rank + file) % 2 === 0) 
-        //   ? <LightSquare {...squareProps} children={children} /> 
-        //   : <DarkSquare {...squareProps} children={children} /> 
-        return <Square {...squareProps} children={children} />
-      }),
+      // squareComponents: startingConfig.map((square, index) => {
+      //   // keycodeToComponent[square]
+      //   const rank = Math.floor(index / 8);
+      //   const file = index % 8;
+      //   const squareProps = {
+      //     color: ((rank + file) % 2 === 0) ? "light" : "dark",
+      //     keycode: square,
+      //     id: index,
+      //     key: `${index}-${square}-0`,
+      //     onSquareClick: this.handleSquareClick,
+      //     // children: null,
+      //   }
+      //   let children = null;
+      //   if (square !== "") children = React.createElement(keycodeToComponent[square], squareProps);
+      //   // return ((rank + file) % 2 === 0) 
+      //   //   ? <LightSquare {...squareProps} children={children} /> 
+      //   //   : <DarkSquare {...squareProps} children={children} /> 
+      //   return <Square {...squareProps} children={children} />
+      // }),
+
+
       // boardSize: this.boardSize,
       squareSelected: null,
       whiteToPlay: true,
@@ -130,8 +156,11 @@ class Game extends React.Component {
     const currFile = squareId % 8;
     let pawnMoves = [];
 
-    if (this.state.pieceKeys[squareId + DIR.N * pawnMultiplier] === "") pawnMoves.push(squareId + DIR.N * pawnMultiplier); // one square forward
-    if (currRank === pawnStartingRank && this.state.pieceKeys[squareId + DIR.N * pawnMultiplier * 2] === "") pawnMoves.push(squareId + DIR.N * pawnMultiplier * 2); // two squares forward from starting position
+    if (this.state.pieceKeys[squareId + DIR.N * pawnMultiplier] === "") {
+      pawnMoves.push(squareId + DIR.N * pawnMultiplier); // one square forward
+      if (currRank === pawnStartingRank && this.state.pieceKeys[squareId + DIR.N * pawnMultiplier * 2] === "") 
+        pawnMoves.push(squareId + DIR.N * pawnMultiplier * 2); // two squares forward from starting position
+    }
     if (currFile !== 0) { // pawn is not on a file
       if (this.state.pieceKeys[squareId + DIR.N * pawnMultiplier + DIR.W] !== "" && this.state.pieceKeys[squareId + DIR.N * pawnMultiplier + DIR.W].charAt(0) !== playerCode) pawnMoves.push(squareId + DIR.N * pawnMultiplier + DIR.W); // capture to the north/south west
       if (this.state.history.length > 0 && this.state.history[this.state.history.length - 1].INN === `${squareId + DIR.N * pawnMultiplier * 2 + DIR.W}${squareId + DIR.W}`) pawnMoves.push(squareId + DIR.N * pawnMultiplier + DIR.W); // en passant capture to the north/sout west
@@ -141,7 +170,7 @@ class Game extends React.Component {
       if (this.state.history.length > 0 && this.state.history[this.state.history.length - 1].INN === `${squareId + DIR.N * pawnMultiplier * 2 + DIR.E}${squareId + DIR.E}`) pawnMoves.push(squareId + DIR.N * pawnMultiplier + DIR.E); // en passant capture to the north/south east
     }
 
-    // TODO check if any of these moves would result in another piece being able to capture the king 
+    // TODO check if any of these moves would result in another piece being able to capture the king ... need to do this for every piece move 
 
     return pawnMoves;
   }
@@ -300,6 +329,13 @@ class Game extends React.Component {
     if (this.state.pieceKeys[squareId] === undefined || this.state.pieceKeys[squareId] === "") return [];
     if (this.state.whiteToPlay && this.state.pieceKeys[squareId]?.charAt(0) !== 'L') return []; // not this player's turn 
 
+    // TODO first, if we're in check, we have three options:
+    //   1. capture the checking piece if possible
+    //   2. block the checking piece if possible
+    //   3. move the king if possible
+    // If none of these are possible, it's checkmate
+    // If we are in a *double* check, we *must* move the king. 
+
     // const square = this.state.squareComponents[squareId];
     // const piece = square.props.children;
     // alert(`Square: ${JSON.stringify(square)}\nPiece: ${JSON.stringify(piece)}`);
@@ -334,7 +370,8 @@ class Game extends React.Component {
     const squareToSelect = squareId;
     // clicking on a square for the first time (no square selected yet) 
     if (this.state.squareSelected === null || this.state.squareSelected !== squareToSelect) { // disallow multi-piece selection for now 
-      if (this.state.squareComponents[squareToSelect].props.isHighlighted) {
+      // if (this.state.squareComponents[squareToSelect].props.isHighlighted) {
+      if (this.state.squareProps[squareToSelect].isHighlighted) {
         // Move piece to clicked square
         // TODO here we also need to handle en passant captures, where the piece being captured is not on the square
         //   that the pawn ends up on ... 
@@ -345,7 +382,9 @@ class Game extends React.Component {
         let squareIdOfKingAfterCastling = null;
         let squareIdOfRookAfterCastling = null;
         let castlingRook = null;
-        let newPieceKeys = this.state.pieceKeys; // this is a copy by reference, same array as what's in state ... TODO verify 
+        // copy the array before mutating so React sees a new reference
+        let newPieceKeys = this.state.pieceKeys.slice();
+
         // newPieceKeys[squareMovedFrom] = "";
         // newPieceKeys[squareMovedTo] = pieceMoving;
         // alert(`piece moving: ${pieceMoving}\nsquare moved from: ${squareMovedFrom}\nsquare moved to: ${squareMovedTo}\npiece key in state: ${this.state.pieceKeys[squareMovedTo]}`)
@@ -380,59 +419,79 @@ class Game extends React.Component {
           ...this.state,
           squareSelected: null,
           whiteToPlay: !this.state.whiteToPlay,
-          squareComponents: this.state.squareComponents.map((el, idx) => {
-            // let children = null;
-            // if (newPie !== "") children = React.createElement(keycodeToComponent[square], squareProps);
-            // let newKeycode = el.keycode;
 
-            // eslint-disable-next-line no-unused-vars
-            const [oldSquareId, oldPieceId, oldChangeCode] = el.key?.split('-');
-            // console.log(`oldSquareId: ${oldSquareId}\toldPieceId: ${oldPieceId}\t${oldChangeCode}\n`);
-            // let newChildren = el.children; 
-            if (idx === squareMovedFrom || idx === squareMovedTo || idx === squareIdOfPawnCapturedViaEnPassant 
-              || idx === squareIdOfKingAfterCastling || idx === squareIdOfRookAfterCastling) {
-              // const [oldSquareId, oldPieceId, oldChangeCode] = el.props.key?.split('-');
-              const newKey = `${oldSquareId}-${oldPieceId}-${oldChangeCode ? oldChangeCode + 1 : 0}`; // TODO i really gotta sort out and fix the keys 
-              // newKeycode = (idx === squareMovedTo) ? pieceMoving : "";
-              let newKeycode = "";
-              let newChildren = null;
-              // const newChildren = (idx === squareMovedTo) ? React.createElement(keycodeToComponent[pieceMoving], el.props) : null; // TODO el.props is the props from the square that previously had no piece on it
-              if (idx === squareMovedTo) {
-                if (squareIdOfKingAfterCastling === null && squareIdOfRookAfterCastling === null) {
-                  newKeycode = pieceMoving;
-                  newChildren = React.createElement(keycodeToComponent[pieceMoving], el.props);
-                }
-              } else if (idx === squareIdOfKingAfterCastling) {
-                newKeycode = pieceMoving;
-                newChildren = React.createElement(keycodeToComponent[pieceMoving], el.props);
-              } else if (idx === squareIdOfRookAfterCastling) {
-                newKeycode = castlingRook;
-                newChildren = React.createElement(keycodeToComponent[castlingRook], el.props);
-              }
-              return React.cloneElement(el, 
-                {
-                  ...el.props, 
-                  keycode: newKeycode, 
-                  isHighlighted: false, 
-                  isSelected: false, 
-                  key: newKey,
-                  children: newChildren,
-                }
-              );
-            } 
-            return React.cloneElement(el, 
-              {
-                ...el.props, 
-                // keycode: newKeycode, 
-                isHighlighted: false, 
-                isSelected: false, 
-                // key: `${el.props.id}-0`, 
-                key: `${idx}-${oldPieceId}-${oldChangeCode ? oldChangeCode + 1 : 0}`
-                // children: {newChildren} 
-              }
-            );
-          }),
+
+          // squareComponents: this.state.squareComponents.map((el, idx) => {
+          //   // let children = null;
+          //   // if (newPie !== "") children = React.createElement(keycodeToComponent[square], squareProps);
+          //   // let newKeycode = el.keycode;
+
+          //   // XXX not necessary eslint-disable-next-line no-unused-vars
+          //   const [oldSquareId, oldPieceId, oldChangeCode] = el.key?.split('-');
+          //   // console.log(`oldSquareId: ${oldSquareId}\toldPieceId: ${oldPieceId}\t${oldChangeCode}\n`);
+          //   // let newChildren = el.children; 
+          //   if (idx === squareMovedFrom || idx === squareMovedTo || idx === squareIdOfPawnCapturedViaEnPassant 
+          //     || idx === squareIdOfKingAfterCastling || idx === squareIdOfRookAfterCastling) {
+          //     // const [oldSquareId, oldPieceId, oldChangeCode] = el.props.key?.split('-');
+          //     const newKey = `${oldSquareId}-${oldPieceId}-${oldChangeCode ? oldChangeCode + 1 : 0}`; // TODO i really gotta sort out and fix the keys 
+          //     // newKeycode = (idx === squareMovedTo) ? pieceMoving : "";
+          //     let newKeycode = "";
+          //     let newChildren = null;
+          //     // const newChildren = (idx === squareMovedTo) ? React.createElement(keycodeToComponent[pieceMoving], el.props) : null; // TODO el.props is the props from the square that previously had no piece on it
+          //     if (idx === squareMovedTo) {
+          //       if (squareIdOfKingAfterCastling === null && squareIdOfRookAfterCastling === null) {
+          //         newKeycode = pieceMoving;
+          //         newChildren = React.createElement(keycodeToComponent[pieceMoving], el.props);
+          //       }
+          //     } else if (idx === squareIdOfKingAfterCastling) {
+          //       newKeycode = pieceMoving;
+          //       newChildren = React.createElement(keycodeToComponent[pieceMoving], el.props);
+          //     } else if (idx === squareIdOfRookAfterCastling) {
+          //       newKeycode = castlingRook;
+          //       newChildren = React.createElement(keycodeToComponent[castlingRook], el.props);
+          //     }
+          //     return React.cloneElement(el, 
+          //       {
+          //         ...el.props, 
+          //         keycode: newKeycode, 
+          //         isHighlighted: false, 
+          //         isSelected: false, 
+          //         key: newKey,
+          //         children: newChildren,
+          //       }
+          //     );
+          //   } 
+          //   return React.cloneElement(el, 
+          //     {
+          //       ...el.props, 
+          //       // keycode: newKeycode, 
+          //       isHighlighted: false, 
+          //       isSelected: false, 
+          //       // key: `${el.props.id}-0`, 
+          //       key: `${idx}-${oldPieceId}-${oldChangeCode ? oldChangeCode + 1 : 0}`
+          //       // children: {newChildren} 
+          //     }
+          //   );
+          // }),
+
+
           pieceKeys: newPieceKeys,
+          squareProps: this.state.squareProps.map((squareProps, squareId) => {
+            // update key and keycode to reflect the new piece placement
+            let key = squareProps.key;
+            if (squareProps.isHighlighted || squareProps.isSelected) {
+              // eslint-disable-next-line no-unused-vars
+              const [oldSquareId, oldPieceId, oldChangeCode] = key.split('-');
+              key = `${oldSquareId}-${newPieceKeys[squareId]}-${oldChangeCode + 1}`;
+            }
+            return {
+              ...squareProps,
+              keycode: newPieceKeys[squareId],
+              isHighlighted: false,
+              isSelected: false,
+              key: key,
+            }
+          }),
           history: this.state.history.concat([{
             pieceKeys: newPieceKeys,
             AN: null, // TODO generate Algebraic Notation for this move -- to do so, we need to know if any other 
@@ -448,17 +507,38 @@ class Game extends React.Component {
         this.setState({
           ...this.state,
           squareSelected: squareToSelect,
-          squareComponents: this.state.squareComponents.map((el, idx) => {
-            const shouldHighlight = squaresToHighlight.includes(idx);
-            const shouldSelect = (idx === squareToSelect);
-            // if (shouldHighlight || shouldSelect) {
-            //   const newKey = `${el.props.id}-${shouldHighlight ? '1' : '0'}`;
-            //   return React.cloneElement(el, {...el.props, isHighlighted: shouldHighlight, isSelected: shouldSelect, key: newKey }); // !el.props.isHighlighted
-            // } else {
-            //   return el;
-            // }
-            const newKey = `${idx}-${el.props.id}-${shouldHighlight ? '1' : '0'}`;
-            return React.cloneElement(el, { ...el.props, isHighlighted: shouldHighlight, isSelected: shouldSelect, key: newKey });
+
+
+          // squareComponents: this.state.squareComponents.map((el, idx) => {
+          //   const shouldHighlight = squaresToHighlight.includes(idx);
+          //   const shouldSelect = (idx === squareToSelect);
+          //   // if (shouldHighlight || shouldSelect) {
+          //   //   const newKey = `${el.props.id}-${shouldHighlight ? '1' : '0'}`;
+          //   //   return React.cloneElement(el, {...el.props, isHighlighted: shouldHighlight, isSelected: shouldSelect, key: newKey }); // !el.props.isHighlighted
+          //   // } else {
+          //   //   return el;
+          //   // }
+          //   // const [oldSquareId, oldPieceId, oldChangeId] = el.props.key.split('-');
+          //   // const newKey = `${oldSquareId}-${oldPieceId}-${oldChangeId + 1}`; // this will just re-render all squares ... not very efficient ... but at least the key is using the right values
+          //   const newKey = `${idx}-${el.keycode}-${shouldHighlight ? '1' : '0'}`; // el.props.id is wrong, should be el.props.keycode
+          //   return React.cloneElement(el, { ...el.props, isHighlighted: shouldHighlight, isSelected: shouldSelect, key: newKey });
+          // }),
+
+
+          squareProps: this.state.squareProps.map((oldProps, squareId) => {
+            const shouldHighlight = squaresToHighlight.includes(squareId);
+            const shouldSelect = (squareId === squareToSelect);
+            let newKey = oldProps.key;
+            if (shouldHighlight || shouldSelect) {
+              const [oldSquareId, oldPieceId, oldChangeCode] = newKey.split('-');
+              newKey = `${oldSquareId}-${oldPieceId}-${oldChangeCode + 1}`;
+            }
+            return {
+              ...oldProps,
+              isHighlighted: shouldHighlight,
+              isSelected: shouldSelect,
+              key: newKey,
+            }
           }),
         })
       }
@@ -469,8 +549,26 @@ class Game extends React.Component {
       this.setState({
         ...this.state,
         squareSelected: null,
-        squareComponents: this.state.squareComponents.map((el, idx) => {
-          return React.cloneElement(el, {...el.props, isHighlighted: false, isSelected: false, key: `${idx}-${el.props.id}-0` });
+        // squareComponents: this.state.squareComponents.map((el, idx) => {
+        //   // el.props.id is wrong in the key, should be el.props.keycode, also don't set the changeCode back to 0 if it exists already 
+        //   let [oldSquareId, oldPieceId, changeCode] = el.key.split('-');
+        //   if (el.props.isHighlighted || el.props.isSelected) changeCode += 1
+        //   const newKey = `${oldSquareId}-${oldPieceId}-${changeCode}`;
+        //   return React.cloneElement(el, {...el.props, isHighlighted: false, isSelected: false, key: newKey }); // key: `${idx}-${el.props.id}-0` 
+        // }),
+        squareProps: this.state.squareProps.map((oldProps) => {
+          // update key to trigger re-render 
+          let newKey = oldProps.key;
+          if (oldProps.isHighlighted || oldProps.isSelected) {
+            const [oldSquareId, oldPieceId, oldChangeCode] = newKey.split('-');
+            newKey = `${oldSquareId}-${oldPieceId}-${oldChangeCode + 1}`;
+          }
+          return {
+            ...oldProps,
+            isHighlighted: false,
+            isSelected: false,
+            key: newKey,
+          }
         }),
       });
     } else {
@@ -526,8 +624,10 @@ class Game extends React.Component {
         <div className="game-board">
           <Board 
             // squares={current.squares}
-            pieceKeys={this.state.pieceKeys}
-            squareComponents={this.state.squareComponents}
+            // pieceKeys={this.state.pieceKeys} // WAS passing this down, but it's not necessary. Info is contained in squareProps
+            // squareComponents={this.state.squareComponents}
+            squareProps={this.state.squareProps}
+            handleSquareClick={this.handleSquareClick}
             boardSize={this.boardSize}
             // onClick={(i) => this.handleClick(i)} // only place we pass down handleClick into onClick prop 
             // onPawnClick={(squareId) => this.handlePawnClick(squareId)}
@@ -537,6 +637,13 @@ class Game extends React.Component {
           whiteToPlay={this.state.whiteToPlay}
           history={this.state.history}
         />
+
+        {/* {
+          this.state.showNotes && (
+            <GameNotes />
+          )
+        } */}
+
         {/* <div id="navbar">
           <Nav />
         </div> */}
