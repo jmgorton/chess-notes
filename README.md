@@ -69,10 +69,22 @@ This section has moved here: [https://facebook.github.io/create-react-app/docs/d
 
 This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
 
-
-
-
-
 when the build folder is ready to be deployed after `npm run build`:
 `npm install -g serve`
 `serve -s build`
+
+
+## Adding TypeScript Support
+
+To add TypeScript support to your project, follow these steps:
+
+1. Install TypeScript and the necessary type definitions for React and ReactDOM as development dependencies:
+
+   ```bash
+   npm install --save-dev typescript @types/react @types/react-dom
+   ```
+
+2. Update the `package.json` scripts to include a TypeScript build command. Add `"build": "tsc"` to the existing scripts.
+
+3. Create a `tsconfig.json` file in the root of your project to configure TypeScript options. Ensure that your existing JavaScript files are included by setting `"allowJs": true` in the `tsconfig.json`.
+
