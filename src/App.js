@@ -343,6 +343,8 @@ class Game extends React.Component {
 
     // gotta first see if we are currently in check
     // then gotta see if we will be in check after this proposed move 
+
+    return validMoves;
   }
 
   // this is going to return a list of *any* piece that can attack this square currently, not just the opponent's pieces 
@@ -557,16 +559,14 @@ class Game extends React.Component {
   render() {
     return (
       <div className="game">
-        <div className="game-board">
-          <Board 
-            // squares={current.squares}
-            // pieceKeys={this.state.pieceKeys} // WAS passing this down, but it's not necessary. Info is contained in squareProps
-            squareProps={this.state.squareProps}
-            handleSquareClick={this.handleSquareClick}
-            handleSquareRightClick={this.handleSquareRightClick}
-            boardSize={this.boardSize}
-          />
-        </div>
+        <Board 
+          // squares={current.squares}
+          // pieceKeys={this.state.pieceKeys} // WAS passing this down, but it's not necessary. Info is contained in squareProps
+          squareProps={this.state.squareProps}
+          handleSquareClick={this.handleSquareClick}
+          handleSquareRightClick={this.handleSquareRightClick}
+          boardSize={this.boardSize}
+        />
         <GameStatus 
           whiteToPlay={this.state.whiteToPlay}
           history={this.state.history}

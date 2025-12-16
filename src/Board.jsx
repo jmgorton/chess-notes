@@ -6,28 +6,31 @@ class Board extends React.Component {
   render() {
     return (
         <div className="board-container">
-            <div>
-                {
-                    Array.from({ length: this.props.boardSize }, (_, rankIndex) => (
-                        <div className="board-row" key={rankIndex}>
-                        {
-                            this.props.squareProps.slice(
-                                rankIndex * this.props.boardSize,
-                                rankIndex * this.props.boardSize + this.props.boardSize
-                            ).map((squareProp, fileIndex) => {
-                                return (
-                                    <Square 
-                                        {...squareProp} 
-                                        color={(rankIndex + fileIndex) % 2 === 0 ? "light" : "dark"} 
-                                        onSquareClick={this.props.handleSquareClick}
-                                        onContextMenu={this.props.handleSquareRightClick}
-                                    />
-                                )
-                            })
-                        }
-                        </div>
-                    ))
-                }
+            <div className="game-board">
+                <div>
+                    {
+                        Array.from({ length: this.props.boardSize }, (_, rankIndex) => (
+                            <div className="board-row" key={rankIndex}>
+                            {
+                                this.props.squareProps.slice(
+                                    rankIndex * this.props.boardSize,
+                                    rankIndex * this.props.boardSize + this.props.boardSize
+                                ).map((squareProp, fileIndex) => {
+                                    return (
+                                        <Square 
+                                            {...squareProp} 
+                                            color={(rankIndex + fileIndex) % 2 === 0 ? "light" : "dark"} 
+                                            onSquareClick={this.props.handleSquareClick}
+                                            onContextMenu={this.props.handleSquareRightClick}
+                                            key={rankIndex * this.props.boardSize + fileIndex}
+                                        />
+                                    )
+                                })
+                            }
+                            </div>
+                        ))
+                    }
+                </div>
             </div>
             <BoardControlPanel 
                 onUndoClick={this.props.handleUndoClick} 

@@ -23,7 +23,7 @@ export const GameNotes: React.FC<GameNotesProps> = ({ algebraicNotation, metadat
 
     return (
         <div className="game-notes">
-            <h3>Position Notes</h3>
+            {/* <h3>Position Notes</h3> */}
             <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
