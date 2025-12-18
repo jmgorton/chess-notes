@@ -210,12 +210,12 @@ class Game extends React.Component {
   ) => {
     const legalMoves = [];
     if ((squareToImagineEmpty || squareToImagineFriendly) && squareToImagineEmpty === squareToImagineFriendly) {
-      console.log("Square to imagine empty can't be the same square to imagine friendly");
+      console.error("Square to imagine empty can't be the same square to imagine friendly");
       return legalMoves;
     }
     if (!directions) return legalMoves;
     if (this.state.pieceKeys[squareId] === 'LN' || (this.state.pieceKeys[squareId] === 'LK' && this.state.pieceKeys[squareToImagineEmpty] === 'LN')) {
-      console.log(`Fn params for ${this.state.pieceKeys[squareId]}:\n\tsquareId: ${squareId}\n\tdirections: ${directions}\n\t{\n\t\tdistance: ${distance}\n\t\tvalidators: ${validators}\n\t\tincludeNonCaptures: ${includeNonCaptures}\n\t\tincludeCaptures: ${includeCaptures}\n\t\tincludeSelfCaptures: ${includeSelfCaptures}\n\t\tsquareToImagineEmpty: ${squareToImagineEmpty}\n\t\tsquareToImagineFriendly: ${squareToImagineFriendly}\n\t}`);
+      // console.log(`Fn params for ${this.state.pieceKeys[squareId]}:\n\tsquareId: ${squareId}\n\tdirections: ${directions}\n\t{\n\t\tdistance: ${distance}\n\t\tvalidators: ${validators}\n\t\tincludeNonCaptures: ${includeNonCaptures}\n\t\tincludeCaptures: ${includeCaptures}\n\t\tincludeSelfCaptures: ${includeSelfCaptures}\n\t\tsquareToImagineEmpty: ${squareToImagineEmpty}\n\t\tsquareToImagineFriendly: ${squareToImagineFriendly}\n\t}`);
     }
     directions.forEach((direction) => {
       let checkedSquare = squareId;
@@ -447,7 +447,7 @@ class Game extends React.Component {
         squareMovedTo, // imagine friendly 
       );
       if (pieceCode === 'N') {
-        console.log(`If we moved this knight from ${squareMovedFrom} to ${squareMovedTo}, our king would be capturable from these squares: ${squaresWithPiecesThatCouldAttackOurKingAfterThisMove}`);
+        // console.log(`If we moved this knight from ${squareMovedFrom} to ${squareMovedTo}, our king would be capturable from these squares: ${squaresWithPiecesThatCouldAttackOurKingAfterThisMove}`);
       }
       return squaresWithPiecesThatCouldAttackOurKingAfterThisMove.length !== 0;
     }
@@ -492,11 +492,11 @@ class Game extends React.Component {
 
   getLegalMoves = (squareId) => {
     if (this.state.pieceKeys[squareId] === undefined || this.state.pieceKeys[squareId] === "") {
-      console.log("The selected square has no piece on it, therefore there are no legal moves to make.");
+      // console.log("The selected square has no piece on it, therefore there are no legal moves to make.");
       return [];
     }
     if (this.state.whiteToPlay && this.state.pieceKeys[squareId]?.charAt(0) !== 'L') {
-      console.log("It is not this player's turn, therefore there are no legal moves to make.")
+      // console.log("It is not this player's turn, therefore there are no legal moves to make.")
       return []; // not this player's turn 
     }
 
@@ -515,15 +515,15 @@ class Game extends React.Component {
 
     // const playerCode = this.state.pieceKeys[squareId].charAt(0);
     const pieceCode = this.state.pieceKeys[squareId].charAt(1);
-    console.log(`Generating valid moves that this ${pieceCode} can make...`);
+    // console.log(`Generating valid moves that this ${pieceCode} can make...`);
     let validMoves = pieceCode in this.legalMoveMap ? this.legalMoveMap[pieceCode](squareId) : [];
-    console.log(`Valid moves for this ${pieceCode} are: ${validMoves}`);
+    // console.log(`Valid moves for this ${pieceCode} are: ${validMoves}`);
 
     // gotta first see if we are currently in check ... actually, no we don't first 
     // then gotta see if we will be in check after this proposed move 
 
     validMoves = validMoves.filter((targetMove) => !this.wouldOwnKingBeInCheckAfterMove(squareId, targetMove));
-    console.log(`Legal moves after filtering out which valid moves would result in this player's king being capturable on the next move: ${validMoves}`);
+    // console.log(`Legal moves after filtering out which valid moves would result in this player's king being capturable on the next move: ${validMoves}`);
 
     return validMoves;
   }
