@@ -56,6 +56,7 @@ class Game extends React.Component {
         }
       }),
 
+      // TODO not yet maintained (except for light/dark king positions) 
       lightPawnPositions: [48, 49, 50, 51, 52, 53, 54, 55],
       darkPawnPositions: [8, 9, 10, 11, 12, 13, 14, 15],
       lightKnightPositions: [57, 62],
@@ -74,6 +75,7 @@ class Game extends React.Component {
       darkKingHasShortCastlingRights: true,
       darkKingHasLongCastlingRights: true,
 
+      // TODO not yet used or maintained 
       // warning: numeric literals with absolute values equal to 2^53 or greater are too large to be represented accurately as integers.
       // append an `n` to use the BigInt javascript type 
       bitmapLightPawns: 0x000000000000ff00n, // 6th (7th) rank full of 1s
@@ -120,37 +122,41 @@ class Game extends React.Component {
     }
   }
 
-  generatePieceValidCaptureMoves = (squareId, directions, {distance = 8, validators = []} = {}) => {
+  // TODO can we name this input argument dictionary and just spread it??
+  generatePieceValidCaptureMoves = (squareId, directions, {distance = 8, nextSquareValidators = [], captureValidators = []} = {}) => {
     return this.generatePieceValidMoves(
       squareId, 
       directions, 
       {
         distance: distance, 
-        validators: validators, 
+        nextSquareValidators: nextSquareValidators, 
+        captureValidators: captureValidators, 
         includeNonCaptures: false
       }
     );
   }
 
-  generatePieceValidNonCaptureMoves = (squareId, directions, {distance = 8, validators = []} = {}) => {
+  generatePieceValidNonCaptureMoves = (squareId, directions, {distance = 8, nextSquareValidators = [], captureValidators = []} = {}) => {
     return this.generatePieceValidMoves(
       squareId, 
       directions, 
       {
         distance: distance, 
-        validators: validators, 
+        nextSquareValidators: nextSquareValidators, 
+        captureValidators: captureValidators, 
         includeCaptures: false
       }
     );
   }
 
-  generatePieceValidSelfCaptureMoves = (squareId, directions, {distance = 8, validators = []} = {}) => {
+  generatePieceValidSelfCaptureMoves = (squareId, directions, {distance = 8, nextSquareValidators = [], captureValidators = []} = {}) => {
     return this.generatePieceValidMoves(
       squareId, 
       directions, 
       {
         distance: distance, 
-        validators: validators, 
+        nextSquareValidators: nextSquareValidators, 
+        captureValidators: captureValidators, 
         includeCaptures: false, 
         includeNonCaptures: false, 
         includeSelfCaptures: true
@@ -160,14 +166,16 @@ class Game extends React.Component {
 
   // in order to allow generatePawnValidMoves to call this method, we also have to include a captureValidator input function
   // all other pieces' captureValidator inputs will be the same, what exists: the piece at the target is not the same color as the piece at the source 
-  // the existing validators input is more like a validPieceMoveValidators input 
+  // the existing nextSquareValidators input is more like a validPieceMovenextSquareValidators input 
   // it would be nice if I could access the Piece objects and use their internal properties to store/call these methods, but whatever 
   generatePieceValidMoves = (
     squareId, 
     directions, 
     {
       distance = 8, 
-      validators = [], 
+      nextSquareValidators = [], 
+      captureValidators = [],
+      selfCaptureValidators = [], // ... never necessary (so far) 
       includeNonCaptures = true,
       includeCaptures = true, 
       includeSelfCaptures = false,
@@ -182,16 +190,19 @@ class Game extends React.Component {
     }
     // if (!directions) return legalMoves; // not necessary 
     // if (this.state.pieceKeys[squareId] === 'LN' || (this.state.pieceKeys[squareId] === 'LK' && this.state.pieceKeys[squareToImagineEmpty] === 'LN')) {
-    //   // console.log(`Fn params for ${this.state.pieceKeys[squareId]}:\n\tsquareId: ${squareId}\n\tdirections: ${directions}\n\t{\n\t\tdistance: ${distance}\n\t\tvalidators: ${validators}\n\t\tincludeNonCaptures: ${includeNonCaptures}\n\t\tincludeCaptures: ${includeCaptures}\n\t\tincludeSelfCaptures: ${includeSelfCaptures}\n\t\tsquareToImagineEmpty: ${squareToImagineEmpty}\n\t\tsquareToImagineFriendly: ${squareToImagineFriendly}\n\t}`);
+    //   // console.log(`Fn params for ${this.state.pieceKeys[squareId]}:\n\tsquareId: ${squareId}\n\tdirections: ${directions}\n\t{\n\t\tdistance: ${distance}\n\t\tnextSquareValidators: ${nextSquareValidators}\n\t\tincludeNonCaptures: ${includeNonCaptures}\n\t\tincludeCaptures: ${includeCaptures}\n\t\tincludeSelfCaptures: ${includeSelfCaptures}\n\t\tsquareToImagineEmpty: ${squareToImagineEmpty}\n\t\tsquareToImagineFriendly: ${squareToImagineFriendly}\n\t}`);
     // }
-    validators.push((oldSquare, newSquare) => oldSquare >= 0 && newSquare >= 0);
-    validators.push((oldSquare, newSquare) => oldSquare < 64 && newSquare < 64);
+    nextSquareValidators.push((oldSquare, newSquare) => oldSquare >= 0 && newSquare >= 0);
+    nextSquareValidators.push((oldSquare, newSquare) => oldSquare < 64 && newSquare < 64);
+    captureValidators.push((squareFrom, squareTo) => this.state.pieceKeys[squareFrom]?.charAt(0) !== this.state.pieceKeys[squareTo]?.charAt(0));
+    selfCaptureValidators.push((squareFrom, squareTo) => this.state.pieceKeys[squareFrom]?.charAt(0) === this.state.pieceKeys[squareTo]?.charAt(0))
+    selfCaptureValidators.push((squareFrom, squareTo) => squareTo === squareToImagineFriendly);
     directions.forEach((direction) => {
       let checkedSquare = squareId;
       let nextSquareToCheck = checkedSquare + direction;
       let rangeRemaining = distance;
       // eslint-disable-next-line no-loop-func
-      while (rangeRemaining > 0 && validators.every(validator => validator(checkedSquare, nextSquareToCheck))) {
+      while (rangeRemaining > 0 && nextSquareValidators.every(validator => validator(checkedSquare, nextSquareToCheck))) {
         if (
           nextSquareToCheck !== squareToImagineFriendly && 
           (
@@ -208,15 +219,17 @@ class Game extends React.Component {
             // generating legal moves from any square without a piece on it will include pieces from either side making contact w this square 
             (
               includeCaptures && 
-              this.state.pieceKeys[nextSquareToCheck].charAt(0) !== this.state.pieceKeys[squareId].charAt(0) && 
-              nextSquareToCheck !== squareToImagineFriendly
+              nextSquareToCheck !== squareToImagineFriendly && 
+              // this.state.pieceKeys[nextSquareToCheck].charAt(0) !== this.state.pieceKeys[squareId].charAt(0) && 
+              captureValidators.some(validator => validator(squareId, nextSquareToCheck)) // at least one validator true means valid capture 
             ) || 
             (
               includeSelfCaptures && 
-              (
-                this.state.pieceKeys[nextSquareToCheck].charAt(0) === this.state.pieceKeys[squareId].charAt(0) || 
-                nextSquareToCheck === squareToImagineFriendly
-              )
+              // (
+              //   this.state.pieceKeys[nextSquareToCheck].charAt(0) === this.state.pieceKeys[squareId].charAt(0) || 
+              //   nextSquareToCheck === squareToImagineFriendly
+              // )
+              selfCaptureValidators.some(validator => validator(squareId, nextSquareToCheck))
             )
           ) {
             legalMoves.push(nextSquareToCheck);
@@ -240,7 +253,7 @@ class Game extends React.Component {
     // // let pawnMoves = piece.state.moves;
     // if (playerCode === 'L' && Math.floor(squareId / 8) === 6 || playerCode === 'D' && Math.floor(squareId / 8) === 1) pawnMoves.push(-16); // two-square opening move
     // if (playerCode === 'D') pawnMoves = pawnMoves.map(move => -move);
-    // let pawnValidators = [
+    // let pawnnextSquareValidators = [
     //   (target) => target >= 0 && target < 64, // on board
     //   (target) => ![8, 16].includes(Math.abs(squareId - target)) || this.state.pieceKeys[target] === "", // not occupied
     //   (target) => ![7, 9].includes(Math.abs(squareId - target)) 
@@ -250,7 +263,7 @@ class Game extends React.Component {
     // // let legalMoves = [];
     // // pawnMoves.forEach(move => {
     // //   const targetSquare = squareId + move;
-    // //   const legalMove = pawnValidators.every(validator => validator(targetSquare));
+    // //   const legalMove = pawnnextSquareValidators.every(validator => validator(targetSquare));
     // //   if (legalMove) {
     // //     legalMoves.push(targetSquare);
     // //   }
@@ -258,7 +271,7 @@ class Game extends React.Component {
     // // return legalMoves;
     // return pawnMoves
     //   .map((move) => move + squareId)
-    //   .filter((target) => pawnValidators.every(validator => validator(target)));
+    //   .filter((target) => pawnnextSquareValidators.every(validator => validator(target)));
 
     // // ****** LEGAL PAWN MOVES (alt approach) ********
 
@@ -298,7 +311,7 @@ class Game extends React.Component {
 
     const playerCode = this.state.pieceKeys[squareId].charAt(0);
     const currRank = Math.floor(squareId / 8);
-    const currFile = squareId % 8;
+    // const currFile = squareId % 8;
 
     let pawnMoves = [];
 
@@ -328,16 +341,38 @@ class Game extends React.Component {
         playerCode === 'L' ? [-7,-9] : [7,9],
         {
           distance: 1,
-          // TODO add capture validator arguments to return en passant captures 
+          captureValidators: [
+            (squareFrom, squareTo) => {
+              if (!this.state.history || this.state.history.length === 0) return false;
+              // previous move had to be a pawn moving from a square "in front of" squareTo to a square "behind" squareTo from this player's perspective ... 
+              // we already validated that it is actually a capture by supplying the directions and calling the valid capture function which validates 
+              const squareInFrontOfTarget = playerCode === 'L' ? squareTo - 8 : squareTo + 8;
+              const squareBehindTarget = playerCode === 'L' ? squareTo + 8 : squareTo - 8;
+              const targetPreviousINN = `${String(squareInFrontOfTarget).padStart(2, '0')}${String(squareBehindTarget).padStart(2, '0')}`;
+              return this.state.history[this.state.history.length - 1].INN === targetPreviousINN;
+            }
+          ],
         }
       )
     )
+
+    if (includeSelfCaptures) {
+      pawnMoves = pawnMoves.concat(
+        this.generatePieceValidSelfCaptureMoves(
+          squareId,
+          playerCode === 'L' ? [-7,-9] : [7,9],
+          {
+            distance: 1,
+          }
+        )
+      )
+    }
 
     return pawnMoves;
   }
 
   generateKnightValidMoves = (squareId, includeNonCaptures = true, includeSelfCaptures = false, squareToImagineEmpty = null, squareToImagineFriendly = null) => {
-    const validators = [
+    const nextSquareValidators = [
       (square, nextSquare) => Math.abs((square % 8) - (nextSquare % 8)) <= 2,
       (square, nextSquare) => Math.abs(Math.floor(square / 8) - Math.floor(nextSquare / 8)) <= 2,
     ];
@@ -347,7 +382,7 @@ class Game extends React.Component {
       directions, 
       {
         distance: 1, 
-        validators: validators, 
+        nextSquareValidators: nextSquareValidators, 
         includeNonCaptures: includeNonCaptures,
         includeSelfCaptures: includeSelfCaptures,
         squareToImagineEmpty: squareToImagineEmpty,
@@ -357,7 +392,7 @@ class Game extends React.Component {
   }
 
   generateBishopValidMoves = (squareId, includeNonCaptures = true, includeSelfCaptures = false, squareToImagineEmpty = null, squareToImagineFriendly = null) => {
-    const validators = [
+    const nextSquareValidators = [
       (square, nextSquare) => Math.abs(Math.floor(nextSquare / 8) - Math.floor(square / 8)) === 1,
       (square, nextSquare) => Math.abs(square % 8 - nextSquare % 8) === 1,
     ];
@@ -366,7 +401,7 @@ class Game extends React.Component {
       squareId, 
       directions, 
       {
-        validators: validators, 
+        nextSquareValidators: nextSquareValidators, 
         includeNonCaptures: includeNonCaptures,
         includeSelfCaptures: includeSelfCaptures,
         squareToImagineEmpty: squareToImagineEmpty,
@@ -376,7 +411,7 @@ class Game extends React.Component {
   }
 
   generateRookValidMoves = (squareId, includeNonCaptures = true, includeSelfCaptures = false, squareToImagineEmpty = null, squareToImagineFriendly = null) => {
-    const validators = [
+    const nextSquareValidators = [
       (square, nextSquare) => Math.abs(Math.floor(nextSquare / 8) - Math.floor(square / 8)) ^ Math.abs(square % 8 - nextSquare % 8) === 0b1,
       (square, nextSquare) => Math.floor(nextSquare / 8) === Math.floor(square / 8) ^ square % 8 === nextSquare % 8,
     ];
@@ -385,7 +420,7 @@ class Game extends React.Component {
       squareId, 
       directions, 
       {
-        validators: validators, 
+        nextSquareValidators: nextSquareValidators, 
         includeNonCaptures: includeNonCaptures,
         includeSelfCaptures: includeSelfCaptures,
         squareToImagineEmpty: squareToImagineEmpty,
@@ -402,9 +437,9 @@ class Game extends React.Component {
   }
 
   generateKingValidMoves = (squareId, includeNonCaptures = true, includeSelfCaptures = false, includeCastling = true) => {
-    // TODO king validators are more complicated, have to analyze other pieces next move for possible checks...
+    // TODO king nextSquareValidators are more complicated, have to analyze other pieces next move for possible checks...
     //   or apply, from the king's square, all possible types of piece moves and see if a piece that can make that move is on any of those squares 
-    const validators = [
+    const nextSquareValidators = [
     ];
     const directions = [-9, -8, -7, -1, 1, 7, 8, 9];
     const legalMoves = this.generatePieceValidMoves(
@@ -412,7 +447,7 @@ class Game extends React.Component {
       directions, 
       {
         distance: 1, 
-        validators: validators, 
+        nextSquareValidators: nextSquareValidators, 
         includeNonCaptures: includeNonCaptures,
         includeSelfCaptures: includeSelfCaptures,
       }
@@ -424,7 +459,9 @@ class Game extends React.Component {
     // check for castling ... start by verifying that the king never moved, could store this info in state for a minor speedup 
     const kingStartingSquare = this.state.whiteToPlay ? 60 : 4; // TODO remove this assumption ?? 
     if (squareId !== kingStartingSquare) return legalMoves;
-    if (this.state.history.some(pastMove => pastMove.INN.startsWith(String(kingStartingSquare).padStart(2, '0')))) return legalMoves;
+    // if (this.state.history.some(pastMove => pastMove.INN.startsWith(String(kingStartingSquare).padStart(2, '0')))) return legalMoves;
+    if (this.state.whiteToPlay && !this.state.lightKingHasShortCastlingRights && !this.state.lightKingHasLongCastlingRights) return legalMoves;
+    if (!this.state.whiteToPlay && !this.state.darkKingHasShortCastlingRights && !this.state.darkKingHasLongCastlingRights) return legalMoves; 
 
     // check short and long castling 
     // need to verify for each side that the rook also never moved, that we have no pieces in between the king and rook, and
@@ -434,8 +471,9 @@ class Game extends React.Component {
     const playerCode = this.state.pieceKeys[squareId].charAt(0);
     const shortCastleRookStartingSquare = this.state.whiteToPlay ? 63 : 7;
     const shortCastleKingSafetySquares = this.state.whiteToPlay ? [60, 61, 62] : [4, 5, 6];
-    if (this.state.pieceKeys.slice(kingStartingSquare + 1, shortCastleRookStartingSquare).every(pieceKey => pieceKey === '')
-      && this.state.history.every(pastMove => !pastMove.INN.startsWith(String(shortCastleRookStartingSquare).padStart(2, '0')))
+    if (
+      this.state.pieceKeys.slice(kingStartingSquare + 1, shortCastleRookStartingSquare).every(pieceKey => pieceKey === '')
+      // && this.state.history.every(pastMove => !pastMove.INN.startsWith(String(shortCastleRookStartingSquare).padStart(2, '0')))
     ) {
       if (shortCastleKingSafetySquares
           .every(square => this.getSquaresWithPiecesThatCanAttackThisSquare(square) 
@@ -448,7 +486,7 @@ class Game extends React.Component {
     const longCastleRookStartingSquare = this.state.whiteToPlay ? 56 : 0;
     const longCastleKingSafetySquares = this.state.whiteToPlay ? [60, 59, 58] : [4, 3, 2];
     if (this.state.pieceKeys.slice(longCastleRookStartingSquare + 1, kingStartingSquare).every(pieceKey => pieceKey === '')
-      && this.state.history.every(pastMove => !pastMove.INN.startsWith(String(longCastleRookStartingSquare).padStart(2, '0')))
+      // && this.state.history.every(pastMove => !pastMove.INN.startsWith(String(longCastleRookStartingSquare).padStart(2, '0')))
     ) {
       if (longCastleKingSafetySquares
           .every(square => this.getSquaresWithPiecesThatCanAttackThisSquare(square) 
@@ -513,8 +551,15 @@ class Game extends React.Component {
     if (pieceCode === 'K') {
       // TODO dangerous, find a better way to do this 
       // warning: do not mutate state directly. use setState()
+      // i still consider it dangerous from a coding practice pov even if we do it the "proper" way ... but let's use setState() i guess 
+      
       this.state.pieceKeys[squareMovedTo] = this.state.pieceKeys[squareMovedFrom];
       this.state.pieceKeys[squareMovedFrom] = '';
+      // const tempPieceKeys = this.getNewPieceKeysCopyWithMoveApplied(squareMovedFrom, squareMovedTo);
+      // this.setState({
+      //   ...this.state,
+      //   pieceKeys: tempPieceKeys,
+      // });
 
       const squaresWithPiecesThatCouldAttackOurKingAfterThisMove = this.getSquaresWithPiecesThatCanAttackThisSquare(
         squareMovedTo, 
@@ -526,6 +571,11 @@ class Game extends React.Component {
       // warning: do not mutate state directly. use setState()
       this.state.pieceKeys[squareMovedFrom] = this.state.pieceKeys[squareMovedTo];
       this.state.pieceKeys[squareMovedTo] = '';
+      // const pieceKeysAfterRevertingTempMove = this.getNewPieceKeysCopyWithMoveApplied(squareMovedTo, squareMovedFrom);
+      // this.setState({
+      //   ...this.state,
+      //   pieceKeys: pieceKeysAfterRevertingTempMove,
+      // });
 
       // console.log(`\tSquares w pieces that can attack the king on square ${squareMovedTo}: ${squaresWithPiecesThatCouldAttackOurKingAfterThisMove}`);
       
@@ -605,7 +655,7 @@ class Game extends React.Component {
     // const playerCode = this.state.pieceKeys[squareId].charAt(0);
     const pieceCode = this.state.pieceKeys[squareId].charAt(1);
     // console.log(`Generating valid moves that this ${pieceCode} can make...`);
-    const validMoves = pieceCode in this.validMoveMap ? this.validMoveMap[pieceCode](squareId) : [];
+    const validMoves = pieceCode in this.validMoveMap ? this.validMoveMap[pieceCode](squareId) : []; // use the default arguments, only supply squareId 
     // if (pieceCode === 'K') console.log(`Valid moves for this ${pieceCode} are: ${validMoves}`);
     const legalMoves = validMoves.filter((targetMove) => !this.wouldOwnKingBeInCheckAfterMove(squareId, targetMove));
     // if (pieceCode === 'K') console.log(`Legal moves after filtering out which valid moves would result in this player's king being capturable on the next move: ${legalMoves}`);
@@ -625,38 +675,54 @@ class Game extends React.Component {
     // if ((squareId === 51 || squareId === 52) && squareToImagineEmpty === 60) console.log(`\t\tgetSquaresWithPiecesThatCanAttackThisSquare(squareId: ${squareId}, includeSelfAttacks: ${includeSelfAttacks}, squareToImagineEmpty: ${squareToImagineEmpty}, squareToImagineFriendly: ${squareToImagineFriendly})`)
     let squaresTargetingThisOne = [];
 
-    let includeWhiteAttacks = true;
-    let includeBlackAttacks = true;
-    if (!includeSelfAttacks && this.state.pieceKeys[squareId] !== '') {
-      if (this.state.pieceKeys[squareId].charAt(0) === 'L') includeBlackAttacks = false;
-      if (this.state.pieceKeys[squareId].charAt(0) === 'D') includeWhiteAttacks = false;
-    }
+    // // Pawn logic replaced with function call to generatePawnValidMoves below 
+    // let includeWhiteAttacks = true;
+    // let includeBlackAttacks = true;
+    // if (!includeSelfAttacks && this.state.pieceKeys[squareId] !== '') {
+    //   if (this.state.pieceKeys[squareId].charAt(0) === 'L') includeBlackAttacks = false;
+    //   if (this.state.pieceKeys[squareId].charAt(0) === 'D') includeWhiteAttacks = false;
+    // }
 
-    // see if a pawn can attack this square separately ... refactor generatePawnValidMoves to have includeSelfAttacks, squareToImagineEmpty, squareToImagineFriendly
-    // i don't think squares to imagine empty/friendly apply to pawns either, a pawn attack can never be blocked 
-    // so just add includeNonAttacks (and includeSelfAttacks, i guess? just for consistency and altHighlighting on ctrl-click) 
-    if (includeBlackAttacks) {
-      if (squareId - 7 >= 0 && this.state.pieceKeys[squareId - 7] === "DP") squaresTargetingThisOne.push(squareId - 7);
-      if (squareId - 9 >= 0 && this.state.pieceKeys[squareId - 9] === "DP") squaresTargetingThisOne.push(squareId - 9);
-    }
-    if (includeWhiteAttacks) {
-      if (squareId + 7 < 64 && this.state.pieceKeys[squareId + 7] === "LP") squaresTargetingThisOne.push(squareId + 7);
-      if (squareId + 9 < 64 && this.state.pieceKeys[squareId + 9] === "LP") squaresTargetingThisOne.push(squareId + 9);
-    }
+    // // see if a pawn can attack this square separately ... refactor generatePawnValidMoves to have includeSelfAttacks, squareToImagineEmpty, squareToImagineFriendly
+    // // i don't think squares to imagine empty/friendly apply to pawns either, a pawn attack can never be blocked 
+    // // so just add includeNonAttacks (and includeSelfAttacks, i guess? just for consistency and altHighlighting on ctrl-click) 
+    // if (includeBlackAttacks) {
+    //   if (squareId - 7 >= 0 && this.state.pieceKeys[squareId - 7] === "DP") squaresTargetingThisOne.push(squareId - 7);
+    //   if (squareId - 9 >= 0 && this.state.pieceKeys[squareId - 9] === "DP") squaresTargetingThisOne.push(squareId - 9);
+    // }
+    // if (includeWhiteAttacks) {
+    //   if (squareId + 7 < 64 && this.state.pieceKeys[squareId + 7] === "LP") squaresTargetingThisOne.push(squareId + 7);
+    //   if (squareId + 9 < 64 && this.state.pieceKeys[squareId + 9] === "LP") squaresTargetingThisOne.push(squareId + 9);
+    // }
 
-    this.generateKnightValidMoves(squareId, false, includeSelfAttacks, squareToImagineEmpty, squareToImagineFriendly) // are squares to imagine empty/friendly needed for knights? blocking isn't possible... 
+    // TODO really need to verify whether we should be including non-captures, probably add a function argument 
+    // for now let's just set it completely based on whether we are checking an empty or occupied square and see if it breaks 
+
+    const includeNonCaptures = (this.state.pieceKeys[squareId] === '');
+
+    this.generatePawnValidMoves(squareId, includeNonCaptures, includeSelfAttacks)
+      .filter((square) => this.state.pieceKeys[square].charAt(1) === "P")
+      .forEach((square) => squaresTargetingThisOne.push(square));
+
+    this.generateKnightValidMoves(squareId, includeNonCaptures, includeSelfAttacks) // , squareToImagineEmpty, squareToImagineFriendly) 
+      // // are squares to imagine empty/friendly needed for knights? blocking isn't possible... 
       .filter((square) => this.state.pieceKeys[square].charAt(1) === "N")
       .forEach((square) => squaresTargetingThisOne.push(square));
 
-    this.generateBishopValidMoves(squareId, false, includeSelfAttacks, squareToImagineEmpty, squareToImagineFriendly)
+    this.generateBishopValidMoves(squareId, includeNonCaptures, includeSelfAttacks, squareToImagineEmpty, squareToImagineFriendly)
       .filter((square) => ["B","Q"].includes(this.state.pieceKeys[square].charAt(1)))
       .forEach((square) => squaresTargetingThisOne.push(square));
 
-    this.generateRookValidMoves(squareId, false, includeSelfAttacks, squareToImagineEmpty, squareToImagineFriendly)
+    this.generateRookValidMoves(squareId, includeNonCaptures, includeSelfAttacks, squareToImagineEmpty, squareToImagineFriendly)
       .filter((square) => ["R","Q"].includes(this.state.pieceKeys[square].charAt(1)))
       .forEach((square) => squaresTargetingThisOne.push(square));
 
-    this.generateKingValidMoves(squareId, true, includeSelfAttacks, false) // includeNonCaptures? 
+    this.generateKingValidMoves(squareId, includeNonCaptures, includeSelfAttacks, false) // includeNonCaptures should be set to..? 
+      // it depends on if this method is being called on a square with a piece on it or an empty square i guess, or if we're just highlighting vs actually using the results 
+      // also, at this moment all others are using false, king is only one set to true, and it seems kinda working... but let's set it to the new var 
+      // OK i broke it again and neither value for includeNonCaptures works ... am i setting includeNonCaptures correctly? 
+      // hmm, it is specifically because of the change in wouldOwnKingBeInCheckAfterMove where i tried to use getPieceKeysCopy and set state appropriately..? 
+      // TODO investigate later 
       .filter((square) => this.state.pieceKeys[square].charAt(1) === "K")
       .forEach((square) => squaresTargetingThisOne.push(square));
 
@@ -673,14 +739,39 @@ class Game extends React.Component {
         const squareMovedTo = squareToSelect;
         const newPieceKeys = this.getNewPieceKeysCopyWithMoveApplied(squareMovedFrom, squareMovedTo);
         if (this.state.pieceKeys[squareMovedFrom].charAt(1) === 'K') {
+          if (this.state.pieceKeys[squareMovedFrom].charAt(0) === 'L') {
+            this.setState({...this.state, lightKingHasLongCastlingRights: false, lightKingHasShortCastlingRights: false});
+          } else {
+            this.setState({...this.state, darkKingHasLongCastlingRights: false, darkKingHasShortCastlingRights: false});
+          }
           if (!this.isMoveCastling(squareMovedFrom, squareMovedTo)) {
-            if (newPieceKeys[squareMovedTo].charAt(0) === 'L') this.setState({...this.state, lightKingPosition: squareMovedTo});
-            else this.setState({...this.state, darkKingPosition: squareMovedTo});
+            if (newPieceKeys[squareMovedTo].charAt(0) === 'L') {
+              this.setState({...this.state, lightKingPosition: squareMovedTo});
+            } else {
+              this.setState({...this.state, darkKingPosition: squareMovedTo});
+            }
           } else {
             const directionFromKing = squareMovedFrom < squareMovedTo ? 1 : -1;
             const squareIdOfKingAfterCastling = squareMovedFrom + directionFromKing * 2;
-            if (newPieceKeys[squareIdOfKingAfterCastling].charAt(0) === 'L') this.setState({...this.state, lightKingPosition: squareIdOfKingAfterCastling});
-            else this.setState({...this.state, darkKingPosition: squareIdOfKingAfterCastling});
+            if (newPieceKeys[squareIdOfKingAfterCastling].charAt(0) === 'L') {
+              this.setState({...this.state, lightKingPosition: squareIdOfKingAfterCastling});
+            } else {
+              this.setState({...this.state, darkKingPosition: squareIdOfKingAfterCastling});
+            }
+          }
+        } else if (this.state.pieceKeys[squareMovedFrom].charAt(1) === 'R') {
+          if (this.state.pieceKeys[squareMovedFrom].charAt(0) === 'L') {
+            if (squareMovedFrom === 63) {
+              this.setState({...this.state, lightKingHasShortCastlingRights: false});
+            } else if (squareMovedFrom === 56) {
+              this.setState({...this.state, lightKingHasLongCastlingRights: false});
+            }
+          } else {
+            if (squareMovedFrom === 7) {
+              this.setState({...this.state, darkKingHasShortCastlingRights: false});
+            } else if (squareMovedFrom === 0) {
+              this.setState({...this.state, darkKingHasLongCastlingRights: false});
+            }
           }
         }
         this.setState({
