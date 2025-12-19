@@ -232,7 +232,7 @@ class Game extends React.Component {
     return legalMoves;
   }
 
-  generatePawnValidMoves = (squareId) => {
+  generatePawnValidMoves = (squareId, includeNonCaptures = true, includeSelfCaptures = false) => {
 
     // // Legal pawn moves 
 
@@ -268,37 +268,39 @@ class Game extends React.Component {
     // // if (this.state.whiteToPlay && playerCode !== 'L') return []; // not this player's turn
     // // if (pieceCode !== 'P') return []; // not a pawn 
 
-    const playerCode = this.state.pieceKeys[squareId].charAt(0);
-    const pawnMultiplier = playerCode === 'L' ? 1 : -1;
-    const pawnStartingRank = playerCode === 'L' ? 6 : 1;
-    const currRank = Math.floor(squareId / 8);
-    const currFile = squareId % 8;
-    let pawnMoves = [];
 
-    if (this.state.pieceKeys[squareId + DIR.N * pawnMultiplier] === "") {
-      pawnMoves.push(squareId + DIR.N * pawnMultiplier); // one square forward
-      if (currRank === pawnStartingRank && this.state.pieceKeys[squareId + DIR.N * pawnMultiplier * 2] === "") 
-        pawnMoves.push(squareId + DIR.N * pawnMultiplier * 2); // two squares forward from starting position
-    }
-    if (currFile !== 0) { // pawn is not on a file
-      if (this.state.pieceKeys[squareId + DIR.N * pawnMultiplier + DIR.W] !== "" && this.state.pieceKeys[squareId + DIR.N * pawnMultiplier + DIR.W].charAt(0) !== playerCode) pawnMoves.push(squareId + DIR.N * pawnMultiplier + DIR.W); // capture to the north/south west
-      if (this.state.history.length > 0 && this.state.history[this.state.history.length - 1].INN === `${String(squareId + DIR.N * pawnMultiplier * 2 + DIR.W).padStart(2, '0')}${String(squareId + DIR.W).padStart(2, '0')}`) pawnMoves.push(squareId + DIR.N * pawnMultiplier + DIR.W); // en passant capture to the north/south west
-    }
-    if (currFile !== 7) { // pawn is not on h file 
-      if (this.state.pieceKeys[squareId + DIR.N * pawnMultiplier + DIR.E] !== "" && this.state.pieceKeys[squareId + DIR.N * pawnMultiplier + DIR.E].charAt(0) !== playerCode) pawnMoves.push(squareId + DIR.N * pawnMultiplier + DIR.E); // capture to the north/south east
-      if (this.state.history.length > 0 && this.state.history[this.state.history.length - 1].INN === `${String(squareId + DIR.N * pawnMultiplier * 2 + DIR.E).padStart(2, '0')}${String(squareId + DIR.E).padStart(2, '0')}`) pawnMoves.push(squareId + DIR.N * pawnMultiplier + DIR.E); // en passant capture to the north/south east
-    }
+    // const playerCode = this.state.pieceKeys[squareId].charAt(0);
+    // const pawnMultiplier = playerCode === 'L' ? 1 : -1;
+    // const pawnStartingRank = playerCode === 'L' ? 6 : 1;
+    // const currRank = Math.floor(squareId / 8);
+    // const currFile = squareId % 8;
+    // let pawnMoves = [];
+
+    // if (this.state.pieceKeys[squareId + DIR.N * pawnMultiplier] === "") {
+    //   pawnMoves.push(squareId + DIR.N * pawnMultiplier); // one square forward
+    //   if (currRank === pawnStartingRank && this.state.pieceKeys[squareId + DIR.N * pawnMultiplier * 2] === "") 
+    //     pawnMoves.push(squareId + DIR.N * pawnMultiplier * 2); // two squares forward from starting position
+    // }
+    // if (currFile !== 0) { // pawn is not on a file
+    //   if (this.state.pieceKeys[squareId + DIR.N * pawnMultiplier + DIR.W] !== "" && this.state.pieceKeys[squareId + DIR.N * pawnMultiplier + DIR.W].charAt(0) !== playerCode) pawnMoves.push(squareId + DIR.N * pawnMultiplier + DIR.W); // capture to the north/south west
+    //   if (this.state.history.length > 0 && this.state.history[this.state.history.length - 1].INN === `${String(squareId + DIR.N * pawnMultiplier * 2 + DIR.W).padStart(2, '0')}${String(squareId + DIR.W).padStart(2, '0')}`) pawnMoves.push(squareId + DIR.N * pawnMultiplier + DIR.W); // en passant capture to the north/south west
+    // }
+    // if (currFile !== 7) { // pawn is not on h file 
+    //   if (this.state.pieceKeys[squareId + DIR.N * pawnMultiplier + DIR.E] !== "" && this.state.pieceKeys[squareId + DIR.N * pawnMultiplier + DIR.E].charAt(0) !== playerCode) pawnMoves.push(squareId + DIR.N * pawnMultiplier + DIR.E); // capture to the north/south east
+    //   if (this.state.history.length > 0 && this.state.history[this.state.history.length - 1].INN === `${String(squareId + DIR.N * pawnMultiplier * 2 + DIR.E).padStart(2, '0')}${String(squareId + DIR.E).padStart(2, '0')}`) pawnMoves.push(squareId + DIR.N * pawnMultiplier + DIR.E); // en passant capture to the north/south east
+    // }
+
 
     // // TODO check if any of these moves would result in another piece being able to capture the king ... need to do this for every piece move 
     // // so maybe just handle this in the getLegalMoves method, removing suggested moves that would leave the king attacked 
 
     // // LEGAL PAWN MOVES (3RD APPROACH) ... nvm that's stupid, not worth it ... or is it? 
 
-    // const playerCode = this.state.pieceKeys[squareId].charAt(0);
-    // const currRank = Math.floor(squareId / 8);
-    // const currFile = squareId % 8;
+    const playerCode = this.state.pieceKeys[squareId].charAt(0);
+    const currRank = Math.floor(squareId / 8);
+    const currFile = squareId % 8;
 
-    // let pawnMoves = [];
+    let pawnMoves = [];
 
     // if (playerCode === 'L') {
     //   if (currRank === 6) pawnMoves = pawnMoves.concat(this.generatePieceValidNonCaptureMoves(squareId, [-8], {distance: 2}));
@@ -308,6 +310,28 @@ class Game extends React.Component {
     // } else if (playerCode === 'D') {
 
     // }
+    if (includeNonCaptures) {
+      pawnMoves = pawnMoves.concat(
+        this.generatePieceValidNonCaptureMoves(
+          squareId,
+          playerCode === 'L' ? [-8] : [8],
+          {
+            distance: (currRank === (playerCode === 'L' ? 6 : 1)) ? 2 : 1,
+          }
+        )
+      );
+    }
+
+    pawnMoves = pawnMoves.concat(
+      this.generatePieceValidCaptureMoves(
+        squareId,
+        playerCode === 'L' ? [-7,-9] : [7,9],
+        {
+          distance: 1,
+          // TODO add capture validator arguments to return en passant captures 
+        }
+      )
+    )
 
     return pawnMoves;
   }
@@ -454,7 +478,7 @@ class Game extends React.Component {
     let attackingSquares = this.getSquaresWithPiecesThatCanAttackThisSquare(
       this.state.whiteToPlay ? 
         this.state.darkKingPosition : 
-        this.state.lightKingPosition, // TODO make sure this state is actually getting updated on moves 
+        this.state.lightKingPosition, 
       false
     );
     return attackingSquares.length !== 0;
@@ -503,7 +527,7 @@ class Game extends React.Component {
       this.state.pieceKeys[squareMovedFrom] = this.state.pieceKeys[squareMovedTo];
       this.state.pieceKeys[squareMovedTo] = '';
 
-      console.log(`\tSquares w pieces that can attack the king on square ${squareMovedTo}: ${squaresWithPiecesThatCouldAttackOurKingAfterThisMove}`);
+      // console.log(`\tSquares w pieces that can attack the king on square ${squareMovedTo}: ${squaresWithPiecesThatCouldAttackOurKingAfterThisMove}`);
       
       return squaresWithPiecesThatCouldAttackOurKingAfterThisMove.length !== 0;
     }
@@ -582,9 +606,9 @@ class Game extends React.Component {
     const pieceCode = this.state.pieceKeys[squareId].charAt(1);
     // console.log(`Generating valid moves that this ${pieceCode} can make...`);
     const validMoves = pieceCode in this.validMoveMap ? this.validMoveMap[pieceCode](squareId) : [];
-    if (pieceCode === 'K') console.log(`Valid moves for this ${pieceCode} are: ${validMoves}`);
+    // if (pieceCode === 'K') console.log(`Valid moves for this ${pieceCode} are: ${validMoves}`);
     const legalMoves = validMoves.filter((targetMove) => !this.wouldOwnKingBeInCheckAfterMove(squareId, targetMove));
-    if (pieceCode === 'K') console.log(`Legal moves after filtering out which valid moves would result in this player's king being capturable on the next move: ${legalMoves}`);
+    // if (pieceCode === 'K') console.log(`Legal moves after filtering out which valid moves would result in this player's king being capturable on the next move: ${legalMoves}`);
     return legalMoves;
   }
 
@@ -598,7 +622,7 @@ class Game extends React.Component {
 
   // TODO we might also need to include an includeNonCaptures flag here as well... 
   getSquaresWithPiecesThatCanAttackThisSquare = (squareId, includeSelfAttacks = true, squareToImagineEmpty = null, squareToImagineFriendly = null) => {
-    if ((squareId === 51 || squareId === 52) && squareToImagineEmpty === 60) console.log(`\t\tgetSquaresWithPiecesThatCanAttackThisSquare(squareId: ${squareId}, includeSelfAttacks: ${includeSelfAttacks}, squareToImagineEmpty: ${squareToImagineEmpty}, squareToImagineFriendly: ${squareToImagineFriendly})`)
+    // if ((squareId === 51 || squareId === 52) && squareToImagineEmpty === 60) console.log(`\t\tgetSquaresWithPiecesThatCanAttackThisSquare(squareId: ${squareId}, includeSelfAttacks: ${includeSelfAttacks}, squareToImagineEmpty: ${squareToImagineEmpty}, squareToImagineFriendly: ${squareToImagineFriendly})`)
     let squaresTargetingThisOne = [];
 
     let includeWhiteAttacks = true;
@@ -609,6 +633,8 @@ class Game extends React.Component {
     }
 
     // see if a pawn can attack this square separately ... refactor generatePawnValidMoves to have includeSelfAttacks, squareToImagineEmpty, squareToImagineFriendly
+    // i don't think squares to imagine empty/friendly apply to pawns either, a pawn attack can never be blocked 
+    // so just add includeNonAttacks (and includeSelfAttacks, i guess? just for consistency and altHighlighting on ctrl-click) 
     if (includeBlackAttacks) {
       if (squareId - 7 >= 0 && this.state.pieceKeys[squareId - 7] === "DP") squaresTargetingThisOne.push(squareId - 7);
       if (squareId - 9 >= 0 && this.state.pieceKeys[squareId - 9] === "DP") squaresTargetingThisOne.push(squareId - 9);
@@ -618,7 +644,7 @@ class Game extends React.Component {
       if (squareId + 9 < 64 && this.state.pieceKeys[squareId + 9] === "LP") squaresTargetingThisOne.push(squareId + 9);
     }
 
-    this.generateKnightValidMoves(squareId, false, includeSelfAttacks, squareToImagineEmpty, squareToImagineFriendly)
+    this.generateKnightValidMoves(squareId, false, includeSelfAttacks, squareToImagineEmpty, squareToImagineFriendly) // are squares to imagine empty/friendly needed for knights? blocking isn't possible... 
       .filter((square) => this.state.pieceKeys[square].charAt(1) === "N")
       .forEach((square) => squaresTargetingThisOne.push(square));
 
@@ -630,7 +656,7 @@ class Game extends React.Component {
       .filter((square) => ["R","Q"].includes(this.state.pieceKeys[square].charAt(1)))
       .forEach((square) => squaresTargetingThisOne.push(square));
 
-    this.generateKingValidMoves(squareId, false, includeSelfAttacks, false) // includeNonCaptures? 
+    this.generateKingValidMoves(squareId, true, includeSelfAttacks, false) // includeNonCaptures? 
       .filter((square) => this.state.pieceKeys[square].charAt(1) === "K")
       .forEach((square) => squaresTargetingThisOne.push(square));
 
