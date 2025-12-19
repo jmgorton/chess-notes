@@ -662,6 +662,14 @@ class Game extends React.Component {
     return legalMoves;
   }
 
+  getOccupiedSquaresThatCanAttackThisEmptySquare = () => {
+    // TODO implement? 
+  }
+
+  getOccupiedSquaresThatCanAttackThisOccupiedSquare = () => {
+    // TODO implement? 
+  }
+
   // returns a list of *any* piece that can attack this square by default, not just the opponent's pieces 
   // maybe add squaresToExclude (imagine empty) and/or squaresToInclude (imagine occupied/captured) ...
   // any piece can block identically to any other piece
@@ -729,143 +737,141 @@ class Game extends React.Component {
     return squaresTargetingThisOne;
   }
 
-  handleSquareClick = (squareId) => {
-    const squareToSelect = squareId;
-    // clicking on a square for the first time (no square selected yet) 
-    if (this.state.squareSelected === null || this.state.squareSelected !== squareToSelect) { // disallow multi-piece selection for now 
-      if (this.state.squareProps[squareToSelect].isHighlighted) {
-        // Move piece to clicked square
-        const squareMovedFrom = this.state.squareSelected;
-        const squareMovedTo = squareToSelect;
-        const newPieceKeys = this.getNewPieceKeysCopyWithMoveApplied(squareMovedFrom, squareMovedTo);
-        if (this.state.pieceKeys[squareMovedFrom].charAt(1) === 'K') {
-          if (this.state.pieceKeys[squareMovedFrom].charAt(0) === 'L') {
-            this.setState({...this.state, lightKingHasLongCastlingRights: false, lightKingHasShortCastlingRights: false});
-          } else {
-            this.setState({...this.state, darkKingHasLongCastlingRights: false, darkKingHasShortCastlingRights: false});
-          }
-          if (!this.isMoveCastling(squareMovedFrom, squareMovedTo)) {
-            if (newPieceKeys[squareMovedTo].charAt(0) === 'L') {
-              this.setState({...this.state, lightKingPosition: squareMovedTo});
-            } else {
-              this.setState({...this.state, darkKingPosition: squareMovedTo});
-            }
-          } else {
-            const directionFromKing = squareMovedFrom < squareMovedTo ? 1 : -1;
-            const squareIdOfKingAfterCastling = squareMovedFrom + directionFromKing * 2;
-            if (newPieceKeys[squareIdOfKingAfterCastling].charAt(0) === 'L') {
-              this.setState({...this.state, lightKingPosition: squareIdOfKingAfterCastling});
-            } else {
-              this.setState({...this.state, darkKingPosition: squareIdOfKingAfterCastling});
-            }
-          }
-        } else if (this.state.pieceKeys[squareMovedFrom].charAt(1) === 'R') {
-          if (this.state.pieceKeys[squareMovedFrom].charAt(0) === 'L') {
-            if (squareMovedFrom === 63) {
-              this.setState({...this.state, lightKingHasShortCastlingRights: false});
-            } else if (squareMovedFrom === 56) {
-              this.setState({...this.state, lightKingHasLongCastlingRights: false});
-            }
-          } else {
-            if (squareMovedFrom === 7) {
-              this.setState({...this.state, darkKingHasShortCastlingRights: false});
-            } else if (squareMovedFrom === 0) {
-              this.setState({...this.state, darkKingHasLongCastlingRights: false});
-            }
-          }
+  deselectAndRemoveHighlightFromAllSquares = () => {
+    this.setState({
+      ...this.state,
+      squareSelected: null,
+      squareAltSelected: null,
+      squareProps: this.state.squareProps.map((oldProps) => {
+        return {
+          ...oldProps,
+          isHighlighted: false,
+          isSelected: false,
+          isAltHighlighted: false,
+          isAltSelected: false,
         }
-        this.setState({
-          ...this.state,
-          squareSelected: null,
-          squareAltSelected: null,
-          whiteToPlay: !this.state.whiteToPlay,
-          pieceKeys: newPieceKeys,
-          squareProps: this.state.squareProps.map((squareProps, squareId) => {
-            // update key and keycode to reflect the new piece placement
-            // let key = squareProps.key;
-            // if (squareProps.isHighlighted || squareProps.isSelected || squareProps.isAltSelected) {
-            //   // eslint-disable-next-line no-unused-vars
-            //   const [oldSquareId, oldPieceId, oldChangeCode] = key.split('-');
-            //   key = `${oldSquareId}-${newPieceKeys[squareId]}-${oldChangeCode + 1}`;
-            // }
-            const newKeycode = newPieceKeys[squareId];
-            // TODO can we setState on a separate field *inside* a setState block that modifies other state parameters??? Probably not... 
-            // Make sure we update the king locations in state here 
-            // Alternatively we could maybe loop over squareProps outside the setState function and call setState 64 times, once for each square 
-            // if (newKeycode?.charAt(1) === 'K') {
-            //   if (newKeycode.charAt(0) === 'L') this.setState({...this.state, lightKingPosition: squareId});
-            //   else this.setState({...this.state, darkKingPosition: squareId});
-            // }
-            // ORRRR... we can do this alllll outside this function entirely, that's what I'll do actually 
-            return {
-              ...squareProps,
-              keycode: newKeycode,
-              isHighlighted: false,
-              isAltHighlighted: false,
-              isSelected: false,
-              isAltSelected: false,
-              // key: key,
-            }
-          }),
-          history: this.state.history.concat([{
-            pieceKeys: newPieceKeys,
-            AN: null, // TODO generate Algebraic Notation for this move -- to do so, we need to know if any other 
-                      //   pieces of the same type would be able to make the same move 
-            INN: `${String(squareMovedFrom).padStart(2, '0')}${String(squareMovedTo).padStart(2, '0')}`, // International Numeric Notation (Computer Notation, e.g. 5254 == e2->e4)
-          }]),
-        })
-      } else {
-        // select an unselected square and highlight the legal moves for that piece on this turn 
-        const isThisPlayersMove = this.state.whiteToPlay ^ this.state.pieceKeys[squareToSelect]?.charAt(0) === 'D';
-        const squaresToHighlight = isThisPlayersMove ? this.getLegalMoves(squareId) : [];
-        this.setState({
-          ...this.state,
-          squareSelected: squareToSelect,
-          squareAltSelected: null,
-          squareProps: this.state.squareProps.map((oldProps, squareId) => {
-            const shouldHighlight = squaresToHighlight.includes(squareId);
-            const shouldSelect = (squareId === squareToSelect);
-            // let newKey = oldProps.key;
-            // if (shouldHighlight || shouldSelect) {
-            //   const [oldSquareId, oldPieceId, oldChangeCode] = newKey.split('-');
-            //   newKey = `${oldSquareId}-${oldPieceId}-${oldChangeCode + 1}`;
-            // }
-            return {
-              ...oldProps,
-              isHighlighted: shouldHighlight,
-              isSelected: shouldSelect,
-              isAltHighlighted: false,
-              isAltSelected: false,
-              // key: newKey,
-            }
-          }),
-        })
-      }
-    } else if (this.state.squareSelected === squareToSelect) {
-      this.setState({
-        ...this.state,
-        squareSelected: null,
-        squareAltSelected: null,
-        squareProps: this.state.squareProps.map((oldProps) => {
-          // update key to trigger re-render 
-          // let newKey = oldProps.key;
-          // if (oldProps.isHighlighted || oldProps.isSelected || oldProps.isAltHighlighted) {
-          //   const [oldSquareId, oldPieceId, oldChangeCode] = newKey.split('-');
-          //   newKey = `${oldSquareId}-${oldPieceId}-${oldChangeCode + 1}`;
-          // }
-          return {
-            ...oldProps,
-            isHighlighted: false,
-            isSelected: false,
-            isAltHighlighted: false,
-            isAltSelected: false,
-            // key: newKey,
-          }
-        }),
-      });
-    } else {
+      }),
+    });
+  }
 
+  selectSquareAndHighlightAllLegalMoves = (squareToSelect, legalMovesToHighlight) => {
+    this.setState({
+      ...this.state,
+      squareSelected: squareToSelect,
+      squareAltSelected: null,
+      squareProps: this.state.squareProps.map((oldProps, squareId) => {
+        const shouldHighlight = legalMovesToHighlight.includes(squareId);
+        const shouldSelect = (squareId === squareToSelect);
+        return {
+          ...oldProps,
+          isHighlighted: shouldHighlight,
+          isSelected: shouldSelect,
+          isAltHighlighted: false,
+          isAltSelected: false,
+        }
+      }),
+    });
+  }
+
+  handleSquareClick = (squareId) => {
+    // clicking the same square again removes all highlighting and selections 
+    if (this.state.squareSelected === squareId) {
+      this.deselectAndRemoveHighlightFromAllSquares();
+      return;
     }
+    // otherwise, we're either clicking on a square for the first time, or clicking on a different square 
+    // disallow multi-piece selection for now 
+    // if (this.state.squareSelected === null || this.state.squareSelected !== squareId) { 
+
+    // if we clicked on an un-highlighted and unselected square square
+    // we're either clicking on a square for the first time, 
+    // or a square that is not a legal move of whichever piece/square is highlighted,
+    // then we just apply the selection and highlighting to prepare for the next click
+    if (!this.state.squareProps[squareId].isHighlighted) {
+      // select an unselected and unhighlighted square and highlight the legal moves for that piece on this turn 
+      const isThisPlayersMove = this.state.whiteToPlay ^ this.state.pieceKeys[squareId]?.charAt(0) === 'D';
+      const squaresToHighlight = isThisPlayersMove ? this.getLegalMoves(squareId) : [];
+      this.selectSquareAndHighlightAllLegalMoves(squareId, squaresToHighlight);
+      return;
+    }
+
+    // otherwise, a square is already selected, and we clicked on one of its legal move squares 
+    // if (this.state.squareProps[squareId].isHighlighted) {
+    // Move piece at selected square to clicked highlighted square
+    const squareMovedFrom = this.state.squareSelected;
+    const squareMovedTo = squareId;
+    const newPieceKeys = this.getNewPieceKeysCopyWithMoveApplied(squareMovedFrom, squareMovedTo);
+    if (this.state.pieceKeys[squareMovedFrom].charAt(1) === 'K') {
+      if (this.state.pieceKeys[squareMovedFrom].charAt(0) === 'L') {
+        this.setState({...this.state, lightKingHasLongCastlingRights: false, lightKingHasShortCastlingRights: false});
+      } else {
+        this.setState({...this.state, darkKingHasLongCastlingRights: false, darkKingHasShortCastlingRights: false});
+      }
+      if (!this.isMoveCastling(squareMovedFrom, squareMovedTo)) {
+        if (newPieceKeys[squareMovedTo].charAt(0) === 'L') {
+          this.setState({...this.state, lightKingPosition: squareMovedTo});
+        } else {
+          this.setState({...this.state, darkKingPosition: squareMovedTo});
+        }
+      } else {
+        const directionFromKing = squareMovedFrom < squareMovedTo ? 1 : -1;
+        const squareIdOfKingAfterCastling = squareMovedFrom + directionFromKing * 2;
+        if (newPieceKeys[squareIdOfKingAfterCastling].charAt(0) === 'L') {
+          this.setState({...this.state, lightKingPosition: squareIdOfKingAfterCastling});
+        } else {
+          this.setState({...this.state, darkKingPosition: squareIdOfKingAfterCastling});
+        }
+      }
+    } else if (this.state.pieceKeys[squareMovedFrom].charAt(1) === 'R') {
+      if (this.state.pieceKeys[squareMovedFrom].charAt(0) === 'L') {
+        if (squareMovedFrom === 63) {
+          this.setState({...this.state, lightKingHasShortCastlingRights: false});
+        } else if (squareMovedFrom === 56) {
+          this.setState({...this.state, lightKingHasLongCastlingRights: false});
+        }
+      } else {
+        if (squareMovedFrom === 7) {
+          this.setState({...this.state, darkKingHasShortCastlingRights: false});
+        } else if (squareMovedFrom === 0) {
+          this.setState({...this.state, darkKingHasLongCastlingRights: false});
+        }
+      }
+    }
+    // TODO there's a bug with castling, rook stopped showing up, seems like it's here somewhere ...
+    // can i not setState twice back to back or something weird?? why is that happening? 
+    this.setState({
+      ...this.state,
+      squareSelected: null,
+      squareAltSelected: null,
+      whiteToPlay: !this.state.whiteToPlay,
+      pieceKeys: newPieceKeys,
+      squareProps: this.state.squareProps.map((squareProps, squareId) => {
+        const newKeycode = newPieceKeys[squareId];
+        // TODO can we setState on a separate field *inside* a setState block that modifies other state parameters??? Probably not... 
+        // Make sure we update the king locations in state here 
+        // Alternatively we could maybe loop over squareProps outside the setState function and call setState 64 times, once for each square 
+        // if (newKeycode?.charAt(1) === 'K') {
+        //   if (newKeycode.charAt(0) === 'L') this.setState({...this.state, lightKingPosition: squareId});
+        //   else this.setState({...this.state, darkKingPosition: squareId});
+        // }
+        // ORRRR... we can do this alllll outside this function entirely, that's what I'll do actually 
+        return {
+          ...squareProps,
+          keycode: newKeycode,
+          isHighlighted: false,
+          isAltHighlighted: false,
+          isSelected: false,
+          isAltSelected: false,
+        }
+      }),
+      history: this.state.history.concat([{
+        pieceKeys: newPieceKeys,
+        AN: null, // TODO generate Algebraic Notation for this move -- to do so, we need to know if any other 
+                  //   pieces of the same type would be able to make the same move 
+        INN: `${String(squareMovedFrom).padStart(2, '0')}${String(squareMovedTo).padStart(2, '0')}`, 
+        // International Numeric Notation (Computer Notation, e.g. 5254 == e2->e4)
+      }]),
+    })
   }
 
   handleSquareRightClick = (event, squareId) => {
@@ -884,18 +890,12 @@ class Game extends React.Component {
         squareAltSelected: squareId,
         squareProps: this.state.squareProps.map((oldProps, squarePropId) => {
           const shouldAltHighlight = squaresToAltHighlight.includes(squarePropId);
-          // let newKey = oldProps.key;
-          // if (shouldAltHighlight) {
-          //   const [oldSquareId, oldPieceId, oldChangeCode] = newKey.split('-');
-          //   newKey = `${oldSquareId}-${oldPieceId}-${oldChangeCode + 1}`;
-          // }
           return {
             ...oldProps,
             isAltSelected: (squarePropId === squareId),
             isAltHighlighted: shouldAltHighlight,
             isSelected: false,
             isHighlighted: false,
-            // key: newKey,
           }
         }),
       })
@@ -904,16 +904,10 @@ class Game extends React.Component {
         ...this.state,
         squareAltSelected: null,
         squareProps: this.state.squareProps.map((oldProps, squarePropId) => {
-          // let newKey = oldProps.key;
-          // if (shouldAltHighlight) {
-          //   const [oldSquareId, oldPieceId, oldChangeCode] = newKey.split('-');
-          //   newKey = `${oldSquareId}-${oldPieceId}-${oldChangeCode + 1}`;
-          // }
           return {
             ...oldProps,
             isAltSelected: false,
             isAltHighlighted: false,
-            // key: newKey,
           }
         }),
       })
