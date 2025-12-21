@@ -51,7 +51,7 @@ class Square extends React.Component {
             (this.props.isSelected || this.props.isAltSelected ? " selected" : "")
         } 
         // onClick={() => props.onClick(props.id)} // prop onClick 
-        onClick={() => this.handleClick()} 
+        onClick={() => this.handleClick()}
         data-square-id={this.props.id}
         onContextMenu={this.handleRightClick}
         // testevent={() => this.testEvent()}

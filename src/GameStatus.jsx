@@ -37,11 +37,15 @@ class GameStatus extends React.Component {
             this.props.history.filter((_, moveNumber) => moveNumber % 2 === 0)
               .map((whiteMoveHistoryPly, moveNumber) => {
                 const plyNumber = moveNumber * 2;
-                let correspondingBlackMoveHistoryPlyINN = null;
-                if (this.props.history.length > plyNumber + 1) correspondingBlackMoveHistoryPlyINN = this.props.history[moveNumber * 2 + 1].INN;
+                // let correspondingBlackMoveHistoryPlyINN = null;
+                let correspondingBlackMoveHistoryPlyAN = null;
+                if (this.props.history.length > plyNumber + 1) {
+                  // correspondingBlackMoveHistoryPlyINN = this.props.history[moveNumber * 2 + 1].INN;
+                  correspondingBlackMoveHistoryPlyAN = this.props.history[moveNumber * 2 + 1].AN;
+                }
                 return (
                   <li key={plyNumber}>
-                    {whiteMoveHistoryPly.INN} {correspondingBlackMoveHistoryPlyINN}
+                    {whiteMoveHistoryPly.AN} {correspondingBlackMoveHistoryPlyAN}
                   </li> 
                 )
               })
