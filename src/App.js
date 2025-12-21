@@ -221,6 +221,7 @@ class Game extends React.Component {
               includeCaptures && 
               nextSquareToCheck !== squareToImagineFriendly && 
               // this.state.pieceKeys[nextSquareToCheck].charAt(0) !== this.state.pieceKeys[squareId].charAt(0) && 
+              // eslint-disable-next-line no-loop-func
               captureValidators.some(validator => validator(squareId, nextSquareToCheck)) // at least one validator true means valid capture 
             ) || 
             (
@@ -229,6 +230,7 @@ class Game extends React.Component {
               //   this.state.pieceKeys[nextSquareToCheck].charAt(0) === this.state.pieceKeys[squareId].charAt(0) || 
               //   nextSquareToCheck === squareToImagineFriendly
               // )
+              // eslint-disable-next-line no-loop-func
               selfCaptureValidators.some(validator => validator(squareId, nextSquareToCheck))
             )
           ) {
@@ -553,13 +555,13 @@ class Game extends React.Component {
       // warning: do not mutate state directly. use setState()
       // i still consider it dangerous from a coding practice pov even if we do it the "proper" way ... but let's use setState() i guess 
       
-      this.state.pieceKeys[squareMovedTo] = this.state.pieceKeys[squareMovedFrom];
-      this.state.pieceKeys[squareMovedFrom] = '';
-      // const tempPieceKeys = this.getNewPieceKeysCopyWithMoveApplied(squareMovedFrom, squareMovedTo);
-      // this.setState({
-      //   ...this.state,
-      //   pieceKeys: tempPieceKeys,
-      // });
+      // this.state.pieceKeys[squareMovedTo] = this.state.pieceKeys[squareMovedFrom];
+      // this.state.pieceKeys[squareMovedFrom] = '';
+      const tempPieceKeys = this.getNewPieceKeysCopyWithMoveApplied(squareMovedFrom, squareMovedTo);
+      this.setState({
+        ...this.state,
+        pieceKeys: tempPieceKeys,
+      });
 
       const squaresWithPiecesThatCouldAttackOurKingAfterThisMove = this.getSquaresWithPiecesThatCanAttackThisSquare(
         squareMovedTo, 
@@ -569,13 +571,13 @@ class Game extends React.Component {
       )
 
       // warning: do not mutate state directly. use setState()
-      this.state.pieceKeys[squareMovedFrom] = this.state.pieceKeys[squareMovedTo];
-      this.state.pieceKeys[squareMovedTo] = '';
-      // const pieceKeysAfterRevertingTempMove = this.getNewPieceKeysCopyWithMoveApplied(squareMovedTo, squareMovedFrom);
-      // this.setState({
-      //   ...this.state,
-      //   pieceKeys: pieceKeysAfterRevertingTempMove,
-      // });
+      // this.state.pieceKeys[squareMovedFrom] = this.state.pieceKeys[squareMovedTo];
+      // this.state.pieceKeys[squareMovedTo] = '';
+      const pieceKeysAfterRevertingTempMove = this.getNewPieceKeysCopyWithMoveApplied(squareMovedTo, squareMovedFrom);
+      this.setState({
+        ...this.state,
+        pieceKeys: pieceKeysAfterRevertingTempMove,
+      });
 
       // console.log(`\tSquares w pieces that can attack the king on square ${squareMovedTo}: ${squaresWithPiecesThatCouldAttackOurKingAfterThisMove}`);
       
