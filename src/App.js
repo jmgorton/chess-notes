@@ -123,7 +123,7 @@ class Game extends React.Component {
   }
 
   // TODO can we name this input argument dictionary and just spread it??
-  generatePieceValidCaptureMoves = (squareId, directions, {distance = 8, nextSquareValidators = [], captureValidators = []} = {}) => {
+  generatePieceValidCaptureMoves = (squareId, directions, {distance = 8, nextSquareValidators = [], captureValidators = []} = {}, boardState = this.state.pieceKeys) => {
     return this.generatePieceValidMoves(
       squareId, 
       directions, 
@@ -132,11 +132,12 @@ class Game extends React.Component {
         nextSquareValidators: nextSquareValidators, 
         captureValidators: captureValidators, 
         includeNonCaptures: false
-      }
+      },
+      boardState,
     );
   }
 
-  generatePieceValidNonCaptureMoves = (squareId, directions, {distance = 8, nextSquareValidators = [], captureValidators = []} = {}) => {
+  generatePieceValidNonCaptureMoves = (squareId, directions, {distance = 8, nextSquareValidators = [], captureValidators = []} = {}, boardState = this.state.pieceKeys) => {
     return this.generatePieceValidMoves(
       squareId, 
       directions, 
@@ -145,11 +146,12 @@ class Game extends React.Component {
         nextSquareValidators: nextSquareValidators, 
         captureValidators: captureValidators, 
         includeCaptures: false
-      }
+      },
+      boardState,
     );
   }
 
-  generatePieceValidSelfCaptureMoves = (squareId, directions, {distance = 8, nextSquareValidators = [], captureValidators = []} = {}) => {
+  generatePieceValidSelfCaptureMoves = (squareId, directions, {distance = 8, nextSquareValidators = [], captureValidators = []} = {}, boardState = this.state.pieceKeys) => {
     return this.generatePieceValidMoves(
       squareId, 
       directions, 
@@ -160,7 +162,8 @@ class Game extends React.Component {
         includeCaptures: false, 
         includeNonCaptures: false, 
         includeSelfCaptures: true
-      }
+      },
+      boardState,
     );
   }
 
@@ -181,7 +184,8 @@ class Game extends React.Component {
       includeSelfCaptures = false,
       squareToImagineEmpty = null, // used to test out possible moves this side may make 
       squareToImagineFriendly = null, // used to test out possible moves this side may make 
-    } = {}
+    } = {},
+    boardState = this.state.pieceKeys,
   ) => {
     const legalMoves = [];
     if ((squareToImagineEmpty || squareToImagineFriendly) && squareToImagineEmpty === squareToImagineFriendly) {
@@ -194,8 +198,8 @@ class Game extends React.Component {
     // }
     nextSquareValidators.push((oldSquare, newSquare) => oldSquare >= 0 && newSquare >= 0);
     nextSquareValidators.push((oldSquare, newSquare) => oldSquare < 64 && newSquare < 64);
-    captureValidators.push((squareFrom, squareTo) => this.state.pieceKeys[squareFrom]?.charAt(0) !== this.state.pieceKeys[squareTo]?.charAt(0));
-    selfCaptureValidators.push((squareFrom, squareTo) => this.state.pieceKeys[squareFrom]?.charAt(0) === this.state.pieceKeys[squareTo]?.charAt(0))
+    captureValidators.push((squareFrom, squareTo) => boardState[squareFrom]?.charAt(0) !== boardState[squareTo]?.charAt(0));
+    selfCaptureValidators.push((squareFrom, squareTo) => boardState[squareFrom]?.charAt(0) === boardState[squareTo]?.charAt(0));
     selfCaptureValidators.push((squareFrom, squareTo) => squareTo === squareToImagineFriendly);
     directions.forEach((direction) => {
       let checkedSquare = squareId;
@@ -206,7 +210,7 @@ class Game extends React.Component {
         if (
           nextSquareToCheck !== squareToImagineFriendly && 
           (
-            this.state.pieceKeys[nextSquareToCheck] === "" || 
+            boardState[nextSquareToCheck] === "" || 
             nextSquareToCheck === squareToImagineEmpty
           )
         ) {
@@ -247,7 +251,7 @@ class Game extends React.Component {
     return legalMoves;
   }
 
-  generatePawnValidMoves = (squareId, includeNonCaptures = true, includeSelfCaptures = false) => {
+  generatePawnValidMoves = (squareId, includeNonCaptures = true, includeSelfCaptures = false, boardState = this.state.pieceKeys) => {
 
     // // Legal pawn moves 
 
@@ -311,7 +315,7 @@ class Game extends React.Component {
 
     // // LEGAL PAWN MOVES (3RD APPROACH) ... nvm that's stupid, not worth it ... or is it? 
 
-    const playerCode = this.state.pieceKeys[squareId].charAt(0);
+    const playerCode = boardState[squareId].charAt(0);
     const currRank = Math.floor(squareId / 8);
     // const currFile = squareId % 8;
 
@@ -332,7 +336,8 @@ class Game extends React.Component {
           playerCode === 'L' ? [-8] : [8],
           {
             distance: (currRank === (playerCode === 'L' ? 6 : 1)) ? 2 : 1,
-          }
+          },
+          boardState
         )
       );
     }
@@ -354,7 +359,8 @@ class Game extends React.Component {
               return this.state.history[this.state.history.length - 1].INN === targetPreviousINN;
             }
           ],
-        }
+        },
+        boardState,
       )
     )
 
@@ -365,7 +371,8 @@ class Game extends React.Component {
           playerCode === 'L' ? [-7,-9] : [7,9],
           {
             distance: 1,
-          }
+          },
+          boardState,
         )
       )
     }
@@ -373,7 +380,7 @@ class Game extends React.Component {
     return pawnMoves;
   }
 
-  generateKnightValidMoves = (squareId, includeNonCaptures = true, includeSelfCaptures = false, squareToImagineEmpty = null, squareToImagineFriendly = null) => {
+  generateKnightValidMoves = (squareId, includeNonCaptures = true, includeSelfCaptures = false, squareToImagineEmpty = null, squareToImagineFriendly = null, boardState = this.state.pieceKeys) => {
     const nextSquareValidators = [
       (square, nextSquare) => Math.abs((square % 8) - (nextSquare % 8)) <= 2,
       (square, nextSquare) => Math.abs(Math.floor(square / 8) - Math.floor(nextSquare / 8)) <= 2,
@@ -389,11 +396,12 @@ class Game extends React.Component {
         includeSelfCaptures: includeSelfCaptures,
         squareToImagineEmpty: squareToImagineEmpty,
         squareToImagineFriendly: squareToImagineFriendly,
-      }
+      },
+      boardState,
     );
   }
 
-  generateBishopValidMoves = (squareId, includeNonCaptures = true, includeSelfCaptures = false, squareToImagineEmpty = null, squareToImagineFriendly = null) => {
+  generateBishopValidMoves = (squareId, includeNonCaptures = true, includeSelfCaptures = false, squareToImagineEmpty = null, squareToImagineFriendly = null, boardState = this.state.pieceKeys) => {
     const nextSquareValidators = [
       (square, nextSquare) => Math.abs(Math.floor(nextSquare / 8) - Math.floor(square / 8)) === 1,
       (square, nextSquare) => Math.abs(square % 8 - nextSquare % 8) === 1,
@@ -408,11 +416,12 @@ class Game extends React.Component {
         includeSelfCaptures: includeSelfCaptures,
         squareToImagineEmpty: squareToImagineEmpty,
         squareToImagineFriendly: squareToImagineFriendly,
-      }
+      },
+      boardState
     );
   }
 
-  generateRookValidMoves = (squareId, includeNonCaptures = true, includeSelfCaptures = false, squareToImagineEmpty = null, squareToImagineFriendly = null) => {
+  generateRookValidMoves = (squareId, includeNonCaptures = true, includeSelfCaptures = false, squareToImagineEmpty = null, squareToImagineFriendly = null, boardState = this.state.pieceKeys) => {
     const nextSquareValidators = [
       (square, nextSquare) => Math.abs(Math.floor(nextSquare / 8) - Math.floor(square / 8)) ^ Math.abs(square % 8 - nextSquare % 8) === 0b1,
       (square, nextSquare) => Math.floor(nextSquare / 8) === Math.floor(square / 8) ^ square % 8 === nextSquare % 8,
@@ -427,18 +436,19 @@ class Game extends React.Component {
         includeSelfCaptures: includeSelfCaptures,
         squareToImagineEmpty: squareToImagineEmpty,
         squareToImagineFriendly: squareToImagineFriendly,
-      }
+      },
+      boardState
     );
   }
 
   // add squareToImagineEmpty = null, squareToImagineFriendly = null here??? idts 
-  generateQueenValidMoves = (squareId, includeNonCaptures = true, includeSelfCaptures = false) => {
+  generateQueenValidMoves = (squareId, includeNonCaptures = true, includeSelfCaptures = false, boardState = this.state.pieceKeys) => {
     // there's a bug here somehow, queen was on d5 and a highlighted move was b4, or even a4 ... maybe it's fixed now 
-    return this.generateBishopValidMoves(squareId, includeNonCaptures, includeSelfCaptures)
-      .concat(this.generateRookValidMoves(squareId, includeNonCaptures, includeSelfCaptures));
+    return this.generateBishopValidMoves(squareId, includeNonCaptures, includeSelfCaptures, null, null, boardState)
+      .concat(this.generateRookValidMoves(squareId, includeNonCaptures, includeSelfCaptures, null, null, boardState));
   }
 
-  generateKingValidMoves = (squareId, includeNonCaptures = true, includeSelfCaptures = false, includeCastling = true) => {
+  generateKingValidMoves = (squareId, includeNonCaptures = true, includeSelfCaptures = false, includeCastling = true, boardState = this.state.pieceKeys) => {
     // TODO king nextSquareValidators are more complicated, have to analyze other pieces next move for possible checks...
     //   or apply, from the king's square, all possible types of piece moves and see if a piece that can make that move is on any of those squares 
     const nextSquareValidators = [
@@ -452,7 +462,8 @@ class Game extends React.Component {
         nextSquareValidators: nextSquareValidators, 
         includeNonCaptures: includeNonCaptures,
         includeSelfCaptures: includeSelfCaptures,
-      }
+      },
+      boardState,
     );
 
     // avoid the infinite loop from getSquaresWithPiecesThatCanAttackThisSquare calling generateKingValidMoves and trying to check for castling as an attack 
@@ -470,16 +481,19 @@ class Game extends React.Component {
     // that none of the opponent's pieces can target either square that the rook or king will land on 
     //   (in short castling, this means none of the squares that are between the king and rook; in long castling, the square
     //    next to the rook *can* be targeted) 
-    const playerCode = this.state.pieceKeys[squareId].charAt(0);
+    const playerCode = boardState[squareId].charAt(0);
     const shortCastleRookStartingSquare = this.state.whiteToPlay ? 63 : 7;
     const shortCastleKingSafetySquares = this.state.whiteToPlay ? [60, 61, 62] : [4, 5, 6];
     if (
-      this.state.pieceKeys.slice(kingStartingSquare + 1, shortCastleRookStartingSquare).every(pieceKey => pieceKey === '')
-      // && this.state.history.every(pastMove => !pastMove.INN.startsWith(String(shortCastleRookStartingSquare).padStart(2, '0')))
+      boardState.slice(kingStartingSquare + 1, shortCastleRookStartingSquare).every(pieceKey => pieceKey === '') && 
+      // this.state.history.every(pastMove => !pastMove.INN.startsWith(String(shortCastleRookStartingSquare).padStart(2, '0')))
+      this.state.whiteToPlay ? 
+        this.state.lightKingHasShortCastlingRights :
+        this.state.darkKingHasShortCastlingRights
     ) {
       if (shortCastleKingSafetySquares
           .every(square => this.getSquaresWithPiecesThatCanAttackThisSquare(square) 
-            .filter((square) => this.state.pieceKeys[square].charAt(0) !== playerCode).length === 0
+            .filter((square) => boardState[square].charAt(0) !== playerCode).length === 0
           )
       ) {
         legalMoves.push(shortCastleRookStartingSquare);
@@ -487,12 +501,15 @@ class Game extends React.Component {
     }
     const longCastleRookStartingSquare = this.state.whiteToPlay ? 56 : 0;
     const longCastleKingSafetySquares = this.state.whiteToPlay ? [60, 59, 58] : [4, 3, 2];
-    if (this.state.pieceKeys.slice(longCastleRookStartingSquare + 1, kingStartingSquare).every(pieceKey => pieceKey === '')
-      // && this.state.history.every(pastMove => !pastMove.INN.startsWith(String(longCastleRookStartingSquare).padStart(2, '0')))
+    if (boardState.slice(longCastleRookStartingSquare + 1, kingStartingSquare).every(pieceKey => pieceKey === '') &&
+      // this.state.history.every(pastMove => !pastMove.INN.startsWith(String(longCastleRookStartingSquare).padStart(2, '0')))
+      this.state.whiteToPlay ?
+        this.state.lightKingHasLongCastlingRights :
+        this.state.darkKingHasLongCastlingRights
     ) {
       if (longCastleKingSafetySquares
           .every(square => this.getSquaresWithPiecesThatCanAttackThisSquare(square) 
-            .filter((square) => this.state.pieceKeys[square].charAt(0) !== playerCode)
+            .filter((square) => boardState[square].charAt(0) !== playerCode)
             .length === 0
           )
       ) {
@@ -546,6 +563,10 @@ class Game extends React.Component {
   }
 
   wouldOwnKingBeInCheckAfterMove = (squareMovedFrom, squareMovedTo) => {
+
+    // const ownKingPosition = this.state.whiteToPlay ? this.state.lightKingPosition : this.state.darkKingPosition;
+    // const tempBoardState = this.getNewPieceKeysCopyWithMoveApplied(squareMovedFrom, squareMovedTo);
+
     // const playerCode = this.state.pieceKeys[squareMovedFrom].charAt(0);
     // const playerCode = this.state.whiteToPlay ? "L" : "D";
     const pieceCode = this.state.pieceKeys[squareMovedFrom].charAt(1);
@@ -554,30 +575,34 @@ class Game extends React.Component {
       // TODO dangerous, find a better way to do this 
       // warning: do not mutate state directly. use setState()
       // i still consider it dangerous from a coding practice pov even if we do it the "proper" way ... but let's use setState() i guess 
-      
-      // this.state.pieceKeys[squareMovedTo] = this.state.pieceKeys[squareMovedFrom];
-      // this.state.pieceKeys[squareMovedFrom] = '';
+      // in current state [c5df4ed], using setState instead of modifying state directly does fix the castling issue where the rook disappears
+      // but it causes the issue with generating the king's escape squares after check to return... the move that should be legal is not
+      // because the king's own pieces, and the king itself, can attack that square 
+
+      // // this.state.pieceKeys[squareMovedTo] = this.state.pieceKeys[squareMovedFrom];
+      // // this.state.pieceKeys[squareMovedFrom] = '';
       const tempPieceKeys = this.getNewPieceKeysCopyWithMoveApplied(squareMovedFrom, squareMovedTo);
-      this.setState({
-        ...this.state,
-        pieceKeys: tempPieceKeys,
-      });
+      // this.setState({
+      //   ...this.state,
+      //   pieceKeys: tempPieceKeys,
+      // });
 
       const squaresWithPiecesThatCouldAttackOurKingAfterThisMove = this.getSquaresWithPiecesThatCanAttackThisSquare(
         squareMovedTo, 
         false, 
-        squareMovedFrom, 
-        null
-      )
+        null, // squareMovedFrom, // do this if we don't update state 
+        null,
+        tempPieceKeys,
+      );
 
-      // warning: do not mutate state directly. use setState()
-      // this.state.pieceKeys[squareMovedFrom] = this.state.pieceKeys[squareMovedTo];
-      // this.state.pieceKeys[squareMovedTo] = '';
-      const pieceKeysAfterRevertingTempMove = this.getNewPieceKeysCopyWithMoveApplied(squareMovedTo, squareMovedFrom);
-      this.setState({
-        ...this.state,
-        pieceKeys: pieceKeysAfterRevertingTempMove,
-      });
+      // // warning: do not mutate state directly. use setState()
+      // // this.state.pieceKeys[squareMovedFrom] = this.state.pieceKeys[squareMovedTo];
+      // // this.state.pieceKeys[squareMovedTo] = '';
+      // const pieceKeysAfterRevertingTempMove = this.getNewPieceKeysCopyWithMoveApplied(squareMovedTo, squareMovedFrom);
+      // this.setState({
+      //   ...this.state,
+      //   pieceKeys: pieceKeysAfterRevertingTempMove,
+      // });
 
       // console.log(`\tSquares w pieces that can attack the king on square ${squareMovedTo}: ${squaresWithPiecesThatCouldAttackOurKingAfterThisMove}`);
       
@@ -681,8 +706,11 @@ class Game extends React.Component {
   // which in turn would have to get passed all the way down to the generatePieceValidMoves method 
 
   // TODO we might also need to include an includeNonCaptures flag here as well... 
-  getSquaresWithPiecesThatCanAttackThisSquare = (squareId, includeSelfAttacks = true, squareToImagineEmpty = null, squareToImagineFriendly = null) => {
-    // if ((squareId === 51 || squareId === 52) && squareToImagineEmpty === 60) console.log(`\t\tgetSquaresWithPiecesThatCanAttackThisSquare(squareId: ${squareId}, includeSelfAttacks: ${includeSelfAttacks}, squareToImagineEmpty: ${squareToImagineEmpty}, squareToImagineFriendly: ${squareToImagineFriendly})`)
+  getSquaresWithPiecesThatCanAttackThisSquare = (squareId, includeSelfAttacks = true, squareToImagineEmpty = null, squareToImagineFriendly = null, boardState = this.state.pieceKeys) => {
+    // if ((squareId === 51 || squareId === 52) && (squareToImagineEmpty === 60 || squareToImagineEmpty === null)) {
+    //   console.log(`\t\tgetSquaresWithPiecesThatCanAttackThisSquare(squareId: ${squareId}, includeSelfAttacks: ${includeSelfAttacks}, squareToImagineEmpty: ${squareToImagineEmpty}, squareToImagineFriendly: ${squareToImagineFriendly})`)
+    //   console.log(`\t\t\tpieceKeys[squareId]=${boardState[squareId]}; pieceKeys[squareToImagineEmpty]=${boardState[squareToImagineEmpty]}`);
+    // }
     let squaresTargetingThisOne = [];
 
     // // Pawn logic replaced with function call to generatePawnValidMoves below 
@@ -708,32 +736,32 @@ class Game extends React.Component {
     // TODO really need to verify whether we should be including non-captures, probably add a function argument 
     // for now let's just set it completely based on whether we are checking an empty or occupied square and see if it breaks 
 
-    const includeNonCaptures = (this.state.pieceKeys[squareId] === '');
+    const includeNonCaptures = (boardState[squareId] === '');
 
-    this.generatePawnValidMoves(squareId, includeNonCaptures, includeSelfAttacks)
-      .filter((square) => this.state.pieceKeys[square].charAt(1) === "P")
+    this.generatePawnValidMoves(squareId, includeNonCaptures, includeSelfAttacks, boardState)
+      .filter((square) => boardState[square].charAt(1) === "P")
       .forEach((square) => squaresTargetingThisOne.push(square));
 
-    this.generateKnightValidMoves(squareId, includeNonCaptures, includeSelfAttacks) // , squareToImagineEmpty, squareToImagineFriendly) 
+    this.generateKnightValidMoves(squareId, includeNonCaptures, includeSelfAttacks, null, null, boardState) // , squareToImagineEmpty, squareToImagineFriendly) 
       // // are squares to imagine empty/friendly needed for knights? blocking isn't possible... 
-      .filter((square) => this.state.pieceKeys[square].charAt(1) === "N")
+      .filter((square) => boardState[square].charAt(1) === "N")
       .forEach((square) => squaresTargetingThisOne.push(square));
 
-    this.generateBishopValidMoves(squareId, includeNonCaptures, includeSelfAttacks, squareToImagineEmpty, squareToImagineFriendly)
-      .filter((square) => ["B","Q"].includes(this.state.pieceKeys[square].charAt(1)))
+    this.generateBishopValidMoves(squareId, includeNonCaptures, includeSelfAttacks, squareToImagineEmpty, squareToImagineFriendly, boardState)
+      .filter((square) => ["B","Q"].includes(boardState[square].charAt(1)))
       .forEach((square) => squaresTargetingThisOne.push(square));
 
-    this.generateRookValidMoves(squareId, includeNonCaptures, includeSelfAttacks, squareToImagineEmpty, squareToImagineFriendly)
-      .filter((square) => ["R","Q"].includes(this.state.pieceKeys[square].charAt(1)))
+    this.generateRookValidMoves(squareId, includeNonCaptures, includeSelfAttacks, squareToImagineEmpty, squareToImagineFriendly, boardState)
+      .filter((square) => ["R","Q"].includes(boardState[square].charAt(1)))
       .forEach((square) => squaresTargetingThisOne.push(square));
 
-    this.generateKingValidMoves(squareId, includeNonCaptures, includeSelfAttacks, false) // includeNonCaptures should be set to..? 
+    this.generateKingValidMoves(squareId, includeNonCaptures, includeSelfAttacks, false, boardState) // includeNonCaptures should be set to..? 
       // it depends on if this method is being called on a square with a piece on it or an empty square i guess, or if we're just highlighting vs actually using the results 
       // also, at this moment all others are using false, king is only one set to true, and it seems kinda working... but let's set it to the new var 
       // OK i broke it again and neither value for includeNonCaptures works ... am i setting includeNonCaptures correctly? 
       // hmm, it is specifically because of the change in wouldOwnKingBeInCheckAfterMove where i tried to use getPieceKeysCopy and set state appropriately..? 
       // TODO investigate later 
-      .filter((square) => this.state.pieceKeys[square].charAt(1) === "K")
+      .filter((square) => boardState[square].charAt(1) === "K")
       .forEach((square) => squaresTargetingThisOne.push(square));
 
     return squaresTargetingThisOne;
@@ -841,6 +869,7 @@ class Game extends React.Component {
     }
     // TODO there's a bug with castling, rook stopped showing up, seems like it's here somewhere ...
     // can i not setState twice back to back or something weird?? why is that happening? 
+    // EDIT: no the issue was somewhere else, avoiding modifying state directly above resolved that issue. 
     this.setState({
       ...this.state,
       squareSelected: null,
