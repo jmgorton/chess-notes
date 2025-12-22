@@ -123,23 +123,69 @@ class Game extends React.Component {
     }
   }
 
+  generateBoardFEN = (boardState = this.state.pieceKeys) => {
+    // lowercase is black, upper is white, standard piece keys for pieces, numbers for consecutive empty squares,
+    // followed by next player's move, then castling rights still available, the en passant target square (if applicable),
+    // and finally, the "half-move clock" and the full-move counter 
+    // see: https://www.chessprogramming.org/Forsyth-Edwards_Notation for more info 
+
+    // 
+  }
+
+  generateBoardStateFromFen = (inputFEN) => {
+    const [piecePlacement, sideToMove, castlingAbility, enPassantTargetSquare, halfmoveClock, fullmoveCounter] = inputFEN.split(' ');
+    const rankPiecePlacements = piecePlacement.split('/');
+  }
+
   // piece should *already* be on squareMovedTo, the algebraic notation will be generated always after the move is played 
   // actually... maybe the history is updated at the same time as the board, and state might not be updated yet 
-  generateMoveAN = (squareMovedFrom, squareMovedTo) => {
-    let [playerCode, pieceCode] = this.state.pieceKeys[squareMovedTo].split('');
-    if (playerCode === undefined && pieceCode === undefined) [playerCode, pieceCode] = this.state.pieceKeys[squareMovedFrom].split('');
+  generateMoveAN = (squareMovedFrom, squareMovedTo) => { // , futureBoardState = this.state.pieceKeys) => {
+    const futureBoardState = this.getNewPieceKeysCopyWithMoveApplied(squareMovedFrom, squareMovedTo);
+    const currentBoardState = this.state.pieceKeys.slice();
+    let [playerCode, pieceCode] = [null, null]; // futureBoardState[squareMovedTo].split('');
+    if (playerCode === null && pieceCode === null) { // null !== undefined ... SMH 
+      [playerCode, pieceCode] = futureBoardState[squareMovedTo].split('');
+    }
+    const isCapture = (currentBoardState[squareMovedTo] !== '' ? 'x' : '');
+    const isCheck = this.isKingInCheck() ? '+' : '';
     const destinationFile = 'abcdefgh'.charAt(squareMovedTo % 8);
-    const destinationRank = Math.floor(squareMovedTo / 8);
-    const movesThatNecessitateFurtherClarification = this.getSquaresWithPiecesThatCanAttackThisSquare(squareMovedTo, true) // get all pieces incl. self-attacks 
-      .filter((squareId) => this.state.pieceKeys[squareId].charAt(0) === playerCode) // filter out non-self-attacks (opponent attacks)
-      .filter((squareId) => this.state.pieceKeys[squareId].charAt(1) === pieceCode) // get only self-attacks from the same type of piece 
+    const destinationRank = 8 - Math.floor(squareMovedTo / 8); // remember that our 0-63 is kind of backwards, and 0-indexed 
+    const movesThatNecessitateFurtherClarification = this.getSquaresWithPiecesThatCanAttackThisSquare(squareMovedTo, true, null, null, futureBoardState) // get all pieces incl. self-attacks 
+      .filter((squareId) => futureBoardState[squareId].charAt(0) === playerCode) // filter out non-self-attacks (opponent attacks)
+      .filter((squareId) => futureBoardState[squareId].charAt(1) === pieceCode) // get only self-attacks from the same type of piece 
       .filter((squareId) => squareId !== squareMovedFrom); // state issue TODO fix ... including this piece 
     // const isCapture = isMoveCapture
     if (movesThatNecessitateFurtherClarification.length === 0) {
-      if (pieceCode === 'P') return `${destinationFile}${destinationRank}`;
-      return `${pieceCode}${destinationFile}${destinationRank}`;
+      if (pieceCode === 'P') {
+        if (isCapture && isCapture !== '') {
+          const sourceFile = 'abcdefgh'.charAt(squareMovedFrom % 8);
+          return `${sourceFile}x${destinationFile}${destinationRank}${isCheck}`;
+        }
+        return `${destinationFile}${destinationRank}${isCheck}`;
+      }
+      return `${pieceCode}${isCapture}${destinationFile}${destinationRank}${isCheck}`;
     } else {
-      return "TODO: CLARIFY";
+      // if (movesThatNecessitateFurtherClarification.length > 1) {
+      //   // this can actually be kind of complicated, for example if one or some of the pieces are pinned, 
+      //   // or promoting several pawns to knights and all (up to 4) attack the same square but have different rank *and* file
+      //   // for rooks, bishops, (even queens? no...) just default with sourceFile,
+      //   // use sourceRank if necessary due to duplicate identical sourceFile options, or use both of both have dupes 
+      //   const sourceFile
+      //   return 
+      // }
+      const sourceFile = 'abcdefgh'.charAt(squareMovedFrom % 8);
+      const sourceRank = 8 - Math.floor(squareMovedFrom / 8);
+      let dupeSourceFiles = false;
+      let dupeSourceRanks = false;
+      for (const altMove in movesThatNecessitateFurtherClarification) {
+        // check if piece move is actually legal here??? could expose a check 
+        const altSourceFile = 'abcdefgh'.charAt(altMove % 8);
+        const altSourceRank = 8 - Math.floor(altMove / 8);
+        dupeSourceFiles = dupeSourceFiles || sourceFile === altSourceFile;
+        dupeSourceRanks = dupeSourceRanks || sourceRank === altSourceRank;
+      }
+      const pieceClarification = dupeSourceFiles ? (dupeSourceRanks ? `${sourceFile}${sourceRank}` : `${sourceRank}`) : `${sourceFile}`;
+      return `${pieceCode}${pieceClarification}${isCapture}${destinationFile}${destinationRank}${isCheck}`;
     }
   }
 
@@ -929,9 +975,15 @@ class Game extends React.Component {
         }
       }
     }
+
+    const nextMoveAN = this.generateMoveAN(squareMovedFrom, squareMovedTo); // , newPieceKeys);
+    const nextMoveJN = this.generateMoveJN(squareMovedFrom, squareMovedTo);
+    const nextMoveINN = this.generateMoveINN(squareMovedFrom, squareMovedTo);
+
     // TODO there's a bug with castling, rook stopped showing up, seems like it's here somewhere ...
     // can i not setState twice back to back or something weird?? why is that happening? 
     // EDIT: no the issue was somewhere else, avoiding modifying state directly above resolved that issue. 
+    // NOTE: *DO NOT CALL METHODS THAT REFERENCE STATE WHILE SETTING STATE* 
     this.setState({
       ...this.state,
       squareSelected: null,
@@ -959,10 +1011,10 @@ class Game extends React.Component {
       }),
       history: this.state.history.concat([{
         pieceKeys: newPieceKeys,
-        AN: this.generateMoveAN(squareMovedFrom, squareMovedTo), // TODO generate Algebraic Notation for this move -- to do so, we need to know if any other 
+        AN: nextMoveAN, // TODO generate Algebraic Notation for this move -- to do so, we need to know if any other 
                   //   pieces of the same type would be able to make the same move 
-        JN: this.generateMoveJN(squareMovedFrom, squareMovedTo), 
-        INN: this.generateMoveINN(squareMovedFrom, squareMovedTo),
+        JN: nextMoveJN, 
+        INN: nextMoveINN,
         // International Numeric Notation (Computer Notation, e.g. 5254 == e2->e4)
       }]),
     });
