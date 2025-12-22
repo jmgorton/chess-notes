@@ -147,7 +147,8 @@ class Game extends React.Component {
       [playerCode, pieceCode] = futureBoardState[squareMovedTo].split('');
     }
     const isCapture = (currentBoardState[squareMovedTo] !== '' ? 'x' : '');
-    const isCheck = this.isKingInCheck() ? '+' : '';
+    const isCheck = this.isKingInCheck() ? '+' : ''; // TODO or checkmate 
+    const isPawnPromotion = '=[Q,R,B,N]'; // TODO implement 
     const destinationFile = 'abcdefgh'.charAt(squareMovedTo % 8);
     const destinationRank = 8 - Math.floor(squareMovedTo / 8); // remember that our 0-63 is kind of backwards, and 0-indexed 
     const movesThatNecessitateFurtherClarification = this.getSquaresWithPiecesThatCanAttackThisSquare(squareMovedTo, true, null, null, futureBoardState) // get all pieces incl. self-attacks 
@@ -647,7 +648,8 @@ class Game extends React.Component {
 
   wouldOwnKingBeInCheckAfterMove = (squareMovedFrom, squareMovedTo) => {
 
-    const ownKingPosition = this.state.whiteToPlay ? this.state.lightKingPosition : this.state.darkKingPosition;
+    let ownKingPosition = this.state.whiteToPlay ? this.state.lightKingPosition : this.state.darkKingPosition;
+    if (ownKingPosition === squareMovedFrom) ownKingPosition = squareMovedTo;
     const tempBoardState = this.getNewPieceKeysCopyWithMoveApplied(squareMovedFrom, squareMovedTo);
     const squaresWithPiecesThatCouldAttackOurKingAfterThisMove = this.getSquaresWithPiecesThatCanAttackThisSquare(
       ownKingPosition, 
@@ -973,6 +975,13 @@ class Game extends React.Component {
         } else if (squareMovedFrom === 0) {
           this.setState({...this.state, darkKingHasLongCastlingRights: false});
         }
+      }
+    } else if (this.state.pieceKeys[squareMovedFrom].charAt(1) === 'P') {
+      const isPromoting = Math.floor(squareMovedTo / 8) === (this.state.whiteToPlay ? 0 : 7);
+      if (isPromoting) {
+        // TODO implement UI, just auto-queen for now 
+        // newPieceKeys is const, but can we change elements?? 
+        newPieceKeys[squareMovedTo] = this.state.pieceKeys[squareMovedFrom].charAt(0) + 'Q';
       }
     }
 
