@@ -963,6 +963,7 @@ class Game extends React.Component {
         }
       }
     } else if (this.state.pieceKeys[squareMovedFrom].charAt(1) === 'R') {
+      // TODO we also lose castling rights if a piece *captures* the rook 
       if (this.state.pieceKeys[squareMovedFrom].charAt(0) === 'L') {
         if (squareMovedFrom === 63) {
           this.setState({...this.state, lightKingHasShortCastlingRights: false});
