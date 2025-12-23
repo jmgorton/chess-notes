@@ -1,9 +1,9 @@
 import React from 'react';
 import './App.css';
 
-import GameStatus from './GameStatus.jsx';
-import { GameNotes } from './GameNotes.tsx';
-import Board from './Board.jsx';
+import GameStatus from './components/GameStatus.jsx';
+import { GameNotes } from './components/GameNotes';
+import Board from './components/Board.jsx';
 
 // import {
 //   BrowserRouter as Router,
@@ -53,20 +53,21 @@ class Game extends React.Component {
           isAltHighlighted: false,
           isSelected: false,
           isAltSelected: false,
+          isPromoting: false,
         }
       }),
 
-      // TODO not yet maintained (except for light/dark king positions) 
-      lightPawnPositions: [48, 49, 50, 51, 52, 53, 54, 55],
-      darkPawnPositions: [8, 9, 10, 11, 12, 13, 14, 15],
-      lightKnightPositions: [57, 62],
-      darkKnightPositions: [1, 6],
-      lightBishopPositions: [58, 61],
-      darkBishopPositions: [2, 5],
-      lightRooksPositions: [56, 63],
-      darkRooksPositions: [0, 7],
-      lightQueenPositions: [59],
-      darkQueenPositions: [3],
+      // // TODO not yet maintained (except for light/dark king positions) 
+      // lightPawnPositions: [48, 49, 50, 51, 52, 53, 54, 55],
+      // darkPawnPositions: [8, 9, 10, 11, 12, 13, 14, 15],
+      // lightKnightPositions: [57, 62],
+      // darkKnightPositions: [1, 6],
+      // lightBishopPositions: [58, 61],
+      // darkBishopPositions: [2, 5],
+      // lightRooksPositions: [56, 63],
+      // darkRooksPositions: [0, 7],
+      // lightQueenPositions: [59],
+      // darkQueenPositions: [3],
       lightKingPosition: 60,
       darkKingPosition: 4,
 
@@ -75,21 +76,27 @@ class Game extends React.Component {
       darkKingHasShortCastlingRights: true,
       darkKingHasLongCastlingRights: true,
 
-      // TODO not yet used or maintained 
-      // warning: numeric literals with absolute values equal to 2^53 or greater are too large to be represented accurately as integers.
-      // append an `n` to use the BigInt javascript type 
-      bitmapLightPawns: 0x000000000000ff00n, // 6th (7th) rank full of 1s
-      bitmapDarkPawns: 0x00ff000000000000n, // 1st (2nd) rank full of 1s
-      bitmapLightKnights: 0x0000000000000042n,
-      bitmapDarkKnights: 0x2400000000000000n,
-      bitmapLightBishops: 0x0000000000000024n,
-      bitmapDarkBishops: 0x4200000000000000n,
-      bitmapLightRooks: 0x0000000000000081n,
-      bitmapDarkRooks: 0x1800000000000000n,
-      bitmapLightQueens: 0x0000000000000010n,
-      bitmapDarkQueens: 0x1000000000000000n,
-      bitmapLightKing: 0x0000000000000008n,
-      bitmapDarkKing: 0x0800000000000000n,
+      enPassantTargetSquare: null,
+
+      // // TODO not yet used or maintained 
+      // // warning: numeric literals with absolute values equal to 2^53 or greater are too large to be represented accurately as integers.
+      // // append an `n` to use the BigInt javascript type 
+      // bitmapLightPawns: 0x000000000000ff00n, // 6th (7th) rank full of 1s
+      // bitmapDarkPawns: 0x00ff000000000000n, // 1st (2nd) rank full of 1s
+      // bitmapLightKnights: 0x0000000000000042n,
+      // bitmapDarkKnights: 0x2400000000000000n,
+      // bitmapLightBishops: 0x0000000000000024n,
+      // bitmapDarkBishops: 0x4200000000000000n,
+      // bitmapLightRooks: 0x0000000000000081n,
+      // bitmapDarkRooks: 0x1800000000000000n,
+      // bitmapLightQueens: 0x0000000000000010n,
+      // bitmapDarkQueens: 0x1000000000000000n,
+      // bitmapLightKing: 0x0000000000000008n,
+      // bitmapDarkKing: 0x0800000000000000n,
+
+      // squaresAttackedByWhite: new Set(40, 41, 42, 43, 44, 45, 46, 47), 
+      // squaresAttackedByBlack: new Set(16, 17, 18, 19, 20, 21, 22, 23), 
+      // TODO also store squares that can be discover-attacked by a piece after moving another piece 
 
 
       // props:
@@ -110,55 +117,168 @@ class Game extends React.Component {
       squareSelected: null,
       squareAltSelected: null,
       whiteToPlay: true,
-      FENstring: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", // starting position in Forsyth-Edwards Notation 
-      history: [], // don't store the initial state 
+      FEN: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", // starting position in Forsyth-Edwards Notation 
+      history: [], 
       // history: [{
-      //   pieceKeys: startingConfig, // full state of keycodes on board at this move
+      //   pieceKeys: startingConfig, // full state of keycodes on board at this move // don't store the initial state 
       //   AN: null, // Algebraic Notation
       //   JN: null, // Jared's Notation
       //   INN: null, // International Numeric Notation (Computer Notation, e.g. 5254 == e2->e4)
-      //          // TODO just realized i'm doing INN wrong... using the square id of the board, not mapping first number to the file and second to rank
       // }],
-      stepNumber: 0,
+      plyNumber: 0,
     }
   }
 
-  generateBoardFEN = (boardState = this.state.pieceKeys) => {
+  generateBoardFEN = (event, boardState = this.state.pieceKeys) => {
+    if (event && typeof event.preventDefault === 'function') event.preventDefault();
+
     // lowercase is black, upper is white, standard piece keys for pieces, numbers for consecutive empty squares,
     // followed by next player's move, then castling rights still available, the en passant target square (if applicable),
     // and finally, the "half-move clock" and the full-move counter 
     // see: https://www.chessprogramming.org/Forsyth-Edwards_Notation for more info 
 
-    // 
+    // console.log(boardState);
+    const piecePlacementWithSpaces = boardState.map((pieceKey, index) => {
+      const [playerCode, pieceCode] = pieceKey.split('');
+      const translator = playerCode === 'L' ? (x) => x.toUpperCase() : (playerCode === 'D' ? (x) => x.toLowerCase() : (x) => ' ');
+      const translated = translator(pieceCode);
+      // if (index % 8 === 7) return `${translated}/`;
+      // else return translated;
+      return translated;
+    });
+    console.log(piecePlacementWithSpaces);
+    let consecutiveSpaces = 0;
+    let newPiecePlacement = '';
+    // for (const char in piecePlacement) {
+    for (let i = 0; i < piecePlacementWithSpaces.length; i++) {
+      const char = piecePlacementWithSpaces[i];
+      if (i && i % 8 === 0) {
+        if (consecutiveSpaces) {
+          newPiecePlacement += `${consecutiveSpaces}`;
+          consecutiveSpaces = 0;
+        }
+        newPiecePlacement += '/';
+      }
+      if (char === ' ') {
+        consecutiveSpaces += 1;
+      } else {
+        if (consecutiveSpaces) {
+          // piecePlacement.splice(i - consecutiveSpaces, consecutiveSpaces)
+          newPiecePlacement += `${consecutiveSpaces}`;
+        }
+        newPiecePlacement += char;
+        consecutiveSpaces = 0;
+      }
+    }
+    console.log(newPiecePlacement);
+
+    const castlingRights = `${this.state.lightKingHasShortCastlingRights ? 'K' : ''}${this.state.lightKingHasLongCastlingRights ? 'Q' : ''}${this.state.darkKingHasShortCastlingRights ? 'k' : ''}${this.state.darkKingHasLongCastlingRights ? 'q' : ''}`;
+    const enPassantTargetSquare = "-";
+    // TODO use history or smth to find enPassantTargetSquare 
+
+    const fullFEN = `${newPiecePlacement} ${this.state.whiteToPlay ? 'w' : 'b'} ${castlingRights} ${enPassantTargetSquare} ${this.state.plyNumber % 2} ${Math.floor(this.state.plyNumber / 2) + 1}`;
+    console.log(`Full FEN: ${fullFEN}`);
+
+    return fullFEN;
   }
 
+  // takes a FEN string and sets the Game state accordingly
   generateBoardStateFromFen = (inputFEN) => {
     const [piecePlacement, sideToMove, castlingAbility, enPassantTargetSquare, halfmoveClock, fullmoveCounter] = inputFEN.split(' ');
     const rankPiecePlacements = piecePlacement.split('/');
+
+    let newPieceKeys = Array(64).fill("");
+    let newLightKingPosition = null;
+    let newDarkKingPosition = null;
+    // TODO this is wrong, rankPiecePlacements is an array of strings mapping to each rank 
+    // for (let i = 0, pki = 0; i < rankPiecePlacements.length; i++) {
+    //   const numEmptySquares = rankPiecePlacements
+    // }
+    let pki = 0;
+    for (const rank in rankPiecePlacements) {
+      for (const char in rank) {
+        if (char.isNumeric()) {
+          let numEmptySquares = Number(char);
+          pki += numEmptySquares;
+        } else {
+          const pieceCode = char.toUpperCase();
+          const playerCode = char === pieceCode ? 'L' : 'D';
+          newPieceKeys[pki] = `${playerCode}${pieceCode}`;
+          if (pieceCode === 'K') {
+            if (playerCode === 'L') newLightKingPosition = pki;
+            else newDarkKingPosition = pki;
+          }
+          pki += 1;
+        }
+      }
+    }
+
+    // this.state.whiteToPlay = sideToMove === 'w'; // otherwise 'b' 
+    // this.state.darkKingHasLongCastlingRights = castlingAbility.includes('q');
+    // this.state.darkKingHasShortCastlingRights = castlingAbility.includes('k');
+    // this.state.lightKingHasLongCastlingRights = castlingAbility.includes('Q');
+    // this.state.lightKingHasShortCastlingRights = castlingAbility.includes('K');
+    // this.state.enPassantTargetSquare = enPassantTargetSquare;
+    // this.state.plyNumber = fullmoveCounter * 2 + halfmoveClock;
+    this.setState({
+      ...this.state,
+      pieceKeys: newPieceKeys, 
+      squareProps: newPieceKeys.map((pieceKey, squareId) => {
+        return {
+          keycode: pieceKey, // pieceId 
+          id: squareId,
+          isHighlighted: false,
+          isAltHighlighted: false,
+          isSelected: false,
+          isAltSelected: false,
+          isPromoting: false,
+        }
+      }), 
+      lightKingPosition: newLightKingPosition, 
+      darkKingPosition: newDarkKingPosition, 
+      whiteToPlay: sideToMove === 'w',
+      darkKingHasShortCastlingRights: castlingAbility.includes('k'),
+      darkKingHasLongCastlingRights: castlingAbility.includes('q'),
+      lightKingHasShortCastlingRights: castlingAbility.includes('K'),
+      lightKingHasLongCastlingRights: castlingAbility.includes('Q'),
+      enPassantTargetSquare: enPassantTargetSquare,
+      plyNumber: fullmoveCounter * 2 + halfmoveClock,
+      FEN: inputFEN,
+      history: [], // no history from loading game from FEN 
+      squareSelected: null,
+      squareAltSelected: null,
+    });
   }
 
-  // piece should *already* be on squareMovedTo, the algebraic notation will be generated always after the move is played 
-  // actually... maybe the history is updated at the same time as the board, and state might not be updated yet 
+  // this method is called before this move is applied to state, still current player's turn 
   generateMoveAN = (squareMovedFrom, squareMovedTo) => { // , futureBoardState = this.state.pieceKeys) => {
     const futureBoardState = this.getNewPieceKeysCopyWithMoveApplied(squareMovedFrom, squareMovedTo);
     const currentBoardState = this.state.pieceKeys.slice();
-    let [playerCode, pieceCode] = [null, null]; // futureBoardState[squareMovedTo].split('');
+    let [playerCode, pieceCode] = currentBoardState[squareMovedFrom].split(''); // [null, null]; // futureBoardState[squareMovedTo].split('');
     if (playerCode === null && pieceCode === null) { // null !== undefined ... SMH 
+      // this shouldn't happen, remnant of previous approach 
       [playerCode, pieceCode] = futureBoardState[squareMovedTo].split('');
     }
-    const isCapture = (currentBoardState[squareMovedTo] !== '' ? 'x' : '');
-    const isCheck = this.isKingInCheck() ? '+' : ''; // TODO or checkmate 
-    const isPawnPromotion = '=[Q,R,B,N]'; // TODO implement 
+
+    const isEnPassantCapture = this.isMoveEnPassant(squareMovedFrom, squareMovedTo); // uses current board state, move not applied yet 
+    const isCapture = (currentBoardState[squareMovedTo] !== '' || isEnPassantCapture ? 'x' : ''); 
+    const opponent = this.state.whiteToPlay ? 'b' : 'w';
+    const isCheck = this.isKingInCheck(opponent, futureBoardState) ? '+' : ''; // TODO or checkmate 
+    // const isPawnPromotion = '=[Q,R,B,N]'; // TODO implement 
+
     const destinationFile = 'abcdefgh'.charAt(squareMovedTo % 8);
     const destinationRank = 8 - Math.floor(squareMovedTo / 8); // remember that our 0-63 is kind of backwards, and 0-indexed 
+
     const movesThatNecessitateFurtherClarification = this.getSquaresWithPiecesThatCanAttackThisSquare(squareMovedTo, true, null, null, futureBoardState) // get all pieces incl. self-attacks 
       .filter((squareId) => futureBoardState[squareId].charAt(0) === playerCode) // filter out non-self-attacks (opponent attacks)
       .filter((squareId) => futureBoardState[squareId].charAt(1) === pieceCode) // get only self-attacks from the same type of piece 
       .filter((squareId) => squareId !== squareMovedFrom); // state issue TODO fix ... including this piece 
-    // const isCapture = isMoveCapture
+
+    console.log(movesThatNecessitateFurtherClarification);
+
     if (movesThatNecessitateFurtherClarification.length === 0) {
       if (pieceCode === 'P') {
-        if (isCapture && isCapture !== '') {
+        if (isCapture !== '') {
           const sourceFile = 'abcdefgh'.charAt(squareMovedFrom % 8);
           return `${sourceFile}x${destinationFile}${destinationRank}${isCheck}`;
         }
@@ -178,12 +298,16 @@ class Game extends React.Component {
       const sourceRank = 8 - Math.floor(squareMovedFrom / 8);
       let dupeSourceFiles = false;
       let dupeSourceRanks = false;
-      for (const altMove in movesThatNecessitateFurtherClarification) {
+      // for (const altMove in movesThatNecessitateFurtherClarification) {
+      for (let i = 0; i < movesThatNecessitateFurtherClarification.length; i++) {
+        const altMove = movesThatNecessitateFurtherClarification[i];
         // check if piece move is actually legal here??? could expose a check 
+        // if (this.wouldOwnKingBeInCheckAfterMove(altMove, squareMovedTo)) continue; 
         const altSourceFile = 'abcdefgh'.charAt(altMove % 8);
         const altSourceRank = 8 - Math.floor(altMove / 8);
-        dupeSourceFiles = dupeSourceFiles || sourceFile === altSourceFile;
-        dupeSourceRanks = dupeSourceRanks || sourceRank === altSourceRank;
+        dupeSourceFiles = dupeSourceFiles || (sourceFile === altSourceFile);
+        dupeSourceRanks = dupeSourceRanks || (sourceRank === altSourceRank);
+        console.log(`\tPiece at ${altMove} results in dupeSourceFiles:${dupeSourceFiles} (file:${altSourceFile}) and dupeSourceRanks:${dupeSourceRanks} (rank:${altSourceRank})`);
       }
       const pieceClarification = dupeSourceFiles ? (dupeSourceRanks ? `${sourceFile}${sourceRank}` : `${sourceRank}`) : `${sourceFile}`;
       return `${pieceCode}${pieceClarification}${isCapture}${destinationFile}${destinationRank}${isCheck}`;
@@ -196,9 +320,9 @@ class Game extends React.Component {
 
   generateMoveINN = (squareMovedFrom, squareMovedTo) => {
     // squareMovedFrom, squareMovedTo passed in as squareId values from 0-63
-    const fromRank = Math.floor(squareMovedFrom / 8);
+    const fromRank = Math.floor(squareMovedFrom / 8); // TODO ranks are backwards 
     const fromFile = squareMovedFrom % 8;
-    const toRank = Math.floor(squareMovedTo / 8);
+    const toRank = Math.floor(squareMovedTo / 8); // TODO ranks are backwards 
     const toFile = squareMovedTo % 8;
     return `${fromRank}${fromFile}${toRank}${toFile}`;
   }
@@ -441,7 +565,9 @@ class Game extends React.Component {
               const squareBehindTarget = playerCode === 'L' ? squareTo + 8 : squareTo - 8;
               const targetPreviousJN = this.generateMoveJN(squareInFrontOfTarget, squareBehindTarget);
               return this.state.history[this.state.history.length - 1].JN === targetPreviousJN;
-            }
+            },
+            // refactoring to use this.state.enPassantTargetSquare
+            (squareFrom, squareTo) => squareTo === this.state.enPassantTargetSquare,
           ],
         },
         boardState,
@@ -613,16 +739,28 @@ class Game extends React.Component {
     'K': this.generateKingValidMoves,
   }
 
-  isKingInCheck = () => {
+  isKingInCheck = (player, boardState = this.state.pieceKeys) => {
     // maybe here we can easily set like a canBlock, canCapture, canEvade boolean state system ...
     // canBlock seems like the only tricky one, gotta check all piece moves 
+    let kingPosition = this.state.whiteToPlay ? 
+      this.state.darkKingPosition : 
+      this.state.lightKingPosition
+    if (player === 'w' || player === 'L') kingPosition = this.state.lightKingPosition;
+    else if (player === 'b' || player === 'D') kingPosition = this.state.darkKingPosition;
+
     let attackingSquares = this.getSquaresWithPiecesThatCanAttackThisSquare(
-      this.state.whiteToPlay ? 
-        this.state.darkKingPosition : 
-        this.state.lightKingPosition, 
-      false
+      kingPosition, 
+      false,
+      null,
+      null,
+      boardState
     );
+
     return attackingSquares.length !== 0;
+    // if attackingSquares.length > 1, it's a double check, can't possible block or capture out of it 
+    // have to evade with the king, check if opponent attacks all of the squares around our king 
+    // if attackingSquares.length === 1, we can first try to capture or make a line from the attackingSquare to our king
+    // and see if we can put a piece on any of those squares in the line to block 
   }
 
   isCheckmate = () => {
@@ -630,11 +768,13 @@ class Game extends React.Component {
   }
 
   isMoveEnPassant = (squareMovedFrom, squareMovedTo) => {
+    // TODO refactor, use this.state.enPassantTargetSquare 
     const pieceMoving = this.state.pieceKeys[squareMovedFrom];
     return (
       pieceMoving.charAt(1) === 'P' // piece moving is a pawn
-      && squareMovedFrom % 8 !== squareMovedTo % 8 // signifies that the pawn performed a capture (changed files) 
-      && this.state.pieceKeys[squareMovedTo] === '' // signifies that the capture was an en passant 
+      // && squareMovedFrom % 8 !== squareMovedTo % 8 // signifies that the pawn performed a capture (changed files) 
+      // && this.state.pieceKeys[squareMovedTo] === '' // signifies that the capture was an en passant 
+      && squareMovedTo === this.state.enPassantTargetSquare
     )
   }
 
@@ -877,6 +1017,42 @@ class Game extends React.Component {
     });
   }
 
+  undoLastMove = () => {
+    console.log(`undoLastMove`);
+    // TODO undo castling and rights, pawn promotions, king locations, etc. 
+    const newPieceKeys = this.state.history[this.state.history.length - 1].pieceKeys;
+    this.setState({
+      ...this.state,
+      history: this.state.history.slice(0, -1),
+      whiteToPlay: !this.state.whiteToPlay, // this.state.history.length % 2 === 0,
+      pieceKeys: newPieceKeys,
+      // squareProps: this.state.history[this.state.history.length - 1].pieceKeys.map((pk, sqId) => {
+      //   return {
+      //     keycode: pk,
+      //     id: sqId,
+      //     isHighlighted: false,
+      //     isAltHighlighted: false,
+      //     isSelected: false,
+      //     isAltSelected: false,
+      //   }
+      // }),
+      squareProps: this.state.squareProps.map((oldSquareProp, squareId) => {
+        return {
+          ...oldSquareProp,
+          keycode: newPieceKeys[squareId],
+          id: squareId,
+          isHighlighted: false,
+          isAltHighlighted: false,
+          isSelected: false,
+          isAltSelected: false,
+        }
+      }),
+      plyNumber: this.state.plyNumber - 1,
+    });
+
+    this.deselectAndRemoveHighlightFromAllSquares();
+  }
+
   deselectAndRemoveHighlightFromAllSquares = () => {
     this.setState({
       ...this.state,
@@ -941,6 +1117,10 @@ class Game extends React.Component {
     const squareMovedFrom = this.state.squareSelected;
     const squareMovedTo = squareId;
     const newPieceKeys = this.getNewPieceKeysCopyWithMoveApplied(squareMovedFrom, squareMovedTo);
+
+    // this.setState({...this.state, isKingInCheck: this.isKingInCheck()});
+    this.setState({...this.state, enPassantTargetSquare: null});
+
     if (this.state.pieceKeys[squareMovedFrom].charAt(1) === 'K') {
       if (this.state.pieceKeys[squareMovedFrom].charAt(0) === 'L') {
         this.setState({...this.state, lightKingHasLongCastlingRights: false, lightKingHasShortCastlingRights: false});
@@ -978,11 +1158,28 @@ class Game extends React.Component {
         }
       }
     } else if (this.state.pieceKeys[squareMovedFrom].charAt(1) === 'P') {
+      if (Math.abs(squareMovedFrom - squareMovedTo) === 16) {
+        // double-square first move
+        const enPassantTargetSquare = (squareMovedFrom + squareMovedTo) / 2;
+        this.setState({...this.state, enPassantTargetSquare: enPassantTargetSquare})
+        // this MUST be set back to null, or updated to different square, on the very next ply
+      }
       const isPromoting = Math.floor(squareMovedTo / 8) === (this.state.whiteToPlay ? 0 : 7);
       if (isPromoting) {
         // TODO implement UI, just auto-queen for now 
-        // newPieceKeys is const, but can we change elements?? 
-        newPieceKeys[squareMovedTo] = this.state.pieceKeys[squareMovedFrom].charAt(0) + 'Q';
+        // newPieceKeys is const, but can we change elements?? Yes, we can 
+        this.setState({
+          ...this.state,
+          squareProps: this.state.squareProps.map((sqProp, sqId) => {
+            if (sqId !== squareMovedTo) return sqProp;
+            return {
+              ...sqProp,
+              isPromoting: true,
+            }
+          })
+        })
+        // this.state.squareProps[squareMovedTo] = this.setState({...this.state.squareProps[squareMovedTo], isPromoting: true});
+        // newPieceKeys[squareMovedTo] = this.state.pieceKeys[squareMovedFrom].charAt(0) + 'Q';
       }
     }
 
@@ -1021,11 +1218,9 @@ class Game extends React.Component {
       }),
       history: this.state.history.concat([{
         pieceKeys: newPieceKeys,
-        AN: nextMoveAN, // TODO generate Algebraic Notation for this move -- to do so, we need to know if any other 
-                  //   pieces of the same type would be able to make the same move 
-        JN: nextMoveJN, 
-        INN: nextMoveINN,
-        // International Numeric Notation (Computer Notation, e.g. 5254 == e2->e4)
+        AN: nextMoveAN, // generate Algebraic Notation for this move 
+        JN: nextMoveJN, // Jared's Notation: How I misinterpreted INN, and just used squareIds from and to 
+        INN: nextMoveINN, // International Numeric Notation (Computer Notation, e.g. 5254 == e2->e4)
       }]),
     });
 
@@ -1072,6 +1267,12 @@ class Game extends React.Component {
     }
   }
 
+  handleUndoClick = (event) => {
+    if (event && typeof event.preventDefault === 'function') event.preventDefault();
+    console.log(`handleUndoClick`);
+    this.undoLastMove();
+  }
+
   render() {
     return (
       <div className="game">
@@ -1082,6 +1283,11 @@ class Game extends React.Component {
           handleSquareClick={this.handleSquareClick}
           handleSquareRightClick={this.handleSquareRightClick}
           boardSize={this.boardSize}
+          // promotionSquare={this.state.promotionSquare}
+          handleUndoClick={this.handleUndoClick}
+          handleRedoClick={() => {}}
+          handleResetClick={() => {}}
+          handleGetFENClick={this.generateBoardFEN}
         />
         <GameStatus 
           whiteToPlay={this.state.whiteToPlay}
