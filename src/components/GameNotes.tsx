@@ -1,18 +1,18 @@
 import React, { useState } from 'react';
 
 interface GameNotesProps {
-    algebraicNotation: string;
+    zobristHash: string;
     metadata?: Record<string, any>;
 }
 
-export const GameNotes: React.FC<GameNotesProps> = ({ algebraicNotation, metadata }) => {
+export const GameNotes: React.FC<GameNotesProps> = ({ zobristHash, metadata }) => {
     const [notes, setNotes] = useState<string>('');
     const [isSaving, setIsSaving] = useState<boolean>(false);
 
     const handleSaveNotes = async (): Promise<void> => {
         setIsSaving(true);
         try {
-            await saveNotesToDatabase(algebraicNotation, notes, metadata);
+            await saveNotesToDatabase(zobristHash, notes, metadata);
             // Optional: Show success message or reset notes
         } catch (error) {
             console.error('Failed to save notes:', error);
@@ -41,7 +41,7 @@ export const GameNotes: React.FC<GameNotesProps> = ({ algebraicNotation, metadat
 
 // TODO: Implement database save logic
 async function saveNotesToDatabase(
-    algebraicNotation: string,
+    zobristHash: string,
     notes: string,
     metadata?: Record<string, any>
 ): Promise<void> {
