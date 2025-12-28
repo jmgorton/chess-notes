@@ -1,36 +1,58 @@
 import React from 'react';
 import './App.css';
 
-import Game from './components/Game.tsx';
+import { Nav } from './components/Nav.tsx';
 
-// function Nav() {
+// function Root() {
 //   return (
-//     <Router>
-//       <div>
+//     <>
+//       <div id="sidebar" style={{background: 'white'}}>
+//         {/* <h1>React Router Contacts</h1>
+//         <div>
+//           <form id="search-form" role="search">
+//             <input
+//               id="q"
+//               aria-label="Search contacts"
+//               placeholder="Search"
+//               type="search"
+//               name="q"
+//             />
+//             <div
+//               id="search-spinner"
+//               aria-hidden
+//               hidden={true}
+//             />
+//             <div
+//               className="sr-only"
+//               aria-live="polite"
+//             ></div>
+//           </form>
+//           <form method="post">
+//             <button type="submit">New</button>
+//           </form>
+//         </div> */}
 //         <nav>
 //           <ul>
 //             <li>
-//               <Link to="/">Home</Link>
+//               <a href={`/home`}>Home</a>
 //             </li>
 //             <li>
-//               <Link to="/about">About</Link>
+//               <a href={`/about`}>About</a>
 //             </li>
 //             <li>
-//               <Link to="/users">Users</Link>
+//               <a href={`/users`}>Users</a>
+//             </li>
+//             <li>
+//               <a href={`/play`} disabled={true}>Play</a>
+//             </li>
+//             <li>
+//               <a href={`/study`}>Study</a>
 //             </li>
 //           </ul>
 //         </nav>
-
-//         {/* A <Switch> looks through its children <Route>s and
-//             renders the first one that matches the current URL. 
-//             Updated <Switch> to <Routes> in React Router v6. */}
-//         <Routes>
-//           <Route path="/about" element={<About />} />
-//           <Route path="/users" element={<Users />} />
-//           <Route path="/" element={<Home />} />
-//         </Routes>
 //       </div>
-//     </Router>
+//       <div id="detail"></div>
+//     </>
 //   );
 // }
 
@@ -53,48 +75,20 @@ function App() {
     //   </header>
     // </div>
 
-
-
-
     <div className="App">
-      <Game />
+      <div id="navbar">
+        <Nav />
+      </div>
+      {/* <Game /> */}
     </div>
 
-
-
-    // <Router>
-    //   <div>
-    //     <nav>
-    //       <ul>
-    //         <li>
-    //           <Link to="/">Home</Link>
-    //         </li>
-    //         <li>
-    //           <Link to="/about">About</Link>
-    //         </li>
-    //         <li>
-    //           <Link to="/users">Users</Link>
-    //         </li>
-    //       </ul>
-    //     </nav>
-
-    //     {/* A <Switch> looks through its children <Route>s and
-    //         renders the first one that matches the current URL. 
-    //         Updated <Switch> to <Routes> in React Router v6. */}
-    //     <Routes>
-    //       <Route path="/about" element={<About />} />
-    //       <Route path="/users" element={<Users />} />
-    //       <Route path="/" element={<Home />} />
-    //     </Routes>
-    //   </div>
-    // </Router>
   );
 }
 
 export default App;
 
 // function Home() {
-//   return <h2>Home</h2>;
+//   return <h2 style={{'color': 'white'}}>Home</h2>;
 // }
 
 // function About() {
