@@ -230,4 +230,11 @@
     opacity: 0.6;
     cursor: not-allowed;
   }
+
+  .prose {
+    /* color: red; */
+    /* justify-content: left;
+    align-items: flex-start; */
+    text-align: left;
+  }
 }

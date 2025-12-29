@@ -240,11 +240,18 @@ class DarkBishop extends Bishop {
 }
 
 class Rook extends Piece {
-  alt = "Rook";
-  piececode = "R";
+  static alt = "Rook";
+  static piececode = "R";
 
-  moveDirections = [-8, -1, 1, 8];
-  moveDistance = 7; // or length of board 
+  static moveDirections = [-8, -1, 1, 8];
+  // static moveDistance = 7; // or length of board 
+  // making property static adds property to component class (constructor)
+  //   as opposed to an instance field 
+  //   alt method : relax typing to `any` -- i.e. (keycodeToComponent["R"] as any).nextSquareValidators 
+  static nextSquareValidators = [
+    (square, nextSquare) => (Math.abs(Math.floor(nextSquare / 8) - Math.floor(square / 8)) ^ Math.abs(square % 8 - nextSquare % 8)) === 0b1,
+    (square, nextSquare) => (Math.floor(nextSquare / 8) === Math.floor(square / 8)) !== (square % 8 === nextSquare % 8),
+  ];
 
   // constructor(props) {
   //   super(props);

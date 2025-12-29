@@ -69,6 +69,24 @@ export default class Game extends React.Component<GameProps, GameState> {
     numSquares: number = this.boardSize ** 2;
     startingFEN: string = 'r1b1kb1r/pp2pppp/2n2n2/1Bpq4/5P2/5N2/PPPP2PP/RNBQK2R w KQkq - 0 1'; // null 
 
+    // state = {
+    //     pieceKeys = null,
+    //     squareProps = null,
+    //     lightKingPosition = null,
+    //     darkKingPosition = null;
+    //     lightKingHasShortCastlingRights = null,
+    //     lightKingHasLongCastlingRights = null,
+    //     darkKingHasShortCastlingRights = null,
+    //     darkKingHasLongCastlingRights = null,
+    //     enPassantTargetSquare = null,
+    //     squareSelected = null,
+    //     squareAltSelected = null,
+    //     whiteToPlay = null,
+    //     FEN = null,
+    //     history = null,
+    //     plyNumber = null,
+    // };
+
     constructor(props: GameProps) {
         super(props);
 
@@ -229,7 +247,7 @@ export default class Game extends React.Component<GameProps, GameState> {
 
         const castlingRights = `${this.state.lightKingHasShortCastlingRights ? 'K' : ''}${this.state.lightKingHasLongCastlingRights ? 'Q' : ''}${this.state.darkKingHasShortCastlingRights ? 'k' : ''}${this.state.darkKingHasLongCastlingRights ? 'q' : ''}`;
         const enPassantTargetSquare = "-";
-        // TODO use history or smth to find enPassantTargetSquare 
+        // TODO use history or smth to find enPassantTargetSquare ... or use this.state.enPassantTargetSquare 
 
         const fullFEN = `${newPiecePlacement} ${this.state.whiteToPlay ? 'w' : 'b'} ${castlingRights} ${enPassantTargetSquare} ${this.state.plyNumber % 2} ${Math.floor(this.state.plyNumber / 2) + 1}`;
         console.log(`Full FEN: ${fullFEN}`);
@@ -899,13 +917,15 @@ export default class Game extends React.Component<GameProps, GameState> {
         includeAttacksFrom: string[] = ['L','D'],
         // squareToImagineEmpty: number | null = null,
         // squareToImagineFriendly: number | null = null,
-        boardState: string[] = this.state.pieceKeys,
+        boardState: string[] = this.state.pieceKeys.slice(),
     ): number[] => {
-        const nextSquareValidators = [
-            (square: number, nextSquare: number) => (Math.abs(Math.floor(nextSquare / 8) - Math.floor(square / 8)) ^ Math.abs(square % 8 - nextSquare % 8)) === 0b1,
-            (square: number, nextSquare: number) => (Math.floor(nextSquare / 8) === Math.floor(square / 8)) !== (square % 8 === nextSquare % 8),
-        ];
-        const directions = [-8, -1, 1, 8];
+        // const nextSquareValidators = [
+        //     (square: number, nextSquare: number) => (Math.abs(Math.floor(nextSquare / 8) - Math.floor(square / 8)) ^ Math.abs(square % 8 - nextSquare % 8)) === 0b1,
+        //     (square: number, nextSquare: number) => (Math.floor(nextSquare / 8) === Math.floor(square / 8)) !== (square % 8 === nextSquare % 8),
+        // ];
+        // const directions = [-8, -1, 1, 8];
+        const nextSquareValidators = keycodeToComponent["R"].nextSquareValidators;
+        const directions = keycodeToComponent["R"].moveDirections;
         return this.generatePieceValidMoves(
             squareId,
             directions,

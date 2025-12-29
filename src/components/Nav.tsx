@@ -10,6 +10,8 @@ import {
 
 import Game from './Game.tsx';
 
+import About from '../pages/About.tsx';
+
 // this file taken and adapted from https://mui.com/material-ui/react-drawer/
 import { styled, useTheme, Theme, CSSObject } from '@mui/material/styles';
 import Box from '@mui/material/Box';
@@ -355,10 +357,6 @@ export function Nav() {
             element: <MiniDrawer />, // <Root />, 
         },
         {
-            path: "/error",
-            element: <MiniDrawer children={<Error />} />, // <Root />, 
-        },
-        {
             path: "/home",
             element: <MiniDrawer children={<Home />} />, // <Home />,
         },
@@ -377,6 +375,14 @@ export function Nav() {
         {
             path: "/study",
             element: <MiniDrawer children={<Game />} />, // <Game />, // notes/ 
+        },
+        {
+            path: "/error",
+            element: <MiniDrawer children={<Error />} />, // <Root />, 
+        },
+        {
+            path: "*",
+            element: <Error />, // <Root />, 
         },
     ]);
 
@@ -426,10 +432,6 @@ function Error() {
 
 function Home() {
     return <h2 style={{ color: 'white' }}>Home</h2>;
-}
-
-function About() {
-    return <h2 style={{ color: 'white' }}>About</h2>;
 }
 
 function Users() {
