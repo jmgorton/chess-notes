@@ -275,16 +275,20 @@
     transform-origin: center;
     /* this animation makes the orbits kind of shaky */
     /* animation: rotateOrbits 12s linear infinite; */
+    /* animation: growOrbits 8s ease-in-out infinite; */
   }
 
   .orbit-dots {
     transform-box: fill-box;
     transform-origin: center;
+    /* rotate dots around center while the orbits grow */
+    /* animation: rotateOrbits 10s linear infinite; */
   }
 
   .orbit-dot.dot1 { animation: orbitDot1 4s linear infinite; }
   .orbit-dot.dot2 { animation: orbitDot2 5.5s linear infinite; }
   .orbit-dot.dot3 { animation: orbitDot3 7s linear infinite; }
+  /* animations orbitDot{1,2,3} are just like rotateOrbits, but with translateX(0); */
 
   @keyframes rotateOrbits {
     from { transform: rotate(0deg); }
@@ -292,16 +296,43 @@
   }
 
   @keyframes orbitDot1 {
-    from { transform: rotate(0deg) translateX(0); }
-    to { transform: rotate(360deg) translateX(0); }
+    /* from { transform: rotate(0deg) translateX(0); }
+    to { transform: rotate(360deg) translateX(0); } */
+    0%    { transform: rotate(0deg) translateX(0); opacity: 1; }
+    25%   { opacity: 0; }
+    75%   { opacity: 0; }
+    100%  { transform: rotate(360deg) translateX(0); opacity: 1; }
   }
+
   @keyframes orbitDot2 {
-    from { transform: rotate(0deg) translateX(0); }
-    to { transform: rotate(-360deg) translateX(0); }
+    /* from { transform: rotate(0deg) translateX(0); }
+    to { transform: rotate(360deg) translateX(0); } */
+    0%    { transform: rotate(0deg) translateX(0); opacity: 0; }
+    25%   { opacity: 0; }
+    75%   { opacity: 1; }
+    100%  { transform: rotate(360deg) translateX(0); opacity: 0; }
   }
+
   @keyframes orbitDot3 {
+    /* from { transform: rotate(0deg) translateX(0); }
+    to { transform: rotate(360deg) translateX(0); } */
+    0%    { transform: rotate(0deg) translateX(0); opacity: 0; }
+    25%   { opacity: 1; }
+    75%   { opacity: 0; }
+    100%  { transform: rotate(360deg) translateX(0); opacity: 0; }
+  }
+
+  /* @keyframes rotateOrbits {
     from { transform: rotate(0deg) translateX(0); }
     to { transform: rotate(360deg) translateX(0); }
+  } */
+
+  @keyframes growOrbits {
+    /* scale from ~45/80 = 0.5625 up to 1.0; fade in at the start and fade out at the end */
+    0%   { transform: scale(0.5625); opacity: 0; }
+    25%  { opacity: 1; }
+    75%  { opacity: 1; }
+    100% { transform: scale(1); opacity: 0; }
   }
 
   @keyframes float {

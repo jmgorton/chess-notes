@@ -27,13 +27,14 @@ const AnimatedLogo = ({ size = 160 }) => {
           <circle className="logo-glow" r="86" fill="url(#glow)" />
 
           <g className="orbits" transform="translate(0 0)">
-            <circle className="orbit orbit1" r="76" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" />
-            <circle className="orbit orbit2" r="56" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1.2" />
+            {/* base radii set to the largest size; CSS will scale the whole group from ~45 -> 80 */}
+            <circle className="orbit orbit1" r="80" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="1.5" />
+            <circle className="orbit orbit2" r="60" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="1.2" />
 
             <g className="orbit-dots">
-              <circle className="orbit-dot dot1" r="6" cx="76" cy="0" fill="#4C9AFF" />
-              <circle className="orbit-dot dot2" r="5" cx="0" cy="-56" fill="#FFD54F" />
-              <circle className="orbit-dot dot3" r="4" cx="-76" cy="0" fill="#FF6B6B" />
+              <circle className="orbit-dot dot1" r="6" cx="80" cy="0" fill="#4C9AFF" />
+              <circle className="orbit-dot dot2" r="5" cx="0" cy="-60" fill="#FFD54F" />
+              <circle className="orbit-dot dot3" r="4" cx="-80" cy="0" fill="#FF6B6B" />
             </g>
           </g>
 
