@@ -139,8 +139,8 @@ class DarkPawn extends Pawn {
 }
 
 class Knight extends Piece {
-  alt = "Knight";
-  piececode = "N";
+  static alt = "Knight";
+  static piececode = "N";
 
   constructor(props) {
     super(props);
@@ -194,8 +194,8 @@ class Bishop extends Piece {
   alt = "Bishop";
   piececode = "B";
 
-  moveDirections = [-9, -7, 7, 9];
-  moveDistance = 7; // or length of board
+  static moveDirections = [-9, -7, 7, 9];
+  // static moveDistance = 7; // or length of board
 
   // constructor(props) {
   //   super(props);

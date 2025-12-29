@@ -238,3 +238,77 @@
     text-align: left;
   }
 }
+
+  /* --- Animated logo styles --- */
+  .app-logo-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 28px 0 8px 0;
+  }
+
+  .animated-logo-wrapper {
+    display: inline-block;
+    will-change: transform;
+  }
+
+  .animated-logo {
+    display: block;
+  }
+
+  .logo-glow {
+    mix-blend-mode: screen;
+    opacity: 0.9;
+    transition: opacity 300ms ease;
+  }
+
+  .logo-image {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: float 6s ease-in-out infinite;
+    border-radius: 12px;
+  }
+
+  .orbits {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: rotateOrbits 12s linear infinite;
+  }
+
+  .orbit-dots {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .orbit-dot.dot1 { animation: orbitDot1 4s linear infinite; }
+  .orbit-dot.dot2 { animation: orbitDot2 5.5s linear infinite; }
+  .orbit-dot.dot3 { animation: orbitDot3 7s linear infinite; }
+
+  @keyframes rotateOrbits {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes orbitDot1 {
+    from { transform: rotate(0deg) translateX(0); }
+    to { transform: rotate(360deg) translateX(0); }
+  }
+  @keyframes orbitDot2 {
+    from { transform: rotate(0deg) translateX(0); }
+    to { transform: rotate(-360deg) translateX(0); }
+  }
+  @keyframes orbitDot3 {
+    from { transform: rotate(0deg) translateX(0); }
+    to { transform: rotate(360deg) translateX(0); }
+  }
+
+  @keyframes float {
+    0% { transform: translateY(0) rotate(0.5deg); }
+    50% { transform: translateY(-6px) rotate(-0.5deg); }
+    100% { transform: translateY(0) rotate(0.5deg); }
+  }
+
+  /* small responsive tweak */
+  @media (max-width: 600px) {
+    .animated-logo { width: 120px; height: 120px; }
+  }

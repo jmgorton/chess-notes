@@ -11,6 +11,8 @@ import {
 import Game from './Game.tsx';
 
 import About from '../pages/About.tsx';
+import Error from '../pages/Error.tsx';
+import Home from '../pages/Home.tsx';
 
 // this file taken and adapted from https://mui.com/material-ui/react-drawer/
 import { styled, useTheme, Theme, CSSObject } from '@mui/material/styles';
@@ -38,6 +40,7 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import SelfImprovementIcon from '@mui/icons-material/SelfImprovement';
 import CodeIcon from '@mui/icons-material/Code';
+import AnimatedLogo from './AnimatedLogo.jsx';
 // import InboxIcon from '@mui/icons-material/MoveToInbox';
 // import MailIcon from '@mui/icons-material/Mail';
 
@@ -198,35 +201,36 @@ export default function MiniDrawer(props: any) {
             <DrawerHeader />
             {
                 props.children || 
-                <>
-                    <Typography sx={{ marginBottom: 2 }}>
-                        Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-                        tempor incididunt ut labore et dolore magna aliqua. Rhoncus dolor purus non
-                        enim praesent elementum facilisis leo vel. Risus at ultrices mi tempus
-                        imperdiet. Semper risus in hendrerit gravida rutrum quisque non tellus.
-                        Convallis convallis tellus id interdum velit laoreet id donec ultrices.
-                        Odio morbi quis commodo odio aenean sed adipiscing. Amet nisl suscipit
-                        adipiscing bibendum est ultricies integer quis. Cursus euismod quis viverra
-                        nibh cras. Metus vulputate eu scelerisque felis imperdiet proin fermentum
-                        leo. Mauris commodo quis imperdiet massa tincidunt. Cras tincidunt lobortis
-                        feugiat vivamus at augue. At augue eget arcu dictum varius duis at
-                        consectetur lorem. Velit sed ullamcorper morbi tincidunt. Lorem donec massa
-                        sapien faucibus et molestie ac.
-                    </Typography>
-                    <Typography sx={{ marginBottom: 2 }}>
-                        Consequat mauris nunc congue nisi vitae suscipit. Fringilla est ullamcorper
-                        eget nulla facilisi etiam dignissim diam. Pulvinar elementum integer enim
-                        neque volutpat ac tincidunt. Ornare suspendisse sed nisi lacus sed viverra
-                        tellus. Purus sit amet volutpat consequat mauris. Elementum eu facilisis
-                        sed odio morbi. Euismod lacinia at quis risus sed vulputate odio. Morbi
-                        tincidunt ornare massa eget egestas purus viverra accumsan in. In hendrerit
-                        gravida rutrum quisque non tellus orci ac. Pellentesque nec nam aliquam sem
-                        et tortor. Habitant morbi tristique senectus et. Adipiscing elit duis
-                        tristique sollicitudin nibh sit. Ornare aenean euismod elementum nisi quis
-                        eleifend. Commodo viverra maecenas accumsan lacus vel facilisis. Nulla
-                        posuere sollicitudin aliquam ultrices sagittis orci a.
-                    </Typography>
-                </>
+                // <>
+                //     <Typography sx={{ marginBottom: 2 }}>
+                //         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+                //         tempor incididunt ut labore et dolore magna aliqua. Rhoncus dolor purus non
+                //         enim praesent elementum facilisis leo vel. Risus at ultrices mi tempus
+                //         imperdiet. Semper risus in hendrerit gravida rutrum quisque non tellus.
+                //         Convallis convallis tellus id interdum velit laoreet id donec ultrices.
+                //         Odio morbi quis commodo odio aenean sed adipiscing. Amet nisl suscipit
+                //         adipiscing bibendum est ultricies integer quis. Cursus euismod quis viverra
+                //         nibh cras. Metus vulputate eu scelerisque felis imperdiet proin fermentum
+                //         leo. Mauris commodo quis imperdiet massa tincidunt. Cras tincidunt lobortis
+                //         feugiat vivamus at augue. At augue eget arcu dictum varius duis at
+                //         consectetur lorem. Velit sed ullamcorper morbi tincidunt. Lorem donec massa
+                //         sapien faucibus et molestie ac.
+                //     </Typography>
+                //     <Typography sx={{ marginBottom: 2 }}>
+                //         Consequat mauris nunc congue nisi vitae suscipit. Fringilla est ullamcorper
+                //         eget nulla facilisi etiam dignissim diam. Pulvinar elementum integer enim
+                //         neque volutpat ac tincidunt. Ornare suspendisse sed nisi lacus sed viverra
+                //         tellus. Purus sit amet volutpat consequat mauris. Elementum eu facilisis
+                //         sed odio morbi. Euismod lacinia at quis risus sed vulputate odio. Morbi
+                //         tincidunt ornare massa eget egestas purus viverra accumsan in. In hendrerit
+                //         gravida rutrum quisque non tellus orci ac. Pellentesque nec nam aliquam sem
+                //         et tortor. Habitant morbi tristique senectus et. Adipiscing elit duis
+                //         tristique sollicitudin nibh sit. Ornare aenean euismod elementum nisi quis
+                //         eleifend. Commodo viverra maecenas accumsan lacus vel facilisis. Nulla
+                //         posuere sollicitudin aliquam ultrices sagittis orci a.
+                //     </Typography>
+                // </>
+                <AnimatedLogo size={480} />
             }
         </Box>
     );
@@ -426,13 +430,58 @@ export function Nav() {
     );
 }
 
-function Error() {
-    return <h2 style={{ color: 'white' }}>Error</h2>;
-}
-
-function Home() {
-    return <h2 style={{ color: 'white' }}>Home</h2>;
-}
+// function Root() {
+//   return (
+//     <>
+//       <div id="sidebar" style={{background: 'white'}}>
+//         {/* <h1>React Router Contacts</h1>
+//         <div>
+//           <form id="search-form" role="search">
+//             <input
+//               id="q"
+//               aria-label="Search contacts"
+//               placeholder="Search"
+//               type="search"
+//               name="q"
+//             />
+//             <div
+//               id="search-spinner"
+//               aria-hidden
+//               hidden={true}
+//             />
+//             <div
+//               className="sr-only"
+//               aria-live="polite"
+//             ></div>
+//           </form>
+//           <form method="post">
+//             <button type="submit">New</button>
+//           </form>
+//         </div> */}
+//         <nav>
+//           <ul>
+//             <li>
+//               <a href={`/home`}>Home</a>
+//             </li>
+//             <li>
+//               <a href={`/about`}>About</a>
+//             </li>
+//             <li>
+//               <a href={`/users`}>Users</a>
+//             </li>
+//             <li>
+//               <a href={`/play`} disabled={true}>Play</a>
+//             </li>
+//             <li>
+//               <a href={`/study`}>Study</a>
+//             </li>
+//           </ul>
+//         </nav>
+//       </div>
+//       <div id="detail"></div>
+//     </>
+//   );
+// }
 
 function Users() {
     return <h2 style={{ color: 'white' }}>Users</h2>;
