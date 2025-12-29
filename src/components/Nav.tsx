@@ -35,6 +35,7 @@ import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
 import DescriptionIcon from '@mui/icons-material/Description';
 import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import SelfImprovementIcon from '@mui/icons-material/SelfImprovement';
+import CodeIcon from '@mui/icons-material/Code';
 // import InboxIcon from '@mui/icons-material/MoveToInbox';
 // import MailIcon from '@mui/icons-material/Mail';
 
@@ -261,20 +262,22 @@ export default function MiniDrawer(props: any) {
                     <IconButton
                         color="inherit"
                         aria-label="navigate portfolio"
-                        // onClick={() => window.location.href='https://www.jarmigo.com'}
                         onClick={() => window.open('https://www.jarmigo.com', '_blank')}
-                        // edge="end"
                         sx={[
                             {
-                                // marginRight: 5,
                                 marginLeft: 'auto',
-                                // p: 0,
                                 // flexGrow: 1,
                             },
-                            // open && { display: 'none' },
                         ]}
                     >
                         <SelfImprovementIcon />
+                    </IconButton>
+                    <IconButton
+                        color="inherit"
+                        aria-label="navigate sourcecode"
+                        onClick={() => window.open('https://github.com/jmgorton/chess-notes', '_blank')}
+                    >
+                        <CodeIcon />
                     </IconButton>
                 </Toolbar>
             </AppBar>

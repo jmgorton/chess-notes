@@ -1,90 +1,117 @@
-# Getting Started with Create React App
+<!--
+	README for the chess-notes React SPA
+	Generated: concise, friendly, and action-oriented
+-->
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# ♟️ Chess Notes
 
-## Available Scripts
+![build](https://img.shields.io/badge/build-passing-brightgreen) ![amplify](https://img.shields.io/badge/AWS-Amplify-FF9900)
 
-In the project directory, you can run:
+Welcome to **Chess Notes** — a small React single-page app (SPA) for taking, storing, and reviewing board-state notes while you study chess games. It's designed to be lightweight, serverless-friendly, and ready for future expansion to a backend API for persistent storage and sharing.
 
-### `npm start`
+---
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+## ✨ Purpose
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+- Capture quick annotations tied to a specific board state during game analysis.
+- Let players jot thoughts, ideas, and plans for positions while replaying or studying games.
+- Provide a simple, responsive UI that works locally and is hosted with CI/CD via AWS Amplify.
 
-### `npm test`
+## 🏗️ Architecture (current)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+This repository is a React SPA built with Create React App and uses React Router for client-side navigation. Key UI pieces:
 
-### `npm run build`
+- `src/components/Board.jsx` — visual chessboard and moves rendering.
+- `src/components/Game.tsx` — page/container for a full game view.
+- `src/components/GameNotes.tsx` — component handling notes tied to board state.
+- `src/components/GameStatus.jsx`, `Piece.jsx`, `Square.jsx` — smaller UI components.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Routing:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+- React Router manages routes such as `/` (home), `/game/:id` (game view), and `/notes`.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Hosting / CI:
 
-### `npm run eject`
+- The SPA is hosted on **AWS Amplify**, configured for continuous deployment using the GitHub ↔ Amplify integration (AWS GitHub App). Pushes to the repository automatically trigger Amplify builds and deploys.
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+## 🔮 Future (serverless) design
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+We envision a serverless backend to enable persistent, shared game notes.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+- API Gateway -> AWS Lambda -> DynamoDB
+- Purpose: persist board-state snapshots and notes, serve user queries, and enable syncing across devices.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+Merits of this design:
 
-## Learn More
+- Serverless scales automatically and keeps the infrastructure footprint minimal.
+- DynamoDB provides fast, low-latency access and a simple key design for gameId + plyIndex (or FEN hash) to retrieve position-specific notes.
+- Lambda functions implement business logic (validation, authentication hooks, transformations).
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Example flow:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+1. `GameNotes` component POSTs note data to `/games/{gameId}/notes` on API Gateway.
+2. API Gateway routes the request to a Lambda which validates and writes an item to DynamoDB:
 
-### Code Splitting
+	 - Partition key: `gameId`
+	 - Sort key: `positionKey` (e.g., FEN or move index)
+	 - Attributes: `noteId`, `text`, `author`, `createdAt`, `metadata`
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+3. A GET endpoint returns notes for a game/position for the UI to display.
 
-### Analyzing the Bundle Size
+Design decisions and rationale:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+- Use FEN (or a deterministic position hash) as the sorting key so multiple notes can be tied to identical board states across different games.
+- Keep the API surface minimal: CRUD for notes plus a small query surface for position-based retrieval.
+- Auth can be added later (Cognito or OAuth via Amplify) to support private notes and collaboration.
 
-### Making a Progressive Web App
+## 🧩 Why serverless?
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+- Reduced operational overhead — no servers to patch or maintain.
+- Pay-per-use pricing aligns well with an app that may have bursty but generally low traffic.
+- Easy to extend: add Lambda functions for export/import, batch processing, or ML-based position tagging.
 
-### Advanced Configuration
+## 🛠️ Run locally
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+Install and start the dev server:
 
-### Deployment
+```bash
+npm install
+npm start
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+Open http://localhost:3000 in your browser.
 
-### `npm run build` fails to minify
+Build for production (Amplify will run similar commands during CI):
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+```bash
+npm run build
+```
 
-when the build folder is ready to be deployed after `npm run build`:
-`npm install -g serve`
-`serve -s build`
+## 🗂️ Notes for contributors
 
+- Keep UI state in the `Game`/`Board` parent components and pass notes down to `GameNotes`.
+- Prefer serializable, minimal state for notes (avoid storing large DOM or binary blobs).
+- If you add a backend, follow the API path `/.netlify/functions` or `/api` locally (or wire Amplify's mock endpoints) so CI/CD deploys run without client code changes.
 
-## Adding TypeScript Support
+## 🖼️ Visual / diagram
 
-To add TypeScript support to your project, follow these steps:
+```mermaid
+graph LR
+	Browser[Browser / React SPA]
+	Browser -->|React Router| Routes[Routes: /, /game/:id, /notes]
+	Browser -->|POST / GET| APIGW[API Gateway (future)]
+	APIGW --> Lambda[Lambda]
+	Lambda --> DynamoDB[(DynamoDB)]
+	CI[GitHub → AWS GitHub App]
+	CI --> Amplify[Amplify (CI/CD + Hosting)]
+	Amplify --> Browser
+```
 
-1. Install TypeScript and the necessary type definitions for React and ReactDOM as development dependencies:
+## 🚀 Next steps (ideas)
 
-   ```bash
-   npm install --save-dev typescript @types/react @types/react-dom
-   ```
+- Add an example API spec (OpenAPI) and a small Lambda prototype that accepts notes.
+- Add Cognito-based auth via Amplify to support private notes.
 
-2. Update the `package.json` scripts to include a TypeScript build command. Add `"build": "tsc"` to the existing scripts.
+---
 
-3. Create a `tsconfig.json` file in the root of your project to configure TypeScript options. Ensure that your existing JavaScript files are included by setting `"allowJs": true` in the `tsconfig.json`.
-
+Happy hacking! ♟️
