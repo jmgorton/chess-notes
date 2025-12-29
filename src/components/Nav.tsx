@@ -27,7 +27,13 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import InboxIcon from '@mui/icons-material/MoveToInbox';
+import HomeIcon from '@mui/icons-material/Home';
+import InfoIcon from '@mui/icons-material/Info';
+import PeopleIcon from '@mui/icons-material/People';
+import SportsEsportsIcon from '@mui/icons-material/SportsEsports';
+import DescriptionIcon from '@mui/icons-material/Description';
+import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
+// import InboxIcon from '@mui/icons-material/MoveToInbox';
 // import MailIcon from '@mui/icons-material/Mail';
 
 const drawerWidth = 240;
@@ -54,38 +60,38 @@ const closedMixin = (theme: Theme): CSSObject => ({
 });
 
 const drawerElementMap = {
-    'Root': {
-        icon: null,
-        // label: 'Root',
-        url: '/',
-        component: <></>,
-    },
+    // 'Root': {
+    //     icon: null,
+    //     // label: 'Root',
+    //     url: '/',
+    //     component: <></>,
+    // },
     'Home': {
-        icon: null,
+        icon: HomeIcon,
         // label: 'Home',
         url: '/home',
         component: <Home />,
     },
     'About': {
-        icon: null,
+        icon: InfoIcon,
         // label: 'About',
         url: '/about',
         component: <About />,
     },
     'Users': {
-        icon: null,
+        icon: PeopleIcon,
         // label: 'Users',
         url: '/users',
         component: <Users />,
     },
     'Play': {
-        icon: null,
+        icon: SportsEsportsIcon,
         // label: 'Play',
         url: '/play',
         component: <></>, // <Game />,
     },
     'Study': {
-        icon: null,
+        icon: DescriptionIcon,
         // label: 'Study',
         url: '/study',
         // component: <Game />,
@@ -109,6 +115,8 @@ interface AppBarProps extends MuiAppBarProps {
 const AppBar = styled(MuiAppBar, {
     shouldForwardProp: (prop) => prop !== 'open',
 })<AppBarProps>(({ theme }) => ({
+    // backgroundColor: '#2f2f2f',
+    // color: '#ffffff',
     zIndex: theme.zIndex.drawer + 1,
     transition: theme.transitions.create(['width', 'margin'], {
         easing: theme.transitions.easing.sharp,
@@ -118,6 +126,8 @@ const AppBar = styled(MuiAppBar, {
         {
             props: ({ open }) => open,
             style: {
+                // backgroundColor: '#2f2f2f',
+                // color: '#ffffff',
                 marginLeft: drawerWidth,
                 width: `calc(100% - ${drawerWidth}px)`,
                 transition: theme.transitions.create(['width', 'margin'], {
@@ -165,45 +175,56 @@ export default function MiniDrawer(props: any) {
             throw Error();
         }
         
-        setChildren(drawerElementMap[eventItemText as keyof typeof drawerElementMap]?.component || <Error />)
-        // const stateObj = { /* data specific to your new state */ };
-        const newUrl = `${drawerElementMap[eventItemText as keyof typeof drawerElementMap]?.url || 'error'}`;
-        // window.history.pushState({}, '', newUrl); // push new url and state without reloading whole page
-        window.history.pushState({}, '', newUrl);
+        try {
+            setChildren(drawerElementMap[eventItemText as keyof typeof drawerElementMap]?.component || <Error />)
+            // const stateObj = { /* data specific to your new state */ };
+            const newUrl = `${drawerElementMap[eventItemText as keyof typeof drawerElementMap]?.url}`;
+            // window.history.pushState({}, '', newUrl); // push new url and state without reloading whole page
+            window.history.pushState({}, '', newUrl);
+        } catch {
+            // try {
+            //     window.location.href = drawerElementMap[eventItemText as keyof typeof drawerElementMap]?.url;
+            // }
+        }
+        
     }
     // type of children? React.Component, Element, Element | (something)
     const [children, setChildren] = React.useState(
-        props.children || 
         (
             <Box component="main" sx={{ flexGrow: 1, p: 3, color: 'white' }}>
                 <DrawerHeader />
-                <Typography sx={{ marginBottom: 2 }}>
-                    Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-                    tempor incididunt ut labore et dolore magna aliqua. Rhoncus dolor purus non
-                    enim praesent elementum facilisis leo vel. Risus at ultrices mi tempus
-                    imperdiet. Semper risus in hendrerit gravida rutrum quisque non tellus.
-                    Convallis convallis tellus id interdum velit laoreet id donec ultrices.
-                    Odio morbi quis commodo odio aenean sed adipiscing. Amet nisl suscipit
-                    adipiscing bibendum est ultricies integer quis. Cursus euismod quis viverra
-                    nibh cras. Metus vulputate eu scelerisque felis imperdiet proin fermentum
-                    leo. Mauris commodo quis imperdiet massa tincidunt. Cras tincidunt lobortis
-                    feugiat vivamus at augue. At augue eget arcu dictum varius duis at
-                    consectetur lorem. Velit sed ullamcorper morbi tincidunt. Lorem donec massa
-                    sapien faucibus et molestie ac.
-                </Typography>
-                <Typography sx={{ marginBottom: 2 }}>
-                    Consequat mauris nunc congue nisi vitae suscipit. Fringilla est ullamcorper
-                    eget nulla facilisi etiam dignissim diam. Pulvinar elementum integer enim
-                    neque volutpat ac tincidunt. Ornare suspendisse sed nisi lacus sed viverra
-                    tellus. Purus sit amet volutpat consequat mauris. Elementum eu facilisis
-                    sed odio morbi. Euismod lacinia at quis risus sed vulputate odio. Morbi
-                    tincidunt ornare massa eget egestas purus viverra accumsan in. In hendrerit
-                    gravida rutrum quisque non tellus orci ac. Pellentesque nec nam aliquam sem
-                    et tortor. Habitant morbi tristique senectus et. Adipiscing elit duis
-                    tristique sollicitudin nibh sit. Ornare aenean euismod elementum nisi quis
-                    eleifend. Commodo viverra maecenas accumsan lacus vel facilisis. Nulla
-                    posuere sollicitudin aliquam ultrices sagittis orci a.
-                </Typography>
+                {
+                    props.children || 
+                    <>
+                        <Typography sx={{ marginBottom: 2 }}>
+                            Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
+                            tempor incididunt ut labore et dolore magna aliqua. Rhoncus dolor purus non
+                            enim praesent elementum facilisis leo vel. Risus at ultrices mi tempus
+                            imperdiet. Semper risus in hendrerit gravida rutrum quisque non tellus.
+                            Convallis convallis tellus id interdum velit laoreet id donec ultrices.
+                            Odio morbi quis commodo odio aenean sed adipiscing. Amet nisl suscipit
+                            adipiscing bibendum est ultricies integer quis. Cursus euismod quis viverra
+                            nibh cras. Metus vulputate eu scelerisque felis imperdiet proin fermentum
+                            leo. Mauris commodo quis imperdiet massa tincidunt. Cras tincidunt lobortis
+                            feugiat vivamus at augue. At augue eget arcu dictum varius duis at
+                            consectetur lorem. Velit sed ullamcorper morbi tincidunt. Lorem donec massa
+                            sapien faucibus et molestie ac.
+                        </Typography>
+                        <Typography sx={{ marginBottom: 2 }}>
+                            Consequat mauris nunc congue nisi vitae suscipit. Fringilla est ullamcorper
+                            eget nulla facilisi etiam dignissim diam. Pulvinar elementum integer enim
+                            neque volutpat ac tincidunt. Ornare suspendisse sed nisi lacus sed viverra
+                            tellus. Purus sit amet volutpat consequat mauris. Elementum eu facilisis
+                            sed odio morbi. Euismod lacinia at quis risus sed vulputate odio. Morbi
+                            tincidunt ornare massa eget egestas purus viverra accumsan in. In hendrerit
+                            gravida rutrum quisque non tellus orci ac. Pellentesque nec nam aliquam sem
+                            et tortor. Habitant morbi tristique senectus et. Adipiscing elit duis
+                            tristique sollicitudin nibh sit. Ornare aenean euismod elementum nisi quis
+                            eleifend. Commodo viverra maecenas accumsan lacus vel facilisis. Nulla
+                            posuere sollicitudin aliquam ultrices sagittis orci a.
+                        </Typography>
+                    </>
+                }
             </Box>
         )
     );
@@ -311,7 +332,7 @@ export default function MiniDrawer(props: any) {
                                     ]}
                                 >
                                     {/* {index % 2 === 0 ? <InboxIcon /> : <MailIcon />} */}
-                                    {drawerElementMap[text as keyof typeof drawerElementMap].icon || <InboxIcon />}
+                                    {React.createElement(drawerElementMap[text as keyof typeof drawerElementMap].icon) || <QuestionMarkIcon />}
                                 </ListItemIcon>
                                 <ListItemText
                                     primary={text}
@@ -460,17 +481,17 @@ export function Nav() {
 }
 
 function Error() {
-    return <h2 style={{ 'color': 'white' }}>Error</h2>;
+    return <h2 style={{ color: 'white' }}>Error</h2>;
 }
 
 function Home() {
-    return <h2 style={{ 'color': 'white' }}>Home</h2>;
+    return <h2 style={{ color: 'white' }}>Home</h2>;
 }
 
 function About() {
-    return <h2 style={{ 'color': 'white' }}>About</h2>;
+    return <h2 style={{ color: 'white' }}>About</h2>;
 }
 
 function Users() {
-    return <h2 style={{ 'color': 'white' }}>Users</h2>;
+    return <h2 style={{ color: 'white' }}>Users</h2>;
 }
