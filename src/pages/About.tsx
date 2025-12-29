@@ -50,7 +50,9 @@ const MermaidChart: React.FC<MermaidChartProps> = ({ chartDefinition, id }) => {
 
 const convertHtmlToMarkdown = (html: string): string => {
   const turndownService = new TurndownService();
+  console.log(`convertHtmlToMarkdown: original html: ${html}`);
   const markdownOutput = turndownService.turndown(html);
+  console.log(`convertHtmlToMarkdown: converted markdown: ${markdownOutput}`);
   return markdownOutput;
 };
 
@@ -104,11 +106,12 @@ const About = () => {
     // Fetch the content of the imported file path
     console.log(markdownFilePath);
     fetch(markdownFilePath)
-      .then((response) => response.text())
+      .then((response) => response.text(), (error) => console.error(error))
       .then((text) => {
         // text = text.replace(/```mermaid[\s\S]*```/g, `${mermaidMarkdownOutput}`);
         // console.log(mermaidMarkdownOutput);
-        setMarkdown(text);
+        console.log(text);
+        if (text) setMarkdown(text);
       });
   }, [mermaidMarkdownOutput]);
 
