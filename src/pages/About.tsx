@@ -102,10 +102,11 @@ const About = () => {
 
   useEffect(() => {
     // Fetch the content of the imported file path
+    console.log(markdownFilePath);
     fetch(markdownFilePath)
       .then((response) => response.text())
       .then((text) => {
-        text = text.replace(/```mermaid[\s\S]*```/g, `${mermaidMarkdownOutput}`);
+        // text = text.replace(/```mermaid[\s\S]*```/g, `${mermaidMarkdownOutput}`);
         // console.log(mermaidMarkdownOutput);
         setMarkdown(text);
       });

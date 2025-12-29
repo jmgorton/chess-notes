@@ -182,6 +182,7 @@ export default function MiniDrawer(props: any) {
         if (event) event.preventDefault();
         if (!Object.keys(drawerElementMap).includes(eventItemText)) {
             console.error(`${eventItemText} does not exist.`);
+            navigate("error");
             throw Error();
         }
 
