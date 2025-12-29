@@ -265,14 +265,16 @@
   .logo-image {
     transform-box: fill-box;
     transform-origin: center;
-    animation: float 6s ease-in-out infinite;
+    /* this animation makes the logo kind of gently bounce */
+    animation: float 6s ease-in-out infinite; 
     border-radius: 12px;
   }
 
   .orbits {
     transform-box: fill-box;
     transform-origin: center;
-    animation: rotateOrbits 12s linear infinite;
+    /* this animation makes the orbits kind of shaky */
+    /* animation: rotateOrbits 12s linear infinite; */
   }
 
   .orbit-dots {
