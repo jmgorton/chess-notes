@@ -105,7 +105,7 @@ const About = () => {
   useEffect(() => {
     // Fetch the content of the imported file path
     let filePathToFetch = process.env.PUBLIC_URL + '/README.md'; // markdownFilePath;
-    const matcher: RegExp = /\/static\/media\/README.md/;
+    const matcher: RegExp = /\/static\/media\/README/;
     console.log(markdownFilePath);
     if (markdownFilePath.match(matcher)) {
         console.log(`${markdownFilePath} matches ${matcher}`);
