@@ -104,8 +104,12 @@ const About = () => {
 
   useEffect(() => {
     // Fetch the content of the imported file path
+    let filePathToFetch = markdownFilePath;
     console.log(markdownFilePath);
-    fetch(markdownFilePath)
+    if (markdownFilePath.match(/^\/static\/media\/README/)) {
+        filePathToFetch = process.env.PUBLIC_URL + '/README.md';
+    }
+    fetch(filePathToFetch)
       .then((response) => response.text(), (error) => console.error(error))
       .then((text) => {
         // text = text.replace(/```mermaid[\s\S]*```/g, `${mermaidMarkdownOutput}`);
