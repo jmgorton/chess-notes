@@ -111,6 +111,8 @@ const About = () => {
         console.log(`${markdownFilePath} matches ${matcher}`);
         // filePathToFetch = process.env.PUBLIC_URL + '/README.md';
         filePathToFetch = markdownFilePath;
+    } else {
+        console.log(`No match between ${matcher} and ${markdownFilePath}`);
     }
     fetch(filePathToFetch)
       .then((response) => response.text(), (error) => console.error(error))

@@ -100,7 +100,7 @@ graph LR
 	APIGW --> Lambda[Lambda]
 	Lambda --> DynamoDB[(DynamoDB)]
 	CI["GitHub → AWS GitHub App"]
-	CI --> Amplify[Amplify (CI/CD + Hosting)]
+	CI --> Amplify[Amplify]
 	Amplify --> Browser
 ```
 
