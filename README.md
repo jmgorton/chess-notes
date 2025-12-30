@@ -99,11 +99,11 @@ npm run build
 graph LR
 	Browser[Browser / React SPA]
 	Browser -->|React Router| Routes[Routes: /, /game/:id, /notes]
-	Browser -->|POST / GET| APIGW[API Gateway (future)]
+	Browser -->|POST / GET| APIGW[API Gateway]
 	APIGW --> Lambda[Lambda]
 	Lambda --> DynamoDB[(DynamoDB)]
-	CI[GitHub → AWS GitHub App]
-	CI --> Amplify[Amplify (CI/CD + Hosting)]
+	CI["GitHub → AWS GitHub App"]
+	CI --> Amplify[Amplify]
 	Amplify --> Browser
 ```
 
