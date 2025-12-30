@@ -84,11 +84,11 @@ const About = () => {
     graph LR
         Browser[Browser / React SPA]
         Browser -->|React Router| Routes[Routes: /, /game/:id, /notes]
-        Browser -->|POST / GET| APIGW[API Gateway (future)]
+        Browser -->|POST / GET| APIGW[API Gateway]
         APIGW --> Lambda[Lambda]
         Lambda --> DynamoDB[(DynamoDB)]
         CI[GitHub → AWS GitHub App]
-        CI --> Amplify[Amplify (CI/CD + Hosting)]
+        CI --> Amplify[Amplify]
         Amplify --> Browser
   `;
 
@@ -105,7 +105,7 @@ const About = () => {
   useEffect(() => {
     // Fetch the content of the imported file path
     let filePathToFetch = process.env.PUBLIC_URL + '/README.md'; // markdownFilePath;
-    const matcher: RegExp = /^\/static\/media\/README.md\.*$/;
+    const matcher: RegExp = /\/static\/media\/README.md/;
     console.log(markdownFilePath);
     if (markdownFilePath.match(matcher)) {
         console.log(`${markdownFilePath} matches ${matcher}`);
