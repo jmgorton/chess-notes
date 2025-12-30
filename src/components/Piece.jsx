@@ -1,5 +1,7 @@
 import React from 'react';
 
+import * as helpers from '../utils/helpers.ts';
+
 // Use public resources so filenames remain predictable in production.
 // Put the PNGs in `public/resources` and reference them via PUBLIC_URL.
 const PUBLIC = process.env.PUBLIC_URL || '';
@@ -27,6 +29,64 @@ class Piece extends React.Component {
     // }
     this.handleClick = this.handleClick.bind(this);
     // if (this.state.piececode === 'Q') alert("Piece constructor"); 
+  }
+
+  // in order to allow generatePawnValidMoves to call this method, we also have to include a captureValidator input function
+  // all other pieces' captureValidator inputs will be the same, what exists: the piece at the target is not the same color as the piece at the source 
+  // the existing nextSquareValidators input is more like a validPieceMovenextSquareValidators input 
+  // it would be nice if I could access the Piece objects and use their internal properties to store/call these methods, but whatever 
+
+  // TODO refactoring includeCaptures and includeSelfCaptures to instead be contained in one includeAttacksFrom (or rename to includeCapturesOf or smth) 
+  static generatePieceValidMoves = (
+    squareId,
+    boardState,
+    directions,
+    {
+      distance = 8,
+      nextSquareValidators = [],
+      captureValidators = [],
+      includeNonCaptures = true,
+      includeAttacksFrom = ['L','D'], // could even put '' to indicate includeNonCaptures as well... 
+    } = {},
+  ) => {
+    const legalMoves = [];
+
+    // if (!directions) return legalMoves; // not necessary 
+
+    nextSquareValidators.push((oldSquare, newSquare) => oldSquare >= 0 && newSquare >= 0);
+    nextSquareValidators.push((oldSquare, newSquare) => oldSquare < 64 && newSquare < 64);
+
+    captureValidators.push((squareFrom, squareTo) => includeAttacksFrom?.includes(boardState[squareTo]?.charAt(0)) || false);
+    // captureValidators.push((squareFrom, squareTo) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState));
+
+    // selfCaptureValidators.push((squareFrom: number, squareTo: number) => boardState[squareFrom]?.charAt(0) === boardState[squareTo]?.charAt(0));
+    // selfCaptureValidators.push((squareFrom: number, squareTo: number) => squareTo === squareToImagineFriendly);
+
+
+    directions.forEach((direction) => {
+      let checkedSquare = squareId;
+      let nextSquareToCheck = checkedSquare + direction;
+      let rangeRemaining = distance;
+      // eslint-disable-next-line no-loop-func
+      while (rangeRemaining > 0 && nextSquareValidators.every(validator => validator(checkedSquare, nextSquareToCheck))) { // (checkedSquare: number, nextSquareToCheck: number) => boolean:
+        if (boardState[nextSquareToCheck] === "") {
+          if (includeNonCaptures) {
+            legalMoves.push(nextSquareToCheck);
+          }
+        } else {
+          // eslint-disable-next-line no-loop-func
+          if (captureValidators.some(validator => validator(squareId, nextSquareToCheck))) { // at least one validator true means valid capture 
+            legalMoves.push(nextSquareToCheck);
+          }
+          break;
+        }
+        checkedSquare = nextSquareToCheck;
+        nextSquareToCheck = checkedSquare + direction;
+        rangeRemaining -= 1;
+      }
+    })
+
+    return legalMoves;
   }
 
   handleClick() {
@@ -57,8 +117,8 @@ class Piece extends React.Component {
 }
 
 class Pawn extends Piece {
-  alt = "Pawn";
-  piececode = "P";
+  static alt = "Pawn";
+  static piececode = "P";
 
   constructor(props) {
     super(props);
@@ -69,6 +129,98 @@ class Pawn extends Piece {
     this.handleClick = this.handleClick.bind(this);
   }
 
+  static generatePieceValidMoves = (
+    squareId,
+    boardState,
+    includeNonCaptures = true,
+    includeCapturesOf = ['L','D'],
+    moveDirections = this.moveDirections,
+    captureDirections = this.captureDirections,
+    startingRank = null,
+  ) => {
+    // // Legal pawn moves   
+    const currRank = Math.floor(squareId / 8);
+    let pawnMoves = [];
+
+    // adding pawn moves (non-captures)
+    if (includeNonCaptures) {
+      pawnMoves = pawnMoves.concat(super.generatePieceValidMoves(
+        squareId,
+        boardState,
+        moveDirections,
+        {
+            distance: currRank === startingRank ? 2 : 1,
+            // nextSquareValidators: this.nextSquareValidators,
+            // captureValidators: captureValidators,
+            includeNonCaptures: true, // includeNonCaptures,
+            includeAttacksFrom: [], // includeCapturesOf,
+        },
+      ));
+    }
+
+    // if (includeNonCaptures) {
+    //   pawnMoves = pawnMoves.concat(
+    //     this.generatePieceValidNonCaptureMoves(
+    //       squareId,
+    //       // playerCode === 'L' ? [-8] : [8],
+    //       this.moveDirections,
+    //       {
+    //         distance: (currRank === (playerCode === 'L' ? 6 : 1)) ? 2 : 1,
+    //       },
+    //       boardState
+    //     )
+    //   );
+    // }
+
+    // how does this work if we reference boardState from this lambda and call it in a separate function? 
+    let captureValidators = [((squareFrom, squareTo) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState))];
+    let nextSquareValidators = [((squareFrom, squareTo) => Math.abs(squareFrom % 8 - squareTo % 8) === 1)];
+
+    // adding more pawn moves (captures)
+    pawnMoves = pawnMoves.concat(super.generatePieceValidMoves(
+      squareId,
+      boardState,
+      captureDirections,
+      {
+          distance: 1,
+          nextSquareValidators: nextSquareValidators,
+          captureValidators: captureValidators,
+          includeNonCaptures: false,
+          includeAttacksFrom: includeCapturesOf,
+      },
+    ));
+
+    // pawnMoves = pawnMoves.concat(
+    //   this.generatePieceValidCaptureMoves(
+    //     squareId,
+    //     playerCode === 'L' ? [-7, -9] : [7, 9],
+    //     1,
+    //     {
+    //       // distance: 1,
+    //       captureValidators: [
+    //         (squareFrom, squareTo) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState),
+    //       ],
+    //     },
+    //     boardState,
+    //   )
+    // )
+
+    // if (includeAttacksFrom.includes(playerCode)) {
+    //   pawnMoves = pawnMoves.concat(
+    //     this.generatePieceValidSelfCaptureMoves(
+    //       squareId,
+    //       playerCode === 'L' ? [-7, -9] : [7, 9],
+    //       {
+    //         distance: 1,
+    //       },
+    //       boardState,
+    //     )
+    //   )
+    // }
+
+    return pawnMoves;
+  }
+
   // handleClick() {
   //   const squareId = this.props.id;
   //   this.props.onPawnClick(squareId);
@@ -76,16 +228,16 @@ class Pawn extends Piece {
 }
 
 class LightPawn extends Pawn {
-  alt = "Light Pawn";
-  playercode = "L";
-  keycode = "LP";
+  static alt = "Light Pawn";
+  static playercode = "L";
+  static keycode = "LP";
   icon = keycodeToIcon["LP"];
 
-  // legalMoves = [-8, -16, -7, -9];
+  static moveDirections = [-8];
+  static captureDirections = [-7, -9];
 
-  moveDirections = [-8];
-  // moveDistance = 2;
-  captureDirections = [-7, -9];
+  // moveDistance = 2; // depends on board state
+  static startingRank = 6;
 
   constructor(props) {
     super(props);
@@ -101,6 +253,23 @@ class LightPawn extends Pawn {
     this.handleClick = this.handleClick.bind(this);
   }
 
+  static generatePieceValidMoves = (
+    squareId,
+    boardState,
+    includeNonCaptures = true,
+    includeCapturesOf = ['D'],
+  ) => {
+    return super.generatePieceValidMoves(
+      squareId,
+      boardState,
+      includeNonCaptures,
+      includeCapturesOf,
+      this.moveDirections,
+      this.captureDirections,
+      this.startingRank,
+    );
+  }
+
   handleClick() {
     // // highlight two squares in front, if legal moves 
     // const squareId = this.props.id;
@@ -110,15 +279,20 @@ class LightPawn extends Pawn {
 }
 
 class DarkPawn extends Pawn {
-  alt = "Dark Pawn";
-  playercode = "D";
-  keycode = "DP";
+  static alt = "Dark Pawn";
+  static playercode = "D";
+  static keycode = "DP";
   icon = keycodeToIcon["DP"];
 
-  // legalMoves = [8, 16, 7, 9];
-  moveDirections = [8];
+  static moveDirections = [8];
+  static captureDirections = [7, 9];
+
   // moveDistance = 2; // put in state and alter after first move 
-  captureDirections = [7, 9]; // also use state to handle en passant ?? No, but we do need history of moves 
+  static startingRank = 1;
+
+  // unlike nextSquareValidators, which require all conditions to be true, 
+  // captureValidators only require at least one condition to be true 
+  // captureValidators always rely on the state of the board, so don't include them 
 
   constructor(props) {
     super(props);
@@ -128,6 +302,23 @@ class DarkPawn extends Pawn {
     //   icon: keycodeToIcon["DP"],
     // }
     this.handleClick = this.handleClick.bind(this);
+  }
+
+  static generatePieceValidMoves = (
+    squareId,
+    boardState,
+    includeNonCaptures = true,
+    includeCapturesOf = ['L'],
+  ) => {
+    return super.generatePieceValidMoves(
+      squareId,
+      boardState,
+      includeNonCaptures,
+      includeCapturesOf,
+      this.moveDirections,
+      this.captureDirections,
+      this.startingRank,
+    );
   }
 
   handleClick() {
@@ -142,6 +333,14 @@ class Knight extends Piece {
   static alt = "Knight";
   static piececode = "N";
 
+  static directions = [-17, -15, -10, -6, 6, 10, 15, 17];
+  static distance = 1;
+  static nextSquareValidators = [
+    (square, nextSquare) => Math.abs((square % 8) - (nextSquare % 8)) <= 2,
+    (square, nextSquare) => Math.abs(Math.floor(square / 8) - Math.floor(nextSquare / 8)) <= 2,
+    // could also add a validator to make sure delta-rank + delta-file add up to 3, and both are not 0
+  ];
+
   constructor(props) {
     super(props);
     // this.state = {
@@ -152,6 +351,26 @@ class Knight extends Piece {
     this.handleClick = this.handleClick.bind(this);
   }
 
+  static generatePieceValidMoves = (
+    squareId,
+    boardState, // = this.state.pieceKeys,
+    includeNonCaptures = true,
+    includeCapturesOf = ['L','D'],
+  ) => {
+    return super.generatePieceValidMoves(
+    // return this.generatePieceValidMoves(
+      squareId,
+      boardState,
+      this.directions,
+      {
+          distance: this.distance,
+          nextSquareValidators: this.nextSquareValidators,
+          includeNonCaptures: includeNonCaptures,
+          includeAttacksFrom: includeCapturesOf,
+      },
+    );
+  }
+
   handleClick() {
     super.handleClick();
     // alert("Clicked on a Knight");
@@ -159,9 +378,9 @@ class Knight extends Piece {
 }
 
 class LightKnight extends Knight {
-  alt = "Light Knight";
-  playercode = "L";
-  keycode = "LN";
+  static alt = "Light Knight";
+  static playercode = "L";
+  static keycode = "LN";
   icon = keycodeToIcon["LN"];
 
   // constructor(props) {
@@ -172,12 +391,26 @@ class LightKnight extends Knight {
   //   //   icon: keycodeToIcon["LN"],
   //   // }
   // }
+
+  static generatePieceValidMoves = (
+    squareId,
+    boardState, // = this.state.pieceKeys,
+    includeNonCaptures = true,
+    includeCapturesOf = ['D'],
+  ) => {
+    return super.generatePieceValidMoves(
+      squareId,
+      boardState,
+      includeNonCaptures,
+      includeCapturesOf,
+    );
+  }
 }
 
 class DarkKnight extends Knight {
-  alt = "Dark Knight";
-  playercode = "D";
-  keycode = "DN";
+  static alt = "Dark Knight";
+  static playercode = "D";
+  static keycode = "DN";
   icon = keycodeToIcon["DN"];
   
   // constructor(props) {
@@ -188,14 +421,32 @@ class DarkKnight extends Knight {
   //   //   icon: keycodeToIcon["DN"],
   //   // }
   // }
+
+  static generatePieceValidMoves = (
+    squareId,
+    boardState, // = this.state.pieceKeys,
+    includeNonCaptures = true,
+    includeCapturesOf = ['L'],
+  ) => {
+    return super.generatePieceValidMoves(
+      squareId,
+      boardState,
+      includeNonCaptures,
+      includeCapturesOf,
+    );
+  }
 }
 
 class Bishop extends Piece {
-  alt = "Bishop";
-  piececode = "B";
+  static alt = "Bishop";
+  static piececode = "B";
 
-  static moveDirections = [-9, -7, 7, 9];
+  static directions = [-9, -7, 7, 9];
   // static moveDistance = 7; // or length of board
+  static nextSquareValidators = [
+    (square, nextSquare) => Math.abs(Math.floor(nextSquare / 8) - Math.floor(square / 8)) === 1,
+    (square, nextSquare) => Math.abs(square % 8 - nextSquare % 8) === 1,
+  ]
 
   // constructor(props) {
   //   super(props);
@@ -208,9 +459,9 @@ class Bishop extends Piece {
 }
 
 class LightBishop extends Bishop {
-  alt = "Light Bishop";
-  playercode = "L";
-  keycode = "LB";
+  static alt = "Light Bishop";
+  static playercode = "L";
+  static keycode = "LB";
   icon = keycodeToIcon["LB"];
 
   // constructor(props) {
@@ -224,9 +475,9 @@ class LightBishop extends Bishop {
 }
 
 class DarkBishop extends Bishop {
-  alt = "Dark Bishop";
-  playercode = "D";
-  keycode = "DP";
+  static alt = "Dark Bishop";
+  static playercode = "D";
+  static keycode = "DP";
   icon = keycodeToIcon["DB"];
 
   // constructor(props) {
@@ -243,11 +494,13 @@ class Rook extends Piece {
   static alt = "Rook";
   static piececode = "R";
 
-  static moveDirections = [-8, -1, 1, 8];
+  static directions = [-8, -1, 1, 8];
   // static moveDistance = 7; // or length of board 
   // making property static adds property to component class (constructor)
   //   as opposed to an instance field 
   //   alt method : relax typing to `any` -- i.e. (keycodeToComponent["R"] as any).nextSquareValidators 
+  // nextSquareValidators compare a possible move at distance n >= 0 to the next possible move at distance n + 1
+  // and make sure that nothing wraps around the board 
   static nextSquareValidators = [
     (square, nextSquare) => (Math.abs(Math.floor(nextSquare / 8) - Math.floor(square / 8)) ^ Math.abs(square % 8 - nextSquare % 8)) === 0b1,
     (square, nextSquare) => (Math.floor(nextSquare / 8) === Math.floor(square / 8)) !== (square % 8 === nextSquare % 8),
@@ -264,9 +517,9 @@ class Rook extends Piece {
 }
 
 class LightRook extends Rook {
-  alt = "Light Rook";
-  playercode = "L";
-  keycode = "LR";
+  static alt = "Light Rook";
+  static playercode = "L";
+  static keycode = "LR";
   icon = keycodeToIcon["LR"];
 
   // constructor(props) {
@@ -280,9 +533,9 @@ class LightRook extends Rook {
 }
 
 class DarkRook extends Rook {
-  alt = "Dark Rook";
-  playercode = "D";
-  keycode = "DR";
+  static alt = "Dark Rook";
+  static playercode = "D";
+  static keycode = "DR";
   icon = keycodeToIcon["DR"];
 
   // constructor(props) {
@@ -296,11 +549,15 @@ class DarkRook extends Rook {
 }
 
 class Queen extends Piece {
-  alt = "Queen";
-  piececode = "Q";
+  static alt = "Queen";
+  static piececode = "Q";
 
-  moveDirections = [-9, -8, -7, -1, 1, 7, 8, 9];
-  moveDistance = 7; // or length of board 
+  static directions = [-9, -8, -7, -1, 1, 7, 8, 9];
+  static distance = 7; // or length of board 
+
+  // TODO validate this
+  // nextSquareValidators require all conditions to be true, so this doesn't work 
+  // static nextSquareValidators = Rook.nextSquareValidators | Bishop.nextSquareValidators;
 
   // possibleMoves = [-63, -56, -54, -49, -45, -36, -35, -28, -27, -21, -18, -14, -9, -7, 7, ]
   // possibleMoves = [
@@ -319,9 +576,9 @@ class Queen extends Piece {
 }
 
 class LightQueen extends Queen {
-  alt = "Light Queen";
-  playercode = "L";
-  keycode = "LQ";
+  static alt = "Light Queen";
+  static playercode = "L";
+  static keycode = "LQ";
   icon = keycodeToIcon["LQ"];
 
   // constructor(props) {
@@ -333,9 +590,9 @@ class LightQueen extends Queen {
 }
 
 class DarkQueen extends Queen {
-  alt = "Dark Queen";
-  playercode = "D";
-  keycode = "DQ";
+  static alt = "Dark Queen";
+  static playercode = "D";
+  static keycode = "DQ";
   icon = keycodeToIcon["DQ"];
 
   // constructor(props) {
@@ -350,12 +607,15 @@ class DarkQueen extends Queen {
 }
 
 class King extends Piece {
-  alt = "King";
-  piececode = "K";
+  static alt = "King";
+  static piececode = "K";
 
-  // possibleMoves = [-9, -8, -7, -1, 1, 7, 8, 9];
-  moveDirections = [-9, -8, -7, -1, 1, 7, 8, 9];
-  moveDistance = 1;
+  static directions = [-9, -8, -7, -1, 1, 7, 8, 9];
+  static distance = 1;
+  static nextSquareValidators = [
+    (oldSquare, newSquare) => Math.abs(Math.floor(newSquare / 8) - Math.floor(oldSquare / 8)) <= 1,
+    (oldSquare, newSquare) => Math.abs(newSquare % 8 - oldSquare % 8) <= 1,
+  ];
 
   // constructor(props) {
   //   super(props);
@@ -368,9 +628,9 @@ class King extends Piece {
 }
 
 class LightKing extends King {
-  alt = "Light King";
-  playercode = "L";
-  keycode = "LK";
+  static alt = "Light King";
+  static playercode = "L";
+  static keycode = "LK";
   icon = keycodeToIcon["LK"];
 
   // constructor(props) {
@@ -384,9 +644,9 @@ class LightKing extends King {
 }
 
 class DarkKing extends King {
-  alt = "Dark King";
-  playercode = "D";
-  keycode = "DK";
+  static alt = "Dark King";
+  static playercode = "D";
+  static keycode = "DK";
   icon = keycodeToIcon["DK"];
 
   // possibleMoves = [-9, -8, -7, -1, 1, 7, 8, 9];
@@ -407,8 +667,8 @@ class DarkKing extends King {
 
 export const keycodeToComponent = {
   // '': div => <div></div>,
-  '': <></>,
-  ' ': <></>,
+  // '': null, // <></>, // NullPiece 
+  // ' ': <></>,
   'R': Rook,
   'N': Knight,
   'B': Bishop,

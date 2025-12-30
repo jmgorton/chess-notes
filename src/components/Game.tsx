@@ -5,7 +5,9 @@ import { GameNotes } from './GameNotes';
 import Board from './Board.jsx';
 
 import { keycodeToComponent } from './Piece.jsx';
-import { multiUpdateState, updateState } from '../utils/helpers.ts';
+// import { multiUpdateState, updateState } from '../utils/helpers.ts';
+import * as helpers from '../utils/helpers.ts';
+import * as constants from '../utils/constants.ts';
 
 // Type definitions
 type GameProps = Record<string, unknown>;
@@ -33,8 +35,8 @@ interface HistoryItem {
 interface GameState {
     pieceKeys: string[];
     squareProps: SquareProp[];
-    lightKingPosition: number | null;
-    darkKingPosition: number | null;
+    lightKingPosition: number;
+    darkKingPosition: number;
     lightKingHasShortCastlingRights: boolean;
     lightKingHasLongCastlingRights: boolean;
     darkKingHasShortCastlingRights: boolean;
@@ -48,20 +50,6 @@ interface GameState {
     plyNumber: number;
     //   testState: number;
 }
-
-// const DIR: { [key: string]: number } = {
-//     N: -8,
-//     S: 8,
-//     E: 1,
-//     W: -1,
-//     NW: -9,
-//     NE: -7,
-//     SW: 7,
-//     SE: 9,
-// }
-
-// const validPieces = ['R','N','B','Q','K','P'];
-// const validPlayers = ['L','D'];
 
 export default class Game extends React.Component<GameProps, GameState> {
     backrankStartingPositions: string[] = ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']; // can make chess960 later 
@@ -173,7 +161,7 @@ export default class Game extends React.Component<GameProps, GameState> {
             squareSelected: null,
             squareAltSelected: null,
             whiteToPlay: true,
-            FEN: "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", // starting position in Forsyth-Edwards Notation 
+            FEN: constants.defaultStartingFEN,
             history: [],
             // history: [{
             //   pieceKeys: startingConfig, // full state of keycodes on board at this move // don't store the initial state 
@@ -191,15 +179,15 @@ export default class Game extends React.Component<GameProps, GameState> {
         this.handleSquareRightClick = this.handleSquareRightClick.bind(this);
         this.handleUndoClick = this.handleUndoClick.bind(this);
 
-        if (this.startingFEN) {
-            this.generateBoardStateFromFen(this.startingFEN); // const newStateKVPs = 
-            // this.setState({
-            //     ...this.state,
-            //     ...newStateKVPs,
-            // });
+        // if (this.startingFEN) {
+        //     this.generateBoardStateFromFen(this.startingFEN); // const newStateKVPs = 
+        //     // this.setState({
+        //     //     ...this.state,
+        //     //     ...newStateKVPs,
+        //     // });
 
-            // return;
-        }
+        //     // return;
+        // }
     }
 
     generateBoardFEN = (event?: React.SyntheticEvent | null, boardState: string[] = this.state.pieceKeys): string => {
@@ -310,8 +298,8 @@ export default class Game extends React.Component<GameProps, GameState> {
                     isPromoting: false,
                 }
             }),
-            lightKingPosition: newLightKingPosition,
-            darkKingPosition: newDarkKingPosition,
+            lightKingPosition: newLightKingPosition!, // TODO could add more validation here to make sure 
+            darkKingPosition: newDarkKingPosition!, // there are kings on the board ... 
             whiteToPlay: sideToMove === 'w',
             darkKingHasShortCastlingRights: castlingAbility.includes('k'),
             darkKingHasLongCastlingRights: castlingAbility.includes('q'),
@@ -335,109 +323,82 @@ export default class Game extends React.Component<GameProps, GameState> {
 
     // this method is called before this move is applied to state, still current player's turn 
     generateMoveAN = (squareMovedFrom: number, squareMovedTo: number): string => { // , futureBoardState = this.state.pieceKeys) => {
-        const futureBoardState = this.getNewPieceKeysCopyWithMoveApplied(squareMovedFrom, squareMovedTo);
         const currentBoardState = this.state.pieceKeys.slice();
+        // const futureBoardState = this.getNewPieceKeysCopyWithMoveApplied(squareMovedFrom, squareMovedTo);
+        const futureBoardState = helpers.getNewPieceKeysCopyWithMoveApplied(currentBoardState, squareMovedFrom, squareMovedTo);
+
         let [playerCode, pieceCode] = currentBoardState[squareMovedFrom].split(''); // [null, null]; // futureBoardState[squareMovedTo].split('');
-        if (playerCode === null && pieceCode === null) { // null !== undefined ... SMH 
-            // this shouldn't happen, remnant of previous approach 
-            [playerCode, pieceCode] = futureBoardState[squareMovedTo].split('');
+        // if (playerCode === null && pieceCode === null) { // null !== undefined ... SMH 
+        //     // this shouldn't happen, remnant of previous approach 
+        //     [playerCode, pieceCode] = futureBoardState[squareMovedTo].split('');
+        // }
+
+        let pieceAN, clarifierAN, isCaptureAN, destFileAN, destRankAN, promotionAN, isCheckOrCheckmateAN = '';
+
+        if (helpers.isKingInCheck(
+            this.state.whiteToPlay ? 
+                this.state.darkKingPosition : 
+                this.state.lightKingPosition, 
+            futureBoardState, 
+            this
+        )) {
+            // if (this.isCheckmate()) isCheckOrCheckmateAN = '#';
+            isCheckOrCheckmateAN = '+';
+        }
+        
+        // TODO implement 
+        // const isPawnPromotion = '=[Q,R,B,N]'; 
+
+        // remember that our 0-63 is kind of backwards, and 0-indexed 
+        destRankAN = 8 - Math.floor(squareMovedTo / 8); 
+        destFileAN = 'abcdefgh'.charAt(squareMovedTo % 8);
+
+        if (
+            currentBoardState[squareMovedTo] !== '' ||
+            helpers.isMoveEnPassant(squareMovedFrom, squareMovedTo, currentBoardState)
+        ) {
+            isCaptureAN = 'x';
         }
 
-        const isEnPassantCapture = this.isMoveEnPassant(squareMovedFrom, squareMovedTo); // uses current board state, move not applied yet 
-        const isCapture = (currentBoardState[squareMovedTo] !== '' || isEnPassantCapture ? 'x' : '');
-        const opponent = this.state.whiteToPlay ? 'b' : 'w';
-        const isCheck = this.isKingInCheck(opponent, futureBoardState) ? '+' : ''; // TODO or checkmate 
-        // const isPawnPromotion = '=[Q,R,B,N]'; // TODO implement 
-
-        const destinationFile = 'abcdefgh'.charAt(squareMovedTo % 8);
-        const destinationRank = 8 - Math.floor(squareMovedTo / 8); // remember that our 0-63 is kind of backwards, and 0-indexed 
-
-        const movesThatNecessitateFurtherClarification = this.getOccupiedSquaresThatCanAttackThisSquare(squareMovedTo, true, [playerCode], null, null, futureBoardState) // get all pieces incl. self-attacks 
-            // .filter((squareId) => futureBoardState[squareId].charAt(0) === playerCode) // filter out non-self-attacks (opponent attacks)
-            .filter((squareId) => futureBoardState[squareId].charAt(1) === pieceCode) // get only self-attacks from the same type of piece 
-            .filter((squareId) => squareId !== squareMovedFrom); // state issue TODO fix ... including this piece 
-
-        // console.log(movesThatNecessitateFurtherClarification);
-
-        if (movesThatNecessitateFurtherClarification.length === 0) {
-            if (pieceCode === 'P') {
-                if (isCapture !== '') {
-                    const sourceFile = 'abcdefgh'.charAt(squareMovedFrom % 8);
-                    return `${sourceFile}x${destinationFile}${destinationRank}${isCheck}`;
-                }
-                return `${destinationFile}${destinationRank}${isCheck}`;
-            }
-            return `${pieceCode}${isCapture}${destinationFile}${destinationRank}${isCheck}`;
+        if (pieceCode === 'P') {
+            if (isCaptureAN === 'x') clarifierAN = 'abcdefgh'.charAt(squareMovedFrom % 8);
         } else {
-            // if (movesThatNecessitateFurtherClarification.length > 1) {
-            //   // this can actually be kind of complicated, for example if one or some of the pieces are pinned, 
-            //   // or promoting several pawns to knights and all (up to 4) attack the same square but have different rank *and* file
-            //   // for rooks, bishops, (even queens? no...) just default with sourceFile,
-            //   // use sourceRank if necessary due to duplicate identical sourceFile options, or use both of both have dupes 
-            //   const sourceFile
-            //   return 
-            // }
-            const sourceFile = 'abcdefgh'.charAt(squareMovedFrom % 8);
-            const sourceRank = 8 - Math.floor(squareMovedFrom / 8);
-            let dupeSourceFiles = false;
-            let dupeSourceRanks = false;
-            // for (const altMove in movesThatNecessitateFurtherClarification.items()) {
-            for (let i = 0; i < movesThatNecessitateFurtherClarification.length; i++) {
-                const altMove = movesThatNecessitateFurtherClarification[i];
-                // check if piece move is actually legal here??? could expose a check 
-                // if (this.wouldOwnKingBeInCheckAfterMove(altMove, squareMovedTo)) continue; 
-                const altSourceFile = 'abcdefgh'.charAt(altMove % 8);
-                const altSourceRank = 8 - Math.floor(altMove / 8);
-                dupeSourceFiles = dupeSourceFiles || (sourceFile === altSourceFile);
-                dupeSourceRanks = dupeSourceRanks || (sourceRank === altSourceRank);
-                // console.log(`\tPiece at ${altMove} results in dupeSourceFiles:${dupeSourceFiles} (file:${altSourceFile}) and dupeSourceRanks:${dupeSourceRanks} (rank:${altSourceRank})`);
+            pieceAN = pieceCode;
+            const movesThatNecessitateFurtherClarification = this.getOccupiedSquaresThatCanAttackThisSquare(squareMovedTo, [playerCode], futureBoardState)
+                .filter((squareId) => futureBoardState[squareId].charAt(1) === pieceCode) // get only self-attacks from the same type of piece 
+                // .filter((squareId) => squareId !== squareMovedFrom); // state issue TODO fix ... including this piece 
+                .filter(squareId => !this.wouldOwnKingBeInCheckAfterMove(squareId, squareMovedTo)) // don't allow illegal moves ... use current state, not future 
+
+            // console.log(movesThatNecessitateFurtherClarification);
+
+            if (movesThatNecessitateFurtherClarification.length > 0) {
+                // if (movesThatNecessitateFurtherClarification.length > 1) {
+                //   // this can actually be kind of complicated, for example if one or some of the pieces are pinned, 
+                //   // or promoting several pawns to knights and all (up to 4) attack the same square but have different rank *and* file
+                //   // for rooks, bishops, (even queens? no...) just default with sourceFile,
+                //   // use sourceRank if necessary due to duplicate identical sourceFile options, or use both of both have dupes 
+                // }
+                const sourceFile = 'abcdefgh'.charAt(squareMovedFrom % 8);
+                const sourceRank = 8 - Math.floor(squareMovedFrom / 8);
+                let dupeSourceFiles = false;
+                let dupeSourceRanks = false;
+                // for (const altMove in movesThatNecessitateFurtherClarification.items()) {
+                for (let i = 0; i < movesThatNecessitateFurtherClarification.length; i++) {
+                    const altMove = movesThatNecessitateFurtherClarification[i];
+                    const altSourceFile = 'abcdefgh'.charAt(altMove % 8);
+                    const altSourceRank = 8 - Math.floor(altMove / 8);
+                    dupeSourceFiles = dupeSourceFiles || (sourceFile === altSourceFile);
+                    dupeSourceRanks = dupeSourceRanks || (sourceRank === altSourceRank);
+                    // console.log(`\tPiece at ${altMove} results in dupeSourceFiles:${dupeSourceFiles} (file:${altSourceFile}) and dupeSourceRanks:${dupeSourceRanks} (rank:${altSourceRank})`);
+                }
+                if (dupeSourceFiles && dupeSourceRanks) clarifierAN = `${sourceFile}${sourceRank}`;
+                else if (dupeSourceFiles) clarifierAN = `${sourceRank}`;
+                else if (dupeSourceRanks) clarifierAN = `${sourceFile}`;
             }
-            const pieceClarification = dupeSourceFiles ? (dupeSourceRanks ? `${sourceFile}${sourceRank}` : `${sourceRank}`) : `${sourceFile}`;
-            return `${pieceCode}${pieceClarification}${isCapture}${destinationFile}${destinationRank}${isCheck}`;
         }
+
+        return [pieceAN, clarifierAN, isCaptureAN, destFileAN, destRankAN, promotionAN, isCheckOrCheckmateAN].join('');
     }
-
-    generateMoveJN = (squareMovedFrom: number, squareMovedTo: number): string => {
-        return `${String(squareMovedFrom).padStart(2, '0')}${String(squareMovedTo).padStart(2, '0')}`;
-    }
-
-    generateMoveINN = (squareMovedFrom: number, squareMovedTo: number): string => {
-        // squareMovedFrom, squareMovedTo passed in as squareId values from 0-63
-        const fromRank = Math.floor(squareMovedFrom / 8); // TODO ranks are backwards 
-        const fromFile = squareMovedFrom % 8;
-        const toRank = Math.floor(squareMovedTo / 8); // TODO ranks are backwards 
-        const toFile = squareMovedTo % 8;
-        return `${fromRank}${fromFile}${toRank}${toFile}`;
-    }
-
-    // getOccupiedSquaresThatCanAttackThisEmptySquare = (
-    //     squareId: number,
-    //     includeAttacksFromPlayers: string[] = ['L','D'],
-    //     boardState: string[] = this.state.pieceKeys,
-    // ) => {
-    //     let occupiedSquaresTargetingThisOne = [];
-    //     // for ([pieceTypeCode, pieceMoveGeneratorFn] in this.validMoveMap)
-    //     Object.keys(this.validMoveMap).forEach(pieceKey => {
-    //         // this.validMoveMap[pieceKey as keyof typeof this.validMoveMap]
-    //         this.validMoveMap[pieceKey](squareId, null, null, includeAttacksFromPlayers, boardState)
-    //             .filter((square) => boardState[square].charAt(1) === pieceKey)
-    //             .forEach((square) => occupiedSquaresTargetingThisOne.push(square));
-    //     });    }
-
-    // getOccupiedSquaresThatCanAttackThisOccupiedSquare = (
-    //     squareId: number,
-    //     includeAttacksFromPlayers: string[] = ['L','D'],
-    //     boardState: string[] = this.state.pieceKeys,
-    // ) => {
-    //     let occupiedSquaresTargetingThisOne = [];
-    //     // for ([pieceTypeCode, pieceMoveGeneratorFn] in this.validMoveMap)
-    //     Object.keys(this.validMoveMap).forEach(pieceKey => {
-    //         // this.validMoveMap[pieceKey as keyof typeof this.validMoveMap]
-    //         this.validMoveMap[pieceKey](squareId, null, null, includeAttacksFromPlayers, boardState)
-    //             .filter((square) => boardState[square].charAt(1) === pieceKey)
-    //             .forEach((square) => occupiedSquaresTargetingThisOne.push(square));
-    //     });
-    // }
 
     // returns a list of *any* piece that can attack this square by default, not just the opponent's pieces 
     // maybe add squaresToExclude (imagine empty) and/or squaresToInclude (imagine occupied/captured) ...
@@ -446,14 +407,12 @@ export default class Game extends React.Component<GameProps, GameState> {
     // evading a check must be performed by the king with respect to the other pieces that really exist on the board (no imagination) 
     // but these optional parameters would have to be passed down to the generate...LegalMoves methods as well 
     // which in turn would have to get passed all the way down to the generatePieceValidMoves method 
-
-    // TODO we might also need to include an includeNonCaptures flag here as well... 
     getOccupiedSquaresThatCanAttackThisSquare = (
         squareId: number,
-        includeSelfAttacks = true,
+        // includeSelfAttacks = true,
         includeAttacksFrom: string[] = ['L','D'],
-        squareToImagineEmpty: number | null = null,
-        squareToImagineFriendly: number | null = null,
+        // squareToImagineEmpty: number | null = null,
+        // squareToImagineFriendly: number | null = null,
         boardState: string[] = this.state.pieceKeys,
     ): number[] => {
         // if ((squareId === 51 || squareId === 52) && (squareToImagineEmpty === 60 || squareToImagineEmpty === null)) {
@@ -516,7 +475,9 @@ export default class Game extends React.Component<GameProps, GameState> {
         // // ****** ALT APPROACH ******
 
         Object.keys(this.validMoveMap).forEach(pieceKey => {
-            this.validMoveMap[pieceKey](squareId, null, null, includeAttacksFrom, boardState) // TODO remove squareToImagine{Empty,Friendly} vars ... 
+            // those nulls are now includeNonCaptures, and for pawns includeSelfCaptures is still there, removing now 
+            this.validMoveMap[pieceKey](squareId, false, includeAttacksFrom, boardState) 
+            // TODO remove squareToImagine{Empty,Friendly} vars ... DONE? 
                 .filter(square => boardState[square].charAt(1) === pieceKey)
                 .forEach(square => squaresTargetingThisOne.push(square));
         });
@@ -595,6 +556,7 @@ export default class Game extends React.Component<GameProps, GameState> {
         }, // any = {},
         boardState: string[] = this.state.pieceKeys,
     ): number[] => {
+        if (boardState[squareId] === '') return [];
         return this.generatePieceValidMoves(
             squareId,
             directions,
@@ -605,7 +567,7 @@ export default class Game extends React.Component<GameProps, GameState> {
                 // includeCaptures: false,
                 includeNonCaptures: false,
                 // includeSelfCaptures: true
-                includeAttacksFrom: [boardState[squareId]?.charAt(0)],
+                includeAttacksFrom: [boardState[squareId].charAt(0)],
             },
             boardState,
         );
@@ -624,7 +586,7 @@ export default class Game extends React.Component<GameProps, GameState> {
             distance = 8,
             nextSquareValidators = [],
             captureValidators = [],
-            selfCaptureValidators = [], // ... never necessary (so far)
+            // selfCaptureValidators = [], // ... never necessary (so far) ... merged into captureValidators 
             includeNonCaptures = true,
             // includeCaptures = true,
             // includeSelfCaptures = false,
@@ -635,7 +597,7 @@ export default class Game extends React.Component<GameProps, GameState> {
             distance?: number;
             nextSquareValidators?: ((oldSquare: number, newSquare: number) => boolean)[];
             captureValidators?: ((squareFrom: number, squareTo: number) => boolean)[];
-            selfCaptureValidators?: ((squareFrom: number, squareTo: number) => boolean)[];
+            // selfCaptureValidators?: ((squareFrom: number, squareTo: number) => boolean)[];
             includeNonCaptures?: boolean;
             // includeCaptures?: boolean;
             // includeSelfCaptures?: boolean;
@@ -654,11 +616,18 @@ export default class Game extends React.Component<GameProps, GameState> {
         // if (this.state.pieceKeys[squareId] === 'LN' || (this.state.pieceKeys[squareId] === 'LK' && this.state.pieceKeys[squareToImagineEmpty] === 'LN')) {
         //   // console.log(`Fn params for ${this.state.pieceKeys[squareId]}:\n\tsquareId: ${squareId}\n\tdirections: ${directions}\n\t{\n\t\tdistance: ${distance}\n\t\tnextSquareValidators: ${nextSquareValidators}\n\t\tincludeNonCaptures: ${includeNonCaptures}\n\t\tincludeCaptures: ${includeCaptures}\n\t\tincludeSelfCaptures: ${includeSelfCaptures}\n\t\tsquareToImagineEmpty: ${squareToImagineEmpty}\n\t\tsquareToImagineFriendly: ${squareToImagineFriendly}\n\t}`);
         // }
+
         nextSquareValidators.push((oldSquare: number, newSquare: number) => oldSquare >= 0 && newSquare >= 0);
         nextSquareValidators.push((oldSquare: number, newSquare: number) => oldSquare < 64 && newSquare < 64);
-        captureValidators.push((squareFrom: number, squareTo: number) => boardState[squareFrom]?.charAt(0) !== boardState[squareTo]?.charAt(0));
+
+        captureValidators.push((squareFrom: number, squareTo: number) => includeAttacksFrom?.includes(boardState[squareTo]?.charAt(0)) || false);
+        captureValidators.push((squareFrom: number, squareTo: number) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState));
+        // captureValidators.push((squareFrom: number, squareTo: number) => boardState[squareFrom]?.charAt(0) !== boardState[squareTo]?.charAt(0));
+
         // selfCaptureValidators.push((squareFrom: number, squareTo: number) => boardState[squareFrom]?.charAt(0) === boardState[squareTo]?.charAt(0));
         // selfCaptureValidators.push((squareFrom: number, squareTo: number) => squareTo === squareToImagineFriendly);
+
+
         directions.forEach((direction) => {
             let checkedSquare = squareId;
             let nextSquareToCheck = checkedSquare + direction;
@@ -686,16 +655,17 @@ export default class Game extends React.Component<GameProps, GameState> {
                             // this.state.pieceKeys[nextSquareToCheck].charAt(0) !== this.state.pieceKeys[squareId].charAt(0) && 
                             // eslint-disable-next-line no-loop-func
                             captureValidators.some(validator => validator(squareId, nextSquareToCheck)) // at least one validator true means valid capture 
-                        ) ||
-                        (
-                            // includeSelfCaptures &&
-                            // (
-                            //   this.state.pieceKeys[nextSquareToCheck].charAt(0) === this.state.pieceKeys[squareId].charAt(0) || 
-                            //   nextSquareToCheck === squareToImagineFriendly
-                            // )
-                            // eslint-disable-next-line no-loop-func
-                            selfCaptureValidators.some(validator => validator(squareId, nextSquareToCheck))
-                        )
+                        ) 
+                        // ||
+                        // (
+                        //     // includeSelfCaptures &&
+                        //     // (
+                        //     //   this.state.pieceKeys[nextSquareToCheck].charAt(0) === this.state.pieceKeys[squareId].charAt(0) || 
+                        //     //   nextSquareToCheck === squareToImagineFriendly
+                        //     // )
+                        //     // eslint-disable-next-line no-loop-func
+                        //     selfCaptureValidators.some(validator => validator(squareId, nextSquareToCheck))
+                        // )
                     ) {
                         legalMoves.push(nextSquareToCheck);
                     }
@@ -710,191 +680,195 @@ export default class Game extends React.Component<GameProps, GameState> {
         return legalMoves;
     }
 
-    generatePawnValidMoves = (
-        squareId: number,
-        includeNonCaptures: boolean = true,
-        includeSelfCaptures: boolean = false,
-        includeAttacksFrom: string[] = ['L','D'],
-        boardState: string[] = this.state.pieceKeys,
-    ): number[] => {
+    // generatePawnValidMoves = (
+    //     squareId: number,
+    //     includeNonCaptures: boolean = true,
+    //     // includeSelfCaptures: boolean = false,
+    //     includeAttacksFrom: string[] = ['L','D'],
+    //     boardState: string[] = this.state.pieceKeys,
+    // ): number[] => {
 
-        // // Legal pawn moves 
+    //     // // Legal pawn moves 
 
-        // let pawnMoves = [-8, -7, -9];
-        // // let pawnMoves = piece.state.moves;
-        // if (playerCode === 'L' && Math.floor(squareId / 8) === 6 || playerCode === 'D' && Math.floor(squareId / 8) === 1) pawnMoves.push(-16); // two-square opening move
-        // if (playerCode === 'D') pawnMoves = pawnMoves.map(move => -move);
-        // let pawnnextSquareValidators = [
-        //   (target) => target >= 0 && target < 64, // on board
-        //   (target) => ![8, 16].includes(Math.abs(squareId - target)) || this.state.pieceKeys[target] === "", // not occupied
-        //   (target) => ![7, 9].includes(Math.abs(squareId - target)) 
-        //     || (this.state.pieceKeys[target] !== "" && this.state.pieceKeys[target]?.charAt(0) !== this.state.pieceKeys[squareId].charAt(0))
-        //     // || (this.state.history[-1].JN === `${squareId-17}${squareId-1}` || this.state.history[-1].JN === `${squareId-15}${squareId+1}`),
-        // ];
-        // // let legalMoves = [];
-        // // pawnMoves.forEach(move => {
-        // //   const targetSquare = squareId + move;
-        // //   const legalMove = pawnnextSquareValidators.every(validator => validator(targetSquare));
-        // //   if (legalMove) {
-        // //     legalMoves.push(targetSquare);
-        // //   }
-        // // })
-        // // return legalMoves;
-        // return pawnMoves
-        //   .map((move) => move + squareId)
-        //   .filter((target) => pawnnextSquareValidators.every(validator => validator(target)));
+    //     // let pawnMoves = [-8, -7, -9];
+    //     // // let pawnMoves = piece.state.moves;
+    //     // if (playerCode === 'L' && Math.floor(squareId / 8) === 6 || playerCode === 'D' && Math.floor(squareId / 8) === 1) pawnMoves.push(-16); // two-square opening move
+    //     // if (playerCode === 'D') pawnMoves = pawnMoves.map(move => -move);
+    //     // let pawnnextSquareValidators = [
+    //     //   (target) => target >= 0 && target < 64, // on board
+    //     //   (target) => ![8, 16].includes(Math.abs(squareId - target)) || this.state.pieceKeys[target] === "", // not occupied
+    //     //   (target) => ![7, 9].includes(Math.abs(squareId - target)) 
+    //     //     || (this.state.pieceKeys[target] !== "" && this.state.pieceKeys[target]?.charAt(0) !== this.state.pieceKeys[squareId].charAt(0))
+    //     //     // || (this.state.history[-1].JN === `${squareId-17}${squareId-1}` || this.state.history[-1].JN === `${squareId-15}${squareId+1}`),
+    //     // ];
+    //     // // let legalMoves = [];
+    //     // // pawnMoves.forEach(move => {
+    //     // //   const targetSquare = squareId + move;
+    //     // //   const legalMove = pawnnextSquareValidators.every(validator => validator(targetSquare));
+    //     // //   if (legalMove) {
+    //     // //     legalMoves.push(targetSquare);
+    //     // //   }
+    //     // // })
+    //     // // return legalMoves;
+    //     // return pawnMoves
+    //     //   .map((move) => move + squareId)
+    //     //   .filter((target) => pawnnextSquareValidators.every(validator => validator(target)));
 
-        // // ****** LEGAL PAWN MOVES (alt approach) ********
+    //     // // ****** LEGAL PAWN MOVES (alt approach) ********
 
-        // // // this validation is handle in the getLegalMoves method, don't do it here in case we want to use this method other places 
-        // // if (this.state.pieceKeys[squareId] === undefined || this.state.pieceKeys[squareId] === "") return [];
-        // // const [playerCode, pieceCode] = this.state.pieceKeys[squareId].split('');
-        // // if (this.state.whiteToPlay && playerCode !== 'L') return []; // not this player's turn
-        // // if (pieceCode !== 'P') return []; // not a pawn 
-
-
-        // const playerCode = this.state.pieceKeys[squareId].charAt(0);
-        // const pawnMultiplier = playerCode === 'L' ? 1 : -1;
-        // const pawnStartingRank = playerCode === 'L' ? 6 : 1;
-        // const currRank = Math.floor(squareId / 8);
-        // const currFile = squareId % 8;
-        // let pawnMoves = [];
-
-        // if (this.state.pieceKeys[squareId + DIR.N * pawnMultiplier] === "") {
-        //   pawnMoves.push(squareId + DIR.N * pawnMultiplier); // one square forward
-        //   if (currRank === pawnStartingRank && this.state.pieceKeys[squareId + DIR.N * pawnMultiplier * 2] === "") 
-        //     pawnMoves.push(squareId + DIR.N * pawnMultiplier * 2); // two squares forward from starting position
-        // }
-        // if (currFile !== 0) { // pawn is not on a file
-        //   if (this.state.pieceKeys[squareId + DIR.N * pawnMultiplier + DIR.W] !== "" && this.state.pieceKeys[squareId + DIR.N * pawnMultiplier + DIR.W].charAt(0) !== playerCode) pawnMoves.push(squareId + DIR.N * pawnMultiplier + DIR.W); // capture to the north/south west
-        //   if (this.state.history.length > 0 && this.state.history[this.state.history.length - 1].JN === `${String(squareId + DIR.N * pawnMultiplier * 2 + DIR.W).padStart(2, '0')}${String(squareId + DIR.W).padStart(2, '0')}`) pawnMoves.push(squareId + DIR.N * pawnMultiplier + DIR.W); // en passant capture to the north/south west
-        // }
-        // if (currFile !== 7) { // pawn is not on h file 
-        //   if (this.state.pieceKeys[squareId + DIR.N * pawnMultiplier + DIR.E] !== "" && this.state.pieceKeys[squareId + DIR.N * pawnMultiplier + DIR.E].charAt(0) !== playerCode) pawnMoves.push(squareId + DIR.N * pawnMultiplier + DIR.E); // capture to the north/south east
-        //   if (this.state.history.length > 0 && this.state.history[this.state.history.length - 1].JN === `${String(squareId + DIR.N * pawnMultiplier * 2 + DIR.E).padStart(2, '0')}${String(squareId + DIR.E).padStart(2, '0')}`) pawnMoves.push(squareId + DIR.N * pawnMultiplier + DIR.E); // en passant capture to the north/south east
-        // }
+    //     // // // this validation is handle in the getLegalMoves method, don't do it here in case we want to use this method other places 
+    //     // // if (this.state.pieceKeys[squareId] === undefined || this.state.pieceKeys[squareId] === "") return [];
+    //     // // const [playerCode, pieceCode] = this.state.pieceKeys[squareId].split('');
+    //     // // if (this.state.whiteToPlay && playerCode !== 'L') return []; // not this player's turn
+    //     // // if (pieceCode !== 'P') return []; // not a pawn 
 
 
-        // // TODO check if any of these moves would result in another piece being able to capture the king ... need to do this for every piece move 
-        // // so maybe just handle this in the getLegalMoves method, removing suggested moves that would leave the king attacked 
+    //     // const playerCode = this.state.pieceKeys[squareId].charAt(0);
+    //     // const pawnMultiplier = playerCode === 'L' ? 1 : -1;
+    //     // const pawnStartingRank = playerCode === 'L' ? 6 : 1;
+    //     // const currRank = Math.floor(squareId / 8);
+    //     // const currFile = squareId % 8;
+    //     // let pawnMoves = [];
 
-        // // LEGAL PAWN MOVES (3RD APPROACH) ... nvm that's stupid, not worth it ... or is it? 
+    //     // if (this.state.pieceKeys[squareId + DIR.N * pawnMultiplier] === "") {
+    //     //   pawnMoves.push(squareId + DIR.N * pawnMultiplier); // one square forward
+    //     //   if (currRank === pawnStartingRank && this.state.pieceKeys[squareId + DIR.N * pawnMultiplier * 2] === "") 
+    //     //     pawnMoves.push(squareId + DIR.N * pawnMultiplier * 2); // two squares forward from starting position
+    //     // }
+    //     // if (currFile !== 0) { // pawn is not on a file
+    //     //   if (this.state.pieceKeys[squareId + DIR.N * pawnMultiplier + DIR.W] !== "" && this.state.pieceKeys[squareId + DIR.N * pawnMultiplier + DIR.W].charAt(0) !== playerCode) pawnMoves.push(squareId + DIR.N * pawnMultiplier + DIR.W); // capture to the north/south west
+    //     //   if (this.state.history.length > 0 && this.state.history[this.state.history.length - 1].JN === `${String(squareId + DIR.N * pawnMultiplier * 2 + DIR.W).padStart(2, '0')}${String(squareId + DIR.W).padStart(2, '0')}`) pawnMoves.push(squareId + DIR.N * pawnMultiplier + DIR.W); // en passant capture to the north/south west
+    //     // }
+    //     // if (currFile !== 7) { // pawn is not on h file 
+    //     //   if (this.state.pieceKeys[squareId + DIR.N * pawnMultiplier + DIR.E] !== "" && this.state.pieceKeys[squareId + DIR.N * pawnMultiplier + DIR.E].charAt(0) !== playerCode) pawnMoves.push(squareId + DIR.N * pawnMultiplier + DIR.E); // capture to the north/south east
+    //     //   if (this.state.history.length > 0 && this.state.history[this.state.history.length - 1].JN === `${String(squareId + DIR.N * pawnMultiplier * 2 + DIR.E).padStart(2, '0')}${String(squareId + DIR.E).padStart(2, '0')}`) pawnMoves.push(squareId + DIR.N * pawnMultiplier + DIR.E); // en passant capture to the north/south east
+    //     // }
 
-        let playerCode = boardState[squareId].charAt(0);
-        if (playerCode === '') {
-            playerCode = (this.state.whiteToPlay ? 'L' : 'D');
-        }
-        const currRank = Math.floor(squareId / 8);
-        // const currFile = squareId % 8;
 
-        let pawnMoves: number[] = [];
+    //     // // TODO check if any of these moves would result in another piece being able to capture the king ... need to do this for every piece move 
+    //     // // so maybe just handle this in the getLegalMoves method, removing suggested moves that would leave the king attacked 
 
-        // if (playerCode === 'L') {
-        //   if (currRank === 6) pawnMoves = pawnMoves.concat(this.generatePieceValidNonCaptureMoves(squareId, [-8], {distance: 2}));
-        //   else pawnMoves = pawnMoves.concat(this.generatePieceValidNonCaptureMoves(squareId, [-8], {distance: 1}));
-        //   pawnMoves = pawnMoves.concat(this.generatePieceValidCaptureMoves(squareId, [-7, -9], {distance: 1}));
-        //   // and en passant 
-        // } else if (playerCode === 'D') {
+    //     // // LEGAL PAWN MOVES (3RD APPROACH) ... nvm that's stupid, not worth it ... or is it? 
 
-        // }
-        if (includeNonCaptures) {
-            pawnMoves = pawnMoves.concat(
-                this.generatePieceValidNonCaptureMoves(
-                    squareId,
-                    playerCode === 'L' ? [-8] : [8],
-                    {
-                        distance: (currRank === (playerCode === 'L' ? 6 : 1)) ? 2 : 1,
-                    },
-                    boardState
-                )
-            );
-        }
+    //     let playerCode = boardState[squareId].charAt(0);
+    //     if (playerCode === '') {
+    //         playerCode = (this.state.whiteToPlay ? 'L' : 'D');
+    //     }
+    //     const currRank = Math.floor(squareId / 8);
+    //     // const currFile = squareId % 8;
 
-        pawnMoves = pawnMoves.concat(
-            this.generatePieceValidCaptureMoves(
-                squareId,
-                playerCode === 'L' ? [-7, -9] : [7, 9],
-                1,
-                {
-                    // distance: 1,
-                    captureValidators: [
-                        (squareFrom: number, squareTo: number) => {
-                            if (!this.state.history || this.state.history.length === 0) return false;
-                            // previous move had to be a pawn moving from a square "in front of" squareTo to a square "behind" squareTo from this player's perspective ... 
-                            // we already validated that it is actually a capture by supplying the directions and calling the valid capture function which validates 
-                            const squareInFrontOfTarget = playerCode === 'L' ? squareTo - 8 : squareTo + 8;
-                            const squareBehindTarget = playerCode === 'L' ? squareTo + 8 : squareTo - 8;
-                            const targetPreviousJN = this.generateMoveJN(squareInFrontOfTarget, squareBehindTarget);
-                            return this.state.history[this.state.history.length - 1].JN === targetPreviousJN;
-                        },
-                        // refactoring to use this.state.enPassantTargetSquare
-                        (squareFrom: number, squareTo: number) => squareTo === this.state.enPassantTargetSquare,
-                    ],
-                },
-                boardState,
-            )
-        )
+    //     let pawnMoves: number[] = [];
 
-        if (includeSelfCaptures) {
-            pawnMoves = pawnMoves.concat(
-                this.generatePieceValidSelfCaptureMoves(
-                    squareId,
-                    playerCode === 'L' ? [-7, -9] : [7, 9],
-                    {
-                        distance: 1,
-                    },
-                    boardState,
-                )
-            )
-        }
+    //     // if (playerCode === 'L') {
+    //     //   if (currRank === 6) pawnMoves = pawnMoves.concat(this.generatePieceValidNonCaptureMoves(squareId, [-8], {distance: 2}));
+    //     //   else pawnMoves = pawnMoves.concat(this.generatePieceValidNonCaptureMoves(squareId, [-8], {distance: 1}));
+    //     //   pawnMoves = pawnMoves.concat(this.generatePieceValidCaptureMoves(squareId, [-7, -9], {distance: 1}));
+    //     //   // and en passant 
+    //     // } else if (playerCode === 'D') {
 
-        return pawnMoves;
-    }
+    //     // }
+    //     if (includeNonCaptures) {
+    //         pawnMoves = pawnMoves.concat(
+    //             this.generatePieceValidNonCaptureMoves(
+    //                 squareId,
+    //                 playerCode === 'L' ? [-8] : [8],
+    //                 {
+    //                     distance: (currRank === (playerCode === 'L' ? 6 : 1)) ? 2 : 1,
+    //                 },
+    //                 boardState
+    //             )
+    //         );
+    //     }
 
-    generateKnightValidMoves = (
-        squareId: number,
-        includeNonCaptures: boolean = true,
-        includeSelfCaptures: boolean = false,
-        includeAttacksFrom: string[] = ['L','D'],
-        // squareToImagineEmpty: number | null = null,
-        // squareToImagineFriendly: number | null = null,
-        boardState: string[] = this.state.pieceKeys,
-    ): number[] => {
-        const nextSquareValidators = [
-            (square: number, nextSquare: number) => Math.abs((square % 8) - (nextSquare % 8)) <= 2,
-            (square: number, nextSquare: number) => Math.abs(Math.floor(square / 8) - Math.floor(nextSquare / 8)) <= 2,
-        ];
-        const directions = [-17, -15, -10, -6, 6, 10, 15, 17];
-        return this.generatePieceValidMoves(
-            squareId,
-            directions,
-            {
-                distance: 1,
-                nextSquareValidators: nextSquareValidators,
-                includeNonCaptures: includeNonCaptures,
-                // includeSelfCaptures: includeSelfCaptures,
-                includeAttacksFrom: includeAttacksFrom,
-                // squareToImagineEmpty: squareToImagineEmpty,
-                // squareToImagineFriendly: squareToImagineFriendly,
-            },
-            boardState,
-        );
-    }
+    //     pawnMoves = pawnMoves.concat(
+    //         this.generatePieceValidCaptureMoves(
+    //             squareId,
+    //             playerCode === 'L' ? [-7, -9] : [7, 9],
+    //             1,
+    //             {
+    //                 // distance: 1,
+    //                 captureValidators: [
+    //                     (squareFrom: number, squareTo: number) => {
+    //                         if (!this.state.history || this.state.history.length === 0) return false;
+    //                         // previous move had to be a pawn moving from a square "in front of" squareTo to a square "behind" squareTo from this player's perspective ... 
+    //                         // we already validated that it is actually a capture by supplying the directions and calling the valid capture function which validates 
+    //                         const squareInFrontOfTarget = playerCode === 'L' ? squareTo - 8 : squareTo + 8;
+    //                         const squareBehindTarget = playerCode === 'L' ? squareTo + 8 : squareTo - 8;
+    //                         const targetPreviousJN = helpers.generateMoveJN(squareInFrontOfTarget, squareBehindTarget);
+    //                         return this.state.history[this.state.history.length - 1].JN === targetPreviousJN;
+    //                     },
+    //                     // refactoring to use this.state.enPassantTargetSquare
+    //                     (squareFrom: number, squareTo: number) => squareTo === this.state.enPassantTargetSquare,
+    //                 ],
+    //             },
+    //             boardState,
+    //         )
+    //     )
+
+    //     if (includeAttacksFrom.includes(playerCode)) {
+    //         pawnMoves = pawnMoves.concat(
+    //             this.generatePieceValidSelfCaptureMoves(
+    //                 squareId,
+    //                 playerCode === 'L' ? [-7, -9] : [7, 9],
+    //                 {
+    //                     distance: 1,
+    //                 },
+    //                 boardState,
+    //             )
+    //         )
+    //     }
+
+    //     return pawnMoves;
+    // }
+
+    // generateKnightValidMoves = (
+    //     squareId: number,
+    //     includeNonCaptures: boolean = true,
+    //     // includeSelfCaptures: boolean = false,
+    //     includeAttacksFrom: string[] = ['L','D'],
+    //     // squareToImagineEmpty: number | null = null,
+    //     // squareToImagineFriendly: number | null = null,
+    //     boardState: string[] = this.state.pieceKeys,
+    // ): number[] => {
+    //     // const nextSquareValidators = [
+    //     //     (square: number, nextSquare: number) => Math.abs((square % 8) - (nextSquare % 8)) <= 2,
+    //     //     (square: number, nextSquare: number) => Math.abs(Math.floor(square / 8) - Math.floor(nextSquare / 8)) <= 2,
+    //     // ];
+    //     // const directions = [-17, -15, -10, -6, 6, 10, 15, 17];
+    //     const nextSquareValidators = keycodeToComponent["N"].nextSquareValidators;
+    //     const directions = keycodeToComponent["N"].directions;
+    //     return this.generatePieceValidMoves(
+    //         squareId,
+    //         directions,
+    //         {
+    //             distance: 1,
+    //             nextSquareValidators: nextSquareValidators,
+    //             includeNonCaptures: includeNonCaptures,
+    //             // includeSelfCaptures: includeSelfCaptures,
+    //             includeAttacksFrom: includeAttacksFrom,
+    //             // squareToImagineEmpty: squareToImagineEmpty,
+    //             // squareToImagineFriendly: squareToImagineFriendly,
+    //         },
+    //         boardState,
+    //     );
+    // }
 
     generateBishopValidMoves = (
         squareId: number,
         includeNonCaptures: boolean = true,
-        includeSelfCaptures: boolean = false,
+        // includeSelfCaptures: boolean = false,
         includeAttacksFrom: string[] = ['L','D'],
         // squareToImagineEmpty: number | null = null,
         // squareToImagineFriendly: number | null = null,
         boardState: string[] = this.state.pieceKeys,
     ): number[] => {
-        const nextSquareValidators = [
-            (square: number, nextSquare: number) => Math.abs(Math.floor(nextSquare / 8) - Math.floor(square / 8)) === 1,
-            (square: number, nextSquare: number) => Math.abs(square % 8 - nextSquare % 8) === 1,
-        ];
-        const directions = [-9, -7, 7, 9];
+        // const nextSquareValidators = [
+        //     (square: number, nextSquare: number) => Math.abs(Math.floor(nextSquare / 8) - Math.floor(square / 8)) === 1,
+        //     (square: number, nextSquare: number) => Math.abs(square % 8 - nextSquare % 8) === 1,
+        // ];
+        // const directions = [-9, -7, 7, 9];
+        const nextSquareValidators = keycodeToComponent["B"].nextSquareValidators;
+        const directions = keycodeToComponent["B"].directions;
         return this.generatePieceValidMoves(
             squareId,
             directions,
@@ -913,7 +887,7 @@ export default class Game extends React.Component<GameProps, GameState> {
     generateRookValidMoves = (
         squareId: number,
         includeNonCaptures: boolean = true,
-        includeSelfCaptures: boolean = false,
+        // includeSelfCaptures: boolean = false,
         includeAttacksFrom: string[] = ['L','D'],
         // squareToImagineEmpty: number | null = null,
         // squareToImagineFriendly: number | null = null,
@@ -925,7 +899,7 @@ export default class Game extends React.Component<GameProps, GameState> {
         // ];
         // const directions = [-8, -1, 1, 8];
         const nextSquareValidators = keycodeToComponent["R"].nextSquareValidators;
-        const directions = keycodeToComponent["R"].moveDirections;
+        const directions = keycodeToComponent["R"].directions;
         return this.generatePieceValidMoves(
             squareId,
             directions,
@@ -945,27 +919,27 @@ export default class Game extends React.Component<GameProps, GameState> {
     generateQueenValidMoves = (
         squareId: number,
         includeNonCaptures: boolean = true,
-        includeSelfCaptures: boolean = false,
+        // includeSelfCaptures: boolean = false,
         includeAttacksFrom: string[] = ['L','D'],
         boardState: string[] = this.state.pieceKeys,
     ): number[] => {
         // there's a bug here somehow, queen was on d5 and a highlighted move was b4, or even a4 ... maybe it's fixed now 
-        return this.generateBishopValidMoves(squareId, includeNonCaptures, includeSelfCaptures, includeAttacksFrom, boardState)
-            .concat(this.generateRookValidMoves(squareId, includeNonCaptures, includeSelfCaptures, includeAttacksFrom, boardState));
+        return this.generateBishopValidMoves(squareId, includeNonCaptures, includeAttacksFrom, boardState)
+            .concat(this.generateRookValidMoves(squareId, includeNonCaptures, includeAttacksFrom, boardState));
     }
 
     generateKingValidMoves = (
         squareId: number,
         includeNonCaptures: boolean = true,
-        includeSelfCaptures: boolean = false,
+        // includeSelfCaptures: boolean = false,
         includeAttacksFrom: string[] = ['L','D'],
         boardState: string[] = this.state.pieceKeys,
         includeCastling: boolean = false, // true,
     ): number[] => {
-        // TODO king nextSquareValidators are more complicated, have to analyze other pieces next move for possible checks...
-        //   or apply, from the king's square, all possible types of piece moves and see if a piece that can make that move is on any of those squares 
-        const nextSquareValidators: ((oldSquare: number, newSquare: number) => boolean)[] = [];
-        const directions = [-9, -8, -7, -1, 1, 7, 8, 9];
+        // const nextSquareValidators: ((oldSquare: number, newSquare: number) => boolean)[] = [];
+        // const directions = [-9, -8, -7, -1, 1, 7, 8, 9];
+        const nextSquareValidators = keycodeToComponent['K'].nextSquareValidators;
+        const directions = keycodeToComponent['K'].directions;
         const legalMoves = this.generatePieceValidMoves(
             squareId,
             directions,
@@ -980,7 +954,7 @@ export default class Game extends React.Component<GameProps, GameState> {
         );
 
         // avoid the infinite loop from getOccupiedSquaresThatCanAttackThisSquare calling generateKingValidMoves and trying to check for castling as an attack 
-        if (!includeCastling) {
+        if (!includeCastling || !boardState[squareId] || boardState[squareId].charAt(1) !== 'K') {
             // console.log("Do not include castling based on method argument.");
             return legalMoves;
         }
@@ -1031,7 +1005,8 @@ export default class Game extends React.Component<GameProps, GameState> {
                 this.state.darkKingHasShortCastlingRights)
         ) {
             if (shortCastleKingSafetySquares
-                .every(square => this.getOccupiedSquaresThatCanAttackThisSquare(square, false, [(playerCode === 'L' ? 'D' : 'L')]) // dupe logic TODO remove
+                // .every(square => this.getOccupiedSquaresThatCanAttackThisSquare(square, false, [(playerCode === 'L' ? 'D' : 'L')]) // dupe logic TODO remove
+                .every(square => this.getOccupiedSquaresThatCanAttackThisSquare(square, [(playerCode === 'L' ? 'D' : 'L')])
                     // .filter((square) => boardState[square].charAt(0) !== playerCode)
                     .length === 0
                 )
@@ -1051,7 +1026,8 @@ export default class Game extends React.Component<GameProps, GameState> {
             this.state.darkKingHasLongCastlingRights)
         ) {
             if (longCastleKingSafetySquares
-                .every(square => this.getOccupiedSquaresThatCanAttackThisSquare(square, false, [(playerCode === 'L' ? 'D' : 'L')]) // dupe logic TODO remove 
+                // .every(square => this.getOccupiedSquaresThatCanAttackThisSquare(square, false, [(playerCode === 'L' ? 'D' : 'L')]) // dupe logic TODO remove 
+                .every(square => this.getOccupiedSquaresThatCanAttackThisSquare(square, [(playerCode === 'L' ? 'D' : 'L')])
                     // .filter((square) => boardState[square].charAt(0) !== playerCode)
                     .length === 0
                 )
@@ -1079,8 +1055,10 @@ export default class Game extends React.Component<GameProps, GameState> {
     //   validMoveMap: Record<string, MoveGenerator> = {
     validMoveMap: Record<string, (squareId: number, ...args: any[]) => number[]> = {
         //   validMoveMap = {
-        'P': this.generatePawnValidMoves,
-        'N': this.generateKnightValidMoves,
+        // // 'P': this.generatePawnValidMoves,
+        // 'P': keycodeToComponent['P'].generatePieceValidMoves,
+        // // 'N': this.generateKnightValidMoves,
+        // 'N': keycodeToComponent['N'].generatePieceValidMoves,
         'B': this.generateBishopValidMoves,
         'R': this.generateRookValidMoves,
         'Q': this.generateQueenValidMoves,
@@ -1088,11 +1066,12 @@ export default class Game extends React.Component<GameProps, GameState> {
     }
 
     getLegalMoves = (squareId: number): number[] => {
-        if (this.state.pieceKeys[squareId] === undefined || this.state.pieceKeys[squareId] === "") {
+        const keycode = this.state.pieceKeys[squareId];
+        if (keycode === undefined || keycode === "") {
             // console.log("The selected square has no piece on it, therefore there are no legal moves to make.");
             return [];
         }
-        if (this.state.whiteToPlay && this.state.pieceKeys[squareId]?.charAt(0) !== 'L') {
+        if (this.state.whiteToPlay && keycode.charAt(0) !== 'L') {
             // console.log("It is not this player's turn, therefore there are no legal moves to make.")
             return []; // not this player's turn 
         }
@@ -1111,82 +1090,105 @@ export default class Game extends React.Component<GameProps, GameState> {
         // without rendering the moves I'm trying out, then set it back to match what's in squareProps or history when I'm done or in between moves 
 
         // const playerCode = this.state.pieceKeys[squareId].charAt(0);
-        const pieceCode: string = this.state.pieceKeys[squareId].charAt(1);
+        const pieceCode: string = keycode.charAt(1);
+        let validMoves: number[] = [];
+        if (['P','N'].includes(pieceCode)) {
+            // validMoves = keycodeToComponent[keycode].generatePieceValidMoves(squareId);
+            const keycodeMapKey = keycode as keyof typeof keycodeToComponent;
+            const piece = keycodeToComponent[keycodeMapKey];
+            // switch (keycode) {
+            //     case 'LP':
+            //         piece = piece as LightPawn;
+            //         validMoves = piece.generatePawnValidMoves(squareId);
+            // }
+            validMoves = piece.generatePieceValidMoves(squareId, this.state.pieceKeys.slice());
+        } else if (pieceCode in this.validMoveMap) {
+            validMoves = this.validMoveMap[pieceCode as keyof typeof this.validMoveMap](squareId);
+        }
         // console.log(`Generating valid moves that this ${pieceCode} can make...`);
-        const validMoves: number[] = pieceCode in this.validMoveMap ? this.validMoveMap[pieceCode as keyof typeof this.validMoveMap](squareId) : []; // use the default arguments, only supply squareId 
+        // const validMoves: number[] = pieceCode in this.validMoveMap ? this.validMoveMap[pieceCode as keyof typeof this.validMoveMap](squareId) : []; // use the default arguments, only supply squareId 
         // if (pieceCode === 'K') console.log(`Valid moves for this ${pieceCode} are: ${validMoves}`);
         const legalMoves = validMoves.filter((targetMove) => !this.wouldOwnKingBeInCheckAfterMove(squareId, targetMove));
         // if (pieceCode === 'K') console.log(`Legal moves after filtering out which valid moves would result in this player's king being capturable on the next move: ${legalMoves}`);
         return legalMoves;
     }
 
-    isKingInCheck = (player: string | 'w' | 'b' | 'L' | 'D', boardState: string[] = this.state.pieceKeys): boolean => {
-        // maybe here we can easily set like a canBlock, canCapture, canEvade boolean state system ...
-        // canBlock seems like the only tricky one, gotta check all piece moves 
-        let kingPosition = this.state.whiteToPlay ?
-            this.state.darkKingPosition :
-            this.state.lightKingPosition
-        if (player === 'w' || player === 'L') kingPosition = this.state.lightKingPosition;
-        else if (player === 'b' || player === 'D') kingPosition = this.state.darkKingPosition;
+    // isKingInCheck = (player: 'w' | 'b' | 'L' | 'D', boardState: string[] = this.state.pieceKeys): boolean => {
+    //     // maybe here we can easily set like a canBlock, canCapture, canEvade boolean state system ...
+    //     // canBlock seems like the only tricky one, gotta check all piece moves 
+    //     let kingPosition = this.state.whiteToPlay ?
+    //         this.state.darkKingPosition :
+    //         this.state.lightKingPosition
+    //     if (player === 'w' || player === 'L') kingPosition = this.state.lightKingPosition;
+    //     else if (player === 'b' || player === 'D') kingPosition = this.state.darkKingPosition;
 
-        let attackingSquares = this.getOccupiedSquaresThatCanAttackThisSquare(
-            kingPosition!, // assert that it will not be null. check this TODO 
-            false,
-            [(this.state.whiteToPlay ? 'D' : 'L')], // dupe logic as prev parameter above TODO remove 
-            null,
-            null,
-            boardState
-        );
+    //     let attackingSquares = this.getOccupiedSquaresThatCanAttackThisSquare(
+    //         kingPosition!, // assert that it will not be null. check this TODO 
+    //         // false,
+    //         [(this.state.whiteToPlay ? 'D' : 'L')], // dupe logic as prev parameter above TODO remove 
+    //         // null,
+    //         // null,
+    //         boardState
+    //     );
 
-        return attackingSquares.length !== 0;
-        // if attackingSquares.length > 1, it's a double check, can't possible block or capture out of it 
-        // have to evade with the king, check if opponent attacks all of the squares around our king 
-        // if attackingSquares.length === 1, we can first try to capture or make a line from the attackingSquare to our king
-        // and see if we can put a piece on any of those squares in the line to block 
-    }
+    //     return attackingSquares.length !== 0;
+    //     // if attackingSquares.length > 1, it's a double check, can't possible block or capture out of it 
+    //     // have to evade with the king, check if opponent attacks all of the squares around our king 
+    //     // if attackingSquares.length === 1, we can first try to capture or make a line from the attackingSquare to our king
+    //     // and see if we can put a piece on any of those squares in the line to block 
+    // }
 
     isCheckmate = () => {
 
     }
 
-    isMoveEnPassant = (squareMovedFrom: number, squareMovedTo: number): boolean => {
-        // TODO refactor, use this.state.enPassantTargetSquare 
-        const pieceMoving = this.state.pieceKeys[squareMovedFrom];
-        return (
-            pieceMoving.charAt(1) === 'P' // piece moving is a pawn
-            // && squareMovedFrom % 8 !== squareMovedTo % 8 // signifies that the pawn performed a capture (changed files) 
-            // && this.state.pieceKeys[squareMovedTo] === '' // signifies that the capture was an en passant 
-            && squareMovedTo === this.state.enPassantTargetSquare
-        )
-    }
+    // isMoveEnPassant = (squareMovedFrom: number, squareMovedTo: number): boolean => {
+    //     // TODO refactor, use this.state.enPassantTargetSquare 
+    //     const pieceMoving = this.state.pieceKeys[squareMovedFrom];
+    //     return (
+    //         pieceMoving.charAt(1) === 'P' // piece moving is a pawn
+    //         // && squareMovedFrom % 8 !== squareMovedTo % 8 // signifies that the pawn performed a capture (changed files) 
+    //         // && this.state.pieceKeys[squareMovedTo] === '' // signifies that the capture was an en passant 
+    //         && squareMovedTo === this.state.enPassantTargetSquare
+    //     )
+    // }
 
-    isMoveCastling = (squareMovedFrom: number, squareMovedTo: number): boolean => {
-        const pieceMoving = this.state.pieceKeys[squareMovedFrom];
-        return (
-            pieceMoving.charAt(1) === 'K'
-            && [60, 4].includes(squareMovedFrom) && [63, 56, 7, 0].includes(squareMovedTo)
-        )
-    }
+    // isMoveCastling = (squareMovedFrom: number, squareMovedTo: number): boolean => {
+    //     const pieceMoving = this.state.pieceKeys[squareMovedFrom];
+    //     return (
+    //         pieceMoving.charAt(1) === 'K'
+    //         && [60, 4].includes(squareMovedFrom) && [63, 56, 7, 0].includes(squareMovedTo)
+    //     )
+    // }
 
     wouldOwnKingBeInCheckAfterMove = (squareMovedFrom: number, squareMovedTo: number): boolean => {
 
         let ownKingPosition = this.state.whiteToPlay ? this.state.lightKingPosition : this.state.darkKingPosition;
         if (ownKingPosition === squareMovedFrom) ownKingPosition = squareMovedTo;
-        const tempBoardState = this.getNewPieceKeysCopyWithMoveApplied(squareMovedFrom, squareMovedTo);
-        const squaresWithPiecesThatCouldAttackOurKingAfterThisMove = this.getOccupiedSquaresThatCanAttackThisSquare(
-            ownKingPosition!, // TODO check, assertion that king position won't be null
-            false,
-            [(this.state.whiteToPlay ? 'D' : 'L')], // dupe logic as prev parameter above TODO remove 
-            null, // squareMovedFrom, // do this if we don't update state 
-            null,
-            tempBoardState,
-        );
+        // const tempBoardState = helpers.getNewPieceKeysCopyWithMoveApplied(this, squareMovedFrom, squareMovedTo);
+        const tempBoardState = helpers.getNewPieceKeysCopyWithMoveApplied(this, squareMovedFrom, squareMovedTo);
 
-        if (squareMovedTo === 7 || squareMovedTo === 63) {
-            console.log(`After checking short castling:\nSquaresWithPiecesThatCouldAttackOurKingAfterThisMove: ${squaresWithPiecesThatCouldAttackOurKingAfterThisMove}`);
-        }
+        // const squaresWithPiecesThatCouldAttackOurKingAfterThisMove = this.getOccupiedSquaresThatCanAttackThisSquare(
+        //     ownKingPosition!, // TODO check, assertion that king position won't be null
+        //     // false,
+        //     [(this.state.whiteToPlay ? 'D' : 'L')], // dupe logic as prev parameter above TODO remove 
+        //     // null, // squareMovedFrom, // do this if we don't update state 
+        //     // null,
+        //     tempBoardState,
+        // );
 
-        return squaresWithPiecesThatCouldAttackOurKingAfterThisMove.length !== 0;
+        // if (squareMovedTo === 7 || squareMovedTo === 63) {
+        //     console.log(`After checking short castling:\nSquaresWithPiecesThatCouldAttackOurKingAfterThisMove: ${squaresWithPiecesThatCouldAttackOurKingAfterThisMove}`);
+        // }
+
+        // if (squaresWithPiecesThatCouldAttackOurKingAfterThisMove.length !== 0) {
+        //     console.log(`This move would result in our king being in check from squares: ${squaresWithPiecesThatCouldAttackOurKingAfterThisMove}`);
+            
+        // }
+
+        // return squaresWithPiecesThatCouldAttackOurKingAfterThisMove.length !== 0;
+
+        return helpers.isKingInCheck(ownKingPosition, tempBoardState, this);
 
         // // ****** ALT METHOD ******
 
@@ -1245,49 +1247,50 @@ export default class Game extends React.Component<GameProps, GameState> {
         // return squaresWithPiecesThatCouldAttackOurKingAfterThisMove.length !== 0;
     }
 
-    getNewPieceKeysCopyWithMoveApplied = (squareMovedFrom: number, squareMovedTo: number): string[] => {
-        const pieceMoving = this.state.pieceKeys[squareMovedFrom];
-        let squareIdOfPawnCapturedViaEnPassant = null;
-        let squareIdOfKingAfterCastling = null;
-        let squareIdOfRookAfterCastling = null;
-        let castlingRook = null;
-        // copy the array before mutating so React sees a new reference
-        let newPieceKeys = this.state.pieceKeys.slice();
+    // getNewPieceKeysCopyWithMoveApplied = (squareMovedFrom: number, squareMovedTo: number): string[] => {
+    //     const pieceMoving = this.state.pieceKeys[squareMovedFrom];
+    //     let squareIdOfPawnCapturedViaEnPassant = null;
+    //     let squareIdOfKingAfterCastling = null;
+    //     let squareIdOfRookAfterCastling = null;
+    //     let castlingRook = null;
+    //     // copy the array before mutating so React sees a new reference
+    //     let newPieceKeys = this.state.pieceKeys.slice();
 
-        if (this.isMoveEnPassant(squareMovedFrom, squareMovedTo)) {
-            // alert("An en passant occurred...");
-            squareIdOfPawnCapturedViaEnPassant = squareMovedTo + -8 * (pieceMoving.charAt(0) === 'L' ? -1 : 1);
-            newPieceKeys[squareIdOfPawnCapturedViaEnPassant] = "";
-            newPieceKeys[squareMovedFrom] = "";
-            newPieceKeys[squareMovedTo] = pieceMoving;
-        } else if (this.isMoveCastling(squareMovedFrom, squareMovedTo)) {
-            // indicates that the king is castling 
-            let directionFromKing = 1;
-            if (squareMovedTo < squareMovedFrom) directionFromKing = -1;
-            castlingRook = this.state.pieceKeys[squareMovedTo];
-            squareIdOfKingAfterCastling = squareMovedFrom + directionFromKing * 2;
-            squareIdOfRookAfterCastling = squareMovedFrom + directionFromKing;
-            newPieceKeys[squareMovedFrom] = "";
-            newPieceKeys[squareMovedTo] = "";
-            newPieceKeys[squareIdOfRookAfterCastling] = castlingRook;
-            newPieceKeys[squareIdOfKingAfterCastling] = pieceMoving;
-        } else {
-            newPieceKeys[squareMovedFrom] = "";
-            newPieceKeys[squareMovedTo] = pieceMoving;
-        }
+    //     if (helpers.isMoveEnPassant(squareMovedFrom, squareMovedTo, this.state.pieceKeys)) {
+    //         // alert("An en passant occurred...");
+    //         squareIdOfPawnCapturedViaEnPassant = squareMovedTo + -8 * (pieceMoving.charAt(0) === 'L' ? -1 : 1);
+    //         newPieceKeys[squareIdOfPawnCapturedViaEnPassant] = "";
+    //         newPieceKeys[squareMovedFrom] = "";
+    //         newPieceKeys[squareMovedTo] = pieceMoving;
+    //     } else if (helpers.isMoveCastling(squareMovedFrom, squareMovedTo, this.state.pieceKeys)) {
+    //         // indicates that the king is castling 
+    //         let directionFromKing = 1;
+    //         if (squareMovedTo < squareMovedFrom) directionFromKing = -1;
+    //         castlingRook = this.state.pieceKeys[squareMovedTo];
+    //         squareIdOfKingAfterCastling = squareMovedFrom + directionFromKing * 2;
+    //         squareIdOfRookAfterCastling = squareMovedFrom + directionFromKing;
+    //         newPieceKeys[squareMovedFrom] = "";
+    //         newPieceKeys[squareMovedTo] = "";
+    //         newPieceKeys[squareIdOfRookAfterCastling] = castlingRook;
+    //         newPieceKeys[squareIdOfKingAfterCastling] = pieceMoving;
+    //     } else {
+    //         newPieceKeys[squareMovedFrom] = "";
+    //         newPieceKeys[squareMovedTo] = pieceMoving;
+    //     }
 
-        return newPieceKeys; // , {squareIdOfPawnCapturedViaEnPassant, squareIdOfKingAfterCastling, squareIdOfRookAfterCastling};
-    }
+    //     return newPieceKeys; // , {squareIdOfPawnCapturedViaEnPassant, squareIdOfKingAfterCastling, squareIdOfRookAfterCastling};
+    // }
 
     updateMoveHistory = (squareMovedFrom: number, squareMovedTo: number, boardState: string[]): void => {
         this.setState({
             ...this.state,
             history: this.state.history.concat([{
                 pieceKeys: boardState,
-                AN: this.generateMoveAN(squareMovedFrom, squareMovedTo), // TODO generate Algebraic Notation for this move -- to do so, we need to know if any other 
+                AN: this.generateMoveAN(squareMovedFrom, squareMovedTo), 
+                // TODO generate Algebraic Notation for this move -- to do so, we need to know if any other 
                 //   pieces of the same type would be able to make the same move 
-                JN: this.generateMoveJN(squareMovedFrom, squareMovedTo),
-                INN: this.generateMoveINN(squareMovedFrom, squareMovedTo),
+                JN: helpers.generateMoveJN(squareMovedFrom, squareMovedTo),
+                INN: helpers.generateMoveINN(squareMovedFrom, squareMovedTo),
                 // International Numeric Notation (Computer Notation, e.g. 5254 == e2->e4)
             }]),
         });
@@ -1326,7 +1329,7 @@ export default class Game extends React.Component<GameProps, GameState> {
             plyNumber: this.state.plyNumber - 1,
         });
 
-        this.deselectAndRemoveHighlightFromAllSquares();
+        // this.deselectAndRemoveHighlightFromAllSquares();
     }
 
     deselectAndRemoveHighlightFromAllSquares = (): void => {
@@ -1396,7 +1399,7 @@ export default class Game extends React.Component<GameProps, GameState> {
         // Move piece at selected square to clicked highlighted square
         const squareMovedFrom: number | null = this.state.squareSelected; // TODO by the time we get here in this method, squareMovedFrom can't be null 
         const squareMovedTo: number = squareId;
-        const newPieceKeys = this.getNewPieceKeysCopyWithMoveApplied(squareMovedFrom!, squareMovedTo);
+        const newPieceKeys = helpers.getNewPieceKeysCopyWithMoveApplied(this.state.pieceKeys, squareMovedFrom!, squareMovedTo);
 
         let squareOfPawnPromotion = null;
 
@@ -1410,7 +1413,7 @@ export default class Game extends React.Component<GameProps, GameState> {
                     "lightKingHasLongCastlingRights": false,
                     "lightKingHasShortCastlingRights": false,
                 };
-                await multiUpdateState(this, newStateKVPs);
+                await helpers.multiUpdateState(this, newStateKVPs);
                 // await updateState(this, 'lightKingHasLongCastlingRights', false);
                 // await updateState(this, 'lightKingHasShortCastlingRights', false);
             } else {
@@ -1419,25 +1422,25 @@ export default class Game extends React.Component<GameProps, GameState> {
                     "darkKingHasLongCastlingRights": false,
                     "darkKingHasShortCastlingRights": false,
                 }
-                await multiUpdateState(this, newStateKVPs);
+                await helpers.multiUpdateState(this, newStateKVPs);
             }
-            if (!this.isMoveCastling(squareMovedFrom!, squareMovedTo)) {
+            if (!helpers.isMoveCastling(squareMovedFrom!, squareMovedTo, this.state.pieceKeys)) {
                 if (newPieceKeys[squareMovedTo].charAt(0) === 'L') {
                     //   this.setState({...this.state, lightKingPosition: squareMovedTo});
-                    await updateState(this, "lightKingPosition", squareMovedTo);
+                    await helpers.updateState(this, "lightKingPosition", squareMovedTo);
                 } else {
                     //   this.setState({...this.state, darkKingPosition: squareMovedTo});
-                    await updateState(this, "darkKingPosition", squareMovedTo);
+                    await helpers.updateState(this, "darkKingPosition", squareMovedTo);
                 }
             } else {
                 const directionFromKing = squareMovedFrom! < squareMovedTo ? 1 : -1;
                 const squareIdOfKingAfterCastling = squareMovedFrom! + directionFromKing * 2;
                 if (newPieceKeys[squareIdOfKingAfterCastling].charAt(0) === 'L') {
                     //   this.setState({...this.state, lightKingPosition: squareIdOfKingAfterCastling});
-                    await updateState(this, "lightKingPosition", squareIdOfKingAfterCastling);
+                    await helpers.updateState(this, "lightKingPosition", squareIdOfKingAfterCastling);
                 } else {
                     //   this.setState({...this.state, darkKingPosition: squareIdOfKingAfterCastling});
-                    await updateState(this, "darkKingPosition", squareIdOfKingAfterCastling);
+                    await helpers.updateState(this, "darkKingPosition", squareIdOfKingAfterCastling);
                 }
             }
         } else if (this.state.pieceKeys[squareMovedFrom!].charAt(1) === 'R') {
@@ -1445,18 +1448,18 @@ export default class Game extends React.Component<GameProps, GameState> {
             if (this.state.pieceKeys[squareMovedFrom!].charAt(0) === 'L') {
                 if (squareMovedFrom === 63) {
                     //   this.setState({...this.state, lightKingHasShortCastlingRights: false});
-                    await updateState(this, "lightKingHasShortCastlingRights", false);
+                    await helpers.updateState(this, "lightKingHasShortCastlingRights", false);
                 } else if (squareMovedFrom === 56) {
                     //   this.setState({...this.state, lightKingHasLongCastlingRights: false});
-                    await updateState(this, "lightKingHasLongCastlingRights", false);
+                    await helpers.updateState(this, "lightKingHasLongCastlingRights", false);
                 }
             } else {
                 if (squareMovedFrom === 7) {
                     //   this.setState({...this.state, darkKingHasShortCastlingRights: false});
-                    await updateState(this, "darkKingHasShortCastlingRights", false);
+                    await helpers.updateState(this, "darkKingHasShortCastlingRights", false);
                 } else if (squareMovedFrom === 0) {
                     //   this.setState({...this.state, darkKingHasLongCastlingRights: false});
-                    await updateState(this, "darkKingHasLongCastlingRights", false);
+                    await helpers.updateState(this, "darkKingHasLongCastlingRights", false);
                 }
             }
         } else if (this.state.pieceKeys[squareMovedFrom!].charAt(1) === 'P') {
@@ -1464,7 +1467,7 @@ export default class Game extends React.Component<GameProps, GameState> {
                 // double-square first move
                 const enPassantTargetSquare = Math.floor((squareMovedFrom! + squareMovedTo) / 2);
                 // this.setState({...this.state, enPassantTargetSquare: enPassantTargetSquare})
-                await updateState(this, "enPassantTargetSquare", enPassantTargetSquare);
+                await helpers.updateState(this, "enPassantTargetSquare", enPassantTargetSquare);
                 // this MUST be set back to null, or updated to different square, on the very next ply
             }
             const isPromoting = Math.floor(squareMovedTo / 8) === (this.state.whiteToPlay ? 0 : 7);
@@ -1491,8 +1494,8 @@ export default class Game extends React.Component<GameProps, GameState> {
         }
 
         const nextMoveAN = this.generateMoveAN(squareMovedFrom!, squareMovedTo); // , newPieceKeys);
-        const nextMoveJN = this.generateMoveJN(squareMovedFrom!, squareMovedTo);
-        const nextMoveINN = this.generateMoveINN(squareMovedFrom!, squareMovedTo);
+        const nextMoveJN = helpers.generateMoveJN(squareMovedFrom!, squareMovedTo);
+        const nextMoveINN = helpers.generateMoveINN(squareMovedFrom!, squareMovedTo);
 
         // TODO there's a bug with castling, rook stopped showing up, seems like it's here somewhere ...
         // can i not setState twice back to back or something weird?? why is that happening? 
