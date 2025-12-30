@@ -4,6 +4,8 @@ import Game from '../components/Game.tsx';
 import GameProps from '../components/Game.tsx';
 import GameState from '../components/Game.tsx';
 
+import * as constants from './constants.ts';
+
 // // ********* GETTERS *********
 // // ***** and generators *****
 
@@ -122,6 +124,69 @@ export const isMoveCastling = (squareMovedFrom: number, squareMovedTo: number, c
         return [56, 63].includes(squareMovedTo);
     }
     return false;
+}
+
+export function getCastlingOptions(player: string, currentGame: Game): number[] {
+    let castlingOptions: number[] = [];
+
+    // if (!['L','D'].includes(player)) return [];
+    if (!constants.validPlayers.includes(player)) return [];
+
+    const kingStartingSquare: number = player === 'L' ? 60 : 4;
+    const rookStartingSquares: number[] = player === 'L' ? [56, 63] : [0, 7];
+
+    rookStartingSquares
+        .forEach((rookStartingSquare: number) => {
+            const squaresBetween: number = Math.abs(rookStartingSquare - kingStartingSquare);
+            // var dir: number; // = constants.DIR.E;
+            let castlingSliceStart: number, castlingSliceEnd: number; 
+            let castlingSafetySquares: number[]; 
+            if (squaresBetween === 4) {
+                // long castling (qs)
+                const qsCastlingRights: boolean = 
+                    player === constants.PLAYER.WHITE ? 
+                        currentGame.state.lightKingHasLongCastlingRights :
+                        currentGame.state.darkKingHasLongCastlingRights;
+                if (!qsCastlingRights) return;
+
+                castlingSliceStart = rookStartingSquare + 1;
+                castlingSliceEnd = kingStartingSquare;
+
+                castlingSafetySquares = player === 'L' ? [60, 59, 58] : [4, 3, 2];
+            } else if (squaresBetween === 3) {
+                // short castling (ks) 
+                const ksCastlingRights: boolean = 
+                    player === constants.PLAYER.WHITE ? 
+                        currentGame.state.lightKingHasShortCastlingRights :
+                        currentGame.state.darkKingHasShortCastlingRights;
+                if (!ksCastlingRights) return;
+
+                castlingSliceStart = kingStartingSquare + 1;
+                castlingSliceEnd = rookStartingSquare;
+                
+                castlingSafetySquares = player === 'L' ? [60, 61, 62] : [4, 5, 6];
+            } else {
+                // should never happen, but just to make sure and avoid compiler errors 
+                return;
+            }
+
+            const ourPiecesAreBlockingCastling = currentGame.state.pieceKeys
+                .slice(kingStartingSquare + 1, rookStartingSquare)
+                .some(pieceKey => pieceKey !== '') || true;
+            if (ourPiecesAreBlockingCastling) return;
+
+            const theirPiecesAreBlockingCastling = castlingSafetySquares
+                .some(castlingSafetySquare => currentGame.getOccupiedSquaresThatCanAttackThisSquare(
+                    castlingSafetySquare,
+                    constants.validPlayers.filter(validPlayer => validPlayer !== player),
+                    currentGame.state.pieceKeys,
+                ).length > 0);
+            if (theirPiecesAreBlockingCastling) return;
+
+            castlingOptions.push(rookStartingSquare);
+        })
+
+    return castlingOptions;
 }
 
 // either both kingPosition and boardState must be supplied, or currentGame must be supplied 
