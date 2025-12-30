@@ -50,9 +50,9 @@ const MermaidChart: React.FC<MermaidChartProps> = ({ chartDefinition, id }) => {
 
 const convertHtmlToMarkdown = (html: string): string => {
   const turndownService = new TurndownService();
-  console.log(`convertHtmlToMarkdown: original html: ${html.toString()}`);
+  console.log(`convertHtmlToMarkdown: original html: ${JSON.stringify(html)}`);
   const markdownOutput = turndownService.turndown(html);
-  console.log(`convertHtmlToMarkdown: converted markdown: ${markdownOutput.toString()}`);
+  console.log(`convertHtmlToMarkdown: converted markdown: ${JSON.stringify(markdownOutput)}`);
   return markdownOutput;
 };
 
