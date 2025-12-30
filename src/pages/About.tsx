@@ -1,60 +1,63 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react'; // useRef 
 import ReactMarkdown from 'react-markdown';
 // import remarkGfm from 'remark-gfm'; // Optional: for GitHub Flavored Markdown
-import mermaid from 'mermaid';
+// import mermaid from 'mermaid';
 // import { renderToStaticMarkup } from 'react-dom/server';
 // import { convert } from 'html-to-markdown';
-import TurndownService from 'turndown';
+// import TurndownService from 'turndown';
 
 // Import the markdown file (bundler handles the path)
 import markdownFilePath from '../README.md';
+// WHY ISN'T THIS WORKING??? 
 
 // export default function About() {
 //     return <h2 style={{ color: 'white' }}>About</h2>;
 // }
 
-interface MermaidChartProps {
-  chartDefinition: string; // The Mermaid markdown text
-  id: string; // A unique ID for the container element
-}
+// interface MermaidChartProps {
+//   chartDefinition: string; // The Mermaid markdown text
+//   id: string; // A unique ID for the container element
+// }
 
-const MermaidChart: React.FC<MermaidChartProps> = ({ chartDefinition, id }) => {
-  const chartRef = useRef<HTMLDivElement>(null);
+// const MermaidChart: React.FC<MermaidChartProps> = ({ chartDefinition, id }) => {
+//   const chartRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    // Basic initialization for mermaid
-    mermaid.initialize({
-      startOnLoad: false, // Prevent mermaid from scanning the entire document automatically
-      theme: 'neutral', // Optional: choose a theme
-      // Add other configurations as needed
-    });
+//   useEffect(() => {
+//     // Basic initialization for mermaid
+//     mermaid.initialize({
+//       startOnLoad: false, // Prevent mermaid from scanning the entire document automatically
+//       theme: 'neutral', // Optional: choose a theme
+//       // Add other configurations as needed
+//     });
 
-    if (chartRef.current) {
-      try {
-        // Clear previous content
-        chartRef.current.innerHTML = chartDefinition;
+//     if (chartRef.current) {
+//       try {
+//         // Clear previous content
+//         chartRef.current.innerHTML = chartDefinition;
 
-        // // Render the new chart using the API
-        // // The render function takes an ID and the chart definition
-        // mermaid.render(id, chartDefinition, (svgCode) => {
-        //   chartRef.current!.innerHTML = svgCode;
-        // });
-      } catch (error) {
-        console.error('Mermaid rendering error:', error);
-      }
-    }
-  }, [chartDefinition, id]); // Re-run effect if the chart definition or ID changes
+//         // // Render the new chart using the API
+//         // // The render function takes an ID and the chart definition
+//         // mermaid.render(id, chartDefinition, (svgCode) => {
+//         //   chartRef.current!.innerHTML = svgCode;
+//         // });
+//       } catch (error) {
+//         console.error('Mermaid rendering error:', error);
+//       }
+//     }
+//   }, [chartDefinition, id]); // Re-run effect if the chart definition or ID changes
 
-  return <div id={id} ref={chartRef} className="mermaid" />;
-};
+//   return <div id={id} ref={chartRef} className="mermaid" />;
+// };
 
-const convertHtmlToMarkdown = (html: string): string => {
-  const turndownService = new TurndownService();
-  console.log(`convertHtmlToMarkdown: original html: ${JSON.stringify(html)}`);
-  const markdownOutput = turndownService.turndown(html);
-  console.log(`convertHtmlToMarkdown: converted markdown: ${JSON.stringify(markdownOutput)}`);
-  return markdownOutput;
-};
+// const convertHtmlToMarkdown = (html: string): string => {
+//   const turndownService = new TurndownService();
+//   console.log(`convertHtmlToMarkdown: original html: ${JSON.stringify(html)}`);
+//   const markdownOutput = turndownService.turndown(html);
+//   console.log(`convertHtmlToMarkdown: converted markdown: ${JSON.stringify(markdownOutput)}`);
+//   return markdownOutput;
+// };
+
+
 
 // // Function to convert React Element to Markdown string
 // const reactElementToMarkdown = (element: React.ReactElement): string => {
@@ -80,31 +83,33 @@ const About = () => {
 
 //   const markdownFilePath = '../../README.md';
 
-  const mermaidFlowchartDefinition = `
-    graph LR
-        Browser[Browser / React SPA]
-        Browser -->|React Router| Routes[Routes: /, /game/:id, /notes]
-        Browser -->|POST / GET| APIGW[API Gateway]
-        APIGW --> Lambda[Lambda]
-        Lambda --> DynamoDB[(DynamoDB)]
-        CI[GitHub → AWS GitHub App]
-        CI --> Amplify[Amplify]
-        Amplify --> Browser
-  `;
+//   const mermaidFlowchartDefinition = `
+//     graph LR
+//         Browser[Browser / React SPA]
+//         Browser -->|React Router| Routes[Routes: /, /game/:id, /notes]
+//         Browser -->|POST / GET| APIGW[API Gateway]
+//         APIGW --> Lambda[Lambda]
+//         Lambda --> DynamoDB[(DynamoDB)]
+//         CI[GitHub → AWS GitHub App]
+//         CI --> Amplify[Amplify]
+//         Amplify --> Browser
+//   `;
 
-  const mermaidChart = (
-    <MermaidChart 
-      chartDefinition={mermaidFlowchartDefinition}
-      id='readme-mermaid-flowchart-id'
-    />
-  )
+//   const mermaidChart = (
+//     <MermaidChart 
+//       chartDefinition={mermaidFlowchartDefinition}
+//       id='readme-mermaid-flowchart-id'
+//     />
+//   )
 
   //   const mermaidMarkdownOutput = reactElementToMarkdown(mermaidChart);
-  const mermaidMarkdownOutput = convertHtmlToMarkdown(mermaidChart.toString());
+//   const mermaidMarkdownOutput = convertHtmlToMarkdown(mermaidChart.toString());
 
   useEffect(() => {
     // Fetch the content of the imported file path
     let filePathToFetch = process.env.PUBLIC_URL + '/README.md'; // markdownFilePath;
+    console.log("PUBLIC_URL: " + process.env.PUBLIC_URL);
+    console.log("PWD: " + process.env.PWD);
     const matcher: RegExp = /\/static\/media\/README/;
     console.log(markdownFilePath);
     if (markdownFilePath.match(matcher)) {
@@ -115,14 +120,23 @@ const About = () => {
         console.log(`No match between ${matcher} and ${markdownFilePath}`);
     }
     fetch(filePathToFetch)
-      .then((response) => response.text(), (error) => console.error(error))
-      .then((text) => {
-        // text = text.replace(/```mermaid[\s\S]*```/g, `${mermaidMarkdownOutput}`);
-        // console.log(mermaidMarkdownOutput);
-        console.log(text);
-        if (text) setMarkdown(text);
-      });
-  }, [mermaidMarkdownOutput]);
+        .then((response) => {
+            console.log(response);
+            return response.text()
+        }, (error) => {
+            console.error(error)
+            throw Error();
+        }).then((text) => {
+            // text = text.replace(/```mermaid[\s\S]*```/g, `${mermaidMarkdownOutput}`);
+            // console.log(mermaidMarkdownOutput);
+            console.log(text);
+            // if (text) setMarkdown(text);
+            if (text) setMarkdown(text);
+        }, (error) => {
+            console.error(error);
+        });
+//   }, [mermaidMarkdownOutput]);
+  }, []);
 
   return (
     <article className="prose"> {/* Optional: use a CSS class for styling like Tailwind's typography plugin */}
