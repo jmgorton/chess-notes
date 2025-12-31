@@ -171,7 +171,7 @@ export function getCastlingOptions(player: string, currentGame: Game): number[] 
             }
 
             const ourPiecesAreBlockingCastling = currentGame.state.pieceKeys
-                .slice(kingStartingSquare + 1, rookStartingSquare)
+                .slice(castlingSliceStart, castlingSliceEnd)
                 .some(pieceKey => pieceKey !== '') || true;
             if (ourPiecesAreBlockingCastling) return;
 

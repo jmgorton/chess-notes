@@ -17,6 +17,8 @@
     "react-markdown": "^10.1.0",
     "react-router-dom": "^6.0.2",
     "react-scripts": "^5.0.1",
+    "rehype-mermaid": "^3.0.0",
+    "remark-gfm": "^4.0.1",
     "styled-components": "^6.1.19",
     "turndown": "^7.2.2",
     "web-vitals": "^1.1.2"
@@ -59,7 +61,6 @@
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
     "@types/turndown": "^5.0.6",
-    "@wcj/html-to-markdown": "^2.1.1",
     "typescript": "^5.9.3"
   }
 }

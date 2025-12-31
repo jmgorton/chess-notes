@@ -1,23 +1,27 @@
-import React, { useState, useEffect } from 'react'; // useRef 
-import ReactMarkdown from 'react-markdown';
-// import remarkGfm from 'remark-gfm'; // Optional: for GitHub Flavored Markdown
-// import mermaid from 'mermaid';
+import React, { Suspense, useState, useEffect, useRef } from 'react'; // + useRef, useMemo
+import ReactMarkdown from 'react-markdown'; // npm install react-markdown 
+// react-markdown plugins
+import remarkGfm from 'remark-gfm'; // Optional: for GitHub Flavored Markdown, Not Necessary ?? 
+import mermaid from 'mermaid'; // npm install mermaid 
+// import rehypeMermaid from 'rehype-mermaid'; // npm install rehype-mermaid
+
 // import { renderToStaticMarkup } from 'react-dom/server';
-// import { convert } from 'html-to-markdown';
+// import { convert } from 'html-to-markdown'; // npm install @wcj/html-to-markdown ??? 
+
 // import TurndownService from 'turndown';
 
 // Import the markdown file (bundler handles the path)
 import markdownFilePath from '../README.md';
 // WHY ISN'T THIS WORKING??? It was the AWS Amplify Redirect/Rewrite smh 
 
-// export default function About() {
-//     return <h2 style={{ color: 'white' }}>About</h2>;
-// }
+import * as functions from '../utils/functions.ts';
 
-// interface MermaidChartProps {
-//   chartDefinition: string; // The Mermaid markdown text
-//   id: string; // A unique ID for the container element
-// }
+
+// // MermaidChart + convertHtmlToMarkdown not necessary with rehype-mermaid plugin ... FAIL 
+interface MermaidChartProps {
+  chart: string; // The Mermaid markdown text
+  id: string; // A unique ID for the container element
+}
 
 // const MermaidChart: React.FC<MermaidChartProps> = ({ chartDefinition, id }) => {
 //   const chartRef = useRef<HTMLDivElement>(null);
@@ -49,11 +53,45 @@ import markdownFilePath from '../README.md';
 //   return <div id={id} ref={chartRef} className="mermaid" />;
 // };
 
+
+const MermaidChart: React.FC<MermaidChartProps> = ({ chart, id }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Initialize mermaid
+    mermaid.initialize({ startOnLoad: false, theme: 'neutral' });
+
+    // Render the chart when the component mounts or updates
+    mermaid.render(id, chart)
+      .then(({ svg }) => {
+        if (containerRef.current) {
+          containerRef.current.innerHTML = svg;
+        }
+      })
+      .catch((err) => {
+        console.error('Mermaid render error:', err);
+        if (containerRef.current) {
+          containerRef.current.innerHTML = `<pre>Error: ${String(err)}</pre>`;
+        }
+      });
+
+      // Cleanup function (optional but good practice for SPAs)
+      return () => {
+          // Any necessary cleanup
+      };
+  }, [chart, id]); // Rerender if chart or id changes
+
+  return <div ref={containerRef} id={id} />;
+};
+
+
+
+
 // const convertHtmlToMarkdown = (html: string): string => {
 //   const turndownService = new TurndownService();
-//   console.log(`convertHtmlToMarkdown: original html: ${JSON.stringify(html)}`);
+// //   console.log(`convertHtmlToMarkdown: original html: ${JSON.stringify(html)}`);
 //   const markdownOutput = turndownService.turndown(html);
-//   console.log(`convertHtmlToMarkdown: converted markdown: ${JSON.stringify(markdownOutput)}`);
+// //   console.log(`convertHtmlToMarkdown: converted markdown: ${JSON.stringify(markdownOutput)}`);
 //   return markdownOutput;
 // };
 
@@ -79,10 +117,13 @@ import markdownFilePath from '../README.md';
 // };
 
 const About = () => {
-  const [markdown, setMarkdown] = useState('');
+  const [markdownComponentList, setMarkdownComponentList] = useState<React.ReactElement[]>([]);
 
-//   const markdownFilePath = '../../README.md';
+  const addMarkdownComponent = (markdown: React.ReactElement) => {
+    setMarkdownComponentList((list) => [...list, markdown])
+  }
 
+// not necessary with rehype-mermaid plugin 
 //   const mermaidFlowchartDefinition = `
 //     graph LR
 //         Browser[Browser / React SPA]
@@ -95,15 +136,20 @@ const About = () => {
 //         Amplify --> Browser
 //   `;
 
-//   const mermaidChart = (
-//     <MermaidChart 
-//       chartDefinition={mermaidFlowchartDefinition}
-//       id='readme-mermaid-flowchart-id'
-//     />
-//   )
+//   // let mermaidChart: React.ReactElement; 
+//   const mermaidChart = useMemo((() => {
+//     return (
+//         <MermaidChart 
+//         chartDefinition={mermaidFlowchartDefinition}
+//         id='readme-mermaid-flowchart-id'
+//         />
+//     )
+//   }), [mermaidFlowchartDefinition]);
+  
 
-  //   const mermaidMarkdownOutput = reactElementToMarkdown(mermaidChart);
-//   const mermaidMarkdownOutput = convertHtmlToMarkdown(mermaidChart.toString());
+  // const mermaidMarkdownOutput = reactElementToMarkdown(mermaidChart); // html-to-markdown + react-dom/server
+//   const mermaidStaticHTML = renderToStaticMarkup(mermaidChart);
+//   const mermaidMarkdownOutput = convertHtmlToMarkdown(mermaidStaticHTML);
 
   useEffect(() => {
     // // Fetch the content of the imported file path
@@ -127,26 +173,84 @@ const About = () => {
             console.error(error)
             throw Error();
         }).then((text) => {
+            // console.log(mermaidChart);
+            // console.log(mermaidStaticHTML);
+            // console.log(mermaidMarkdownOutput);
             // text = text.replace(/```mermaid[\s\S]*```/g, `${mermaidMarkdownOutput}`);
             // console.log(mermaidMarkdownOutput);
             // console.log(text);
+
             // if (text) setMarkdown(text);
-            if (text) setMarkdown(text);
+
+            const mermaidMatcherRegex: RegExp = /```mermaid[\s\S]*```/g;
+            const nonMermaidMarkdown: string[] = text.split(mermaidMatcherRegex);
+            const mermaidMarkdown: string[] = Array.from(text.matchAll(mermaidMatcherRegex)).map(match => match[0]);
+
+            mermaidMarkdown.forEach(str => console.log(str));
+            
+            const nonMermaidMarkdownComponents = nonMermaidMarkdown
+                .map((markdown, index) => {
+                    return (
+                        <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            // rehypePlugins={[[rehypeMermaid, { mermaidConfig: { theme: 'default' } }]]}
+                            key={`readme-non-mermaid-markdown-id-${index}`}
+                        >
+                            {markdown}
+                        </ReactMarkdown>
+                    )
+                });
+            const mermaidMarkdownComponents = mermaidMarkdown
+                .map((markdown, index) => {
+                    return (
+                        <pre className="mermaid">
+                            <MermaidChart 
+                                chart={markdown}
+                                id={`readme-mermaid-flowchart-id-${index}`}
+                                key={`readme-mermaid-flowchart-id-${index}`}
+                            />
+                        </pre>
+                    )
+                });
+            
+            const nonMermaidGoesFirst: boolean = 
+                mermaidMarkdown.length === 0 || 
+                mermaidMarkdown.length < nonMermaidMarkdown.length || 
+                text.startsWith(nonMermaidMarkdown[0]);
+            const markdownToRender = nonMermaidGoesFirst ? 
+                functions.interleave(nonMermaidMarkdownComponents, mermaidMarkdownComponents) : 
+                functions.interleave(mermaidMarkdownComponents, nonMermaidMarkdownComponents);
+            
+            markdownToRender.forEach((component) => addMarkdownComponent(component));
+                
         }, (error) => {
             console.error(error);
         });
-//   }, [mermaidMarkdownOutput]);
+//   }, [mermaidChart, mermaidStaticHTML, mermaidMarkdownOutput]);
   }, []);
 
   return (
-    <article className="prose"> {/* Optional: use a CSS class for styling like Tailwind's typography plugin */}
-      <ReactMarkdown 
-        // plugins={[remarkGfm]}
-        // remarkPlugins={[remarkGfm]}
-      >
-        {markdown}
-    </ReactMarkdown>
-    </article>
+    <>
+        <article className="prose"> {/* Optional: use a CSS class for styling like Tailwind's typography plugin */}
+            <Suspense fallback={<div>Loading Mermaid diagram...</div>}>
+                {/* <ReactMarkdown 
+                    // plugins={[remarkGfm]}
+                    remarkPlugins={[remarkGfm]}
+                    rehypePlugins={[[rehypeMermaid, { mermaidConfig: { theme: 'default' } }]]}
+                >
+                    {markdown}
+                </ReactMarkdown> */}
+                {
+                    markdownComponentList
+                }
+            </Suspense>
+        </article>
+        {/* {mermaidChart}
+        <MermaidChart 
+            chartDefinition={mermaidFlowchartDefinition}
+            id='readme-mermaid-flowchart-id'
+        /> */}
+    </>
   );
 };
 

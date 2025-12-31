@@ -7,7 +7,7 @@ import Board from './Board.jsx';
 // import Piece, { keycodeToComponent } from './Piece.tsx';
 import { keycodeToComponent } from './Piece.tsx';
 import {
-    King, 
+    // King, 
     LightKing, 
     DarkKing
  } from './Piece.tsx';

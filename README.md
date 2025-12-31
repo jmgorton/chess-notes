@@ -5,7 +5,7 @@
 
 # ♟️ Chess Notes
 
-![build](https://img.shields.io/badge/build-passing-brightgreen) ![amplify](https://img.shields.io/badge/AWS-Amplify-FF9900)
+![build](https://img.shields.io/badge/build-passing-brightgreen) ![amplify](https://img.shields.io/badge/AWS-Amplify-FF9900) ![GitHub](https://img.shields.io/badge/GitHub-%23121011.svg?logo=github&logoColor=white) ![Git](https://img.shields.io/badge/Git-F05032?logo=git&logoColor=fff) ![React](https://img.shields.io/badge/React-%2320232a.svg?logo=react&logoColor=%2361DAFB) ![React Router](https://img.shields.io/badge/React_Router-CA4245?logo=react-router&logoColor=white) ![npm](https://img.shields.io/badge/npm-CB3837?logo=npm&logoColor=fff) ![CSS](https://img.shields.io/badge/CSS-639?logo=css&logoColor=fff) ![HTML](https://img.shields.io/badge/HTML-%23E34F26.svg?logo=html5&logoColor=white) ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?logo=javascript&logoColor=000) ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=fff) ![Markdown](https://img.shields.io/badge/Markdown-%23000000.svg?logo=markdown&logoColor=white)
 
 Welcome to **Chess Notes** — a small React single-page app (SPA) for taking, storing, and reviewing board-state notes while you study chess games. It's designed to be lightweight, serverless-friendly, and ready for future expansion to a backend API for persistent storage and sharing.
 
