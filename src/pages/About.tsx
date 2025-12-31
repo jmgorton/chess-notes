@@ -182,7 +182,10 @@ const About = () => {
 
             // if (text) setMarkdown(text);
 
-            const mermaidMatcherRegex: RegExp = /```mermaid[\s\S]*```/g;
+            const mermaidMatcherRegex: RegExp = /```mermaid[\s\S]*?```/g; 
+            // (?!```) negative lookahead for triple backtick 
+            // [\s\S] match any whitespace-character, including newlines (\s), or any non-whitespace character (\S)
+            // *? match 0 or more of the preceding character, but match as few characters as possible 
             const nonMermaidMarkdown: string[] = text.split(mermaidMatcherRegex);
             const mermaidMarkdown: string[] = Array.from(text.matchAll(mermaidMatcherRegex)).map(match => match[0]);
 

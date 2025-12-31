@@ -6,6 +6,13 @@ Welcome to **Chess Notes** — a small React single-page app (SPA) for taking, s
 
 ---
 
+## Testing a Very Simple Mermaid Chart
+
+```mermaid
+flowchart LR
+    A[Start] --> B(End)
+```
+
 ## ✨ Purpose
 
 - Capture quick annotations tied to a specific board state during game analysis.
