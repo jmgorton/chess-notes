@@ -1,3 +1,6 @@
+// general purpose helper functions
+// not specific to chess or react game state
+
 export function interleave<T, U>(arr1: T[], arr2: U[]): (T | U)[] {
     const interleavedArray: (T | U)[] = [];
     const minLength = Math.min(arr1.length, arr2.length);

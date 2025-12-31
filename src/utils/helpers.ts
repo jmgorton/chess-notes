@@ -6,6 +6,8 @@ import GameState from '../components/Game.tsx';
 
 import * as constants from './constants.ts';
 
+import { keycodeToComponent } from '../components/Piece.tsx';
+
 // // ********* GETTERS *********
 // // ***** and generators *****
 
@@ -126,6 +128,7 @@ export const isMoveCastling = (squareMovedFrom: number, squareMovedTo: number, c
     return false;
 }
 
+// export function getCastlingOptions(player: string, castlingRights: {}, boardState: string[]): number[] {
 export function getCastlingOptions(player: string, currentGame: Game): number[] {
     let castlingOptions: number[] = [];
 
@@ -176,7 +179,7 @@ export function getCastlingOptions(player: string, currentGame: Game): number[] 
             if (ourPiecesAreBlockingCastling) return;
 
             const theirPiecesAreBlockingCastling = castlingSafetySquares
-                .some(castlingSafetySquare => currentGame.getOccupiedSquaresThatCanAttackThisSquare(
+                .some(castlingSafetySquare => getOccupiedSquaresThatCanAttackThisSquare(
                     castlingSafetySquare,
                     constants.validPlayers.filter(validPlayer => validPlayer !== player),
                     currentGame.state.pieceKeys,
@@ -233,14 +236,19 @@ export function isKingInCheck(kingPositionArg?: number, boardStateArg?: string[]
 
     let attackingSquares = null;
     if (currentGame) {
-        attackingSquares = currentGame.getOccupiedSquaresThatCanAttackThisSquare(
+        attackingSquares = getOccupiedSquaresThatCanAttackThisSquare(
             kingPosition, 
             attackers,
-            boardState
+            boardState,
         );
     } else {
-        console.error("Not implemented. Must pass currentGame argument for now.");
-        throw Error("Not implemented yet.");
+        // console.error("Not implemented. Must pass currentGame argument for now.");
+        // throw Error("Not implemented yet.");
+        attackingSquares = getOccupiedSquaresThatCanAttackThisSquare(
+            kingPosition,
+            attackers,
+            boardState,
+        );
     }
 
     // console.log(`Squares attacking our ${defender}K on ${kingPosition}: ${attackingSquares}`);
@@ -348,8 +356,137 @@ export function getNewPieceKeysCopyWithMoveApplied(state: unknown, squareMovedFr
     return newPieceKeys; // , {squareIdOfPawnCapturedViaEnPassant, squareIdOfKingAfterCastling, squareIdOfRookAfterCastling};
 }
 
+// returns a list of *any* piece that can attack this square by default, not just the opponent's pieces 
+// any piece can block identically to any other piece
+// any capture is equivalently effective at removing a check 
+// evading a check must be performed by the king with respect to the other pieces that really exist on the board (no imagination) 
+// but these optional parameters would have to be passed down to the generate...LegalMoves methods as well 
+// which in turn would have to get passed all the way down to the generatePieceValidMoves method 
+export const getOccupiedSquaresThatCanAttackThisSquare = (
+    squareId: number,
+    includeAttacksFrom: string[] = ['L','D'],
+    boardState: string[],
+): number[] => {
+
+    let squaresTargetingThisOne: number[] = [];
+
+    // Object.keys(this.validMoveMap).forEach(pieceKey => {
+    //     // those nulls are now includeNonCaptures, and for pawns includeSelfCaptures is still there, removing now 
+    //     this.validMoveMap[pieceKey](squareId, boardState, false, includeAttacksFrom) 
+    //     // TODO remove squareToImagine{Empty,Friendly} vars ... DONE? 
+    //         .filter(square => boardState[square].charAt(1) === pieceKey)
+    //         .forEach(square => squaresTargetingThisOne.push(square));
+    // });
+
+    Object.keys(keycodeToComponent).forEach(keycode => {
+        const keycodeMapKey = keycode as keyof typeof keycodeToComponent;
+        keycodeToComponent[keycodeMapKey]
+            .generatePieceValidMoves(squareId, boardState, undefined, {
+                includeNonCaptures: false, 
+                includeCapturesOf: includeAttacksFrom,
+            })
+            .filter((square: number) => boardState[square] === keycode)
+            .forEach((square: number) => squaresTargetingThisOne.push(square));
+    });
+
+    return squaresTargetingThisOne;
+}
+
 // // ********* SETTERS *********
 
+export const initializeState = (component: React.Component<any, any>): void => {
+// export const initializeState = (component: React.Component<GameProps, GameState>): void => {
+    let startingConfig: string[] = Array(64).fill("");
+    startingConfig.fill("DP", 8, 16);
+    startingConfig.splice(0, 8, ...constants.defaultStartingBackRank.map((piece) => "D" + piece));
+
+    startingConfig.fill("LP", 48, 56);
+    startingConfig.splice(56, 8, ...constants.defaultStartingBackRank.map((piece) => "L" + piece));
+
+    const newState: { [key: string]: any } = {
+    // const newState: GameState = {
+        pieceKeys: startingConfig, // we could get rid of this state entirely as well, or use it internally for testing moves?? 
+        squareProps: startingConfig.map((pieceKey, squareId) => {
+            return {
+                keycode: pieceKey, // pieceId 
+                id: squareId, // squareId
+                // key: `${squareId}-${pieceKey}-0`, // element key, must be unique, and change to force re-render 
+                // TODO  don't use the reserved React keyword `key` as it gets stripped from component props. Use another name
+                isHighlighted: false,
+                isAltHighlighted: false,
+                isSelected: false,
+                isAltSelected: false,
+                isPromoting: false,
+            }
+        }),
+
+        // // TODO not yet maintained (except for light/dark king positions) 
+        // lightPawnPositions: [48, 49, 50, 51, 52, 53, 54, 55],
+        // darkPawnPositions: [8, 9, 10, 11, 12, 13, 14, 15],
+        // lightKnightPositions: [57, 62],
+        // darkKnightPositions: [1, 6],
+        // lightBishopPositions: [58, 61],
+        // darkBishopPositions: [2, 5],
+        // lightRooksPositions: [56, 63],
+        // darkRooksPositions: [0, 7],
+        // lightQueenPositions: [59],
+        // darkQueenPositions: [3],
+        
+        lightKingPosition: 60,
+        darkKingPosition: 4,
+        // kingPositions: {
+        //     L: 60,
+        //     D: 4,
+        // },
+
+        lightKingHasShortCastlingRights: true,
+        lightKingHasLongCastlingRights: true,
+        darkKingHasShortCastlingRights: true,
+        darkKingHasLongCastlingRights: true,
+        // castlingRights: {
+        //     LK: true,
+        //     LQ: true,
+        //     DK: true,
+        //     DQ: true,
+        // },
+
+        enPassantTargetSquare: null,
+
+        // // TODO not yet used or maintained 
+        // // warning: numeric literals with absolute values equal to 2^53 or greater are too large to be represented accurately as integers.
+        // // append an `n` to use the BigInt javascript type 
+        // bitmapLightPawns: 0x000000000000ff00n, // 6th (7th) rank full of 1s
+        // bitmapDarkPawns: 0x00ff000000000000n, // 1st (2nd) rank full of 1s
+        // bitmapLightKnights: 0x0000000000000042n,
+        // bitmapDarkKnights: 0x2400000000000000n,
+        // bitmapLightBishops: 0x0000000000000024n,
+        // bitmapDarkBishops: 0x4200000000000000n,
+        // bitmapLightRooks: 0x0000000000000081n,
+        // bitmapDarkRooks: 0x1800000000000000n,
+        // bitmapLightQueens: 0x0000000000000010n,
+        // bitmapDarkQueens: 0x1000000000000000n,
+        // bitmapLightKing: 0x0000000000000008n,
+        // bitmapDarkKing: 0x0800000000000000n,
+
+        // squaresAttackedByWhite: new Set(40, 41, 42, 43, 44, 45, 46, 47), 
+        // squaresAttackedByBlack: new Set(16, 17, 18, 19, 20, 21, 22, 23), 
+        // TODO also store squares that can be discover-attacked by a piece after moving another piece 
+
+        squareSelected: null,
+        squareAltSelected: null,
+        whiteToPlay: true,
+        FEN: constants.defaultStartingFEN,
+        history: [],
+        plyNumber: 0,
+    }
+
+    // wipe out existing state, if any 
+    component.setState({
+        ...newState,
+    });
+}
+
+// TODO (component: React.Component<P, S>, stateKey: string as keyof typeof P ??? , stateValue: any) 
 export const updateState = (component: React.Component<any, any>, stateKey: string, stateValue: any): Promise<void> => {
     return new Promise((resolve, reject) => {
         if (!component) {

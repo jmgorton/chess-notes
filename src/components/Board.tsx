@@ -1,10 +1,17 @@
-import React from 'react';
-import Square from './Square.jsx';
-import PawnPromotionPiecePicker from './PawnPromotionPiecePicker.tsx';
+import React, { MouseEventHandler } from 'react';
+import Square from './Square.tsx';
+// import PawnPromotionPiecePicker from './PawnPromotionPiecePicker.tsx';
 
-class Board extends React.Component {
+import {
+  BoardProps,
+  BoardState,
+} from '../utils/types.ts';
 
-  constructor(props) {
+import BoardControlPanel from './BoardControlPanel.tsx';
+
+class Board extends React.Component<BoardProps, BoardState> {
+
+  constructor(props: BoardProps) {
     super(props);
 
     // TODO explain this in more depth 
@@ -14,28 +21,31 @@ class Board extends React.Component {
     this.handleResetClick = this.handleResetClick.bind(this);
   }
 
-  handleUndoClick(event) {
+  handleUndoClick: MouseEventHandler<HTMLButtonElement> = (event) => { // (event: Event) {
     if (event && typeof event.preventDefault === 'function') {
       event.preventDefault();
       event.stopPropagation();
     }
-    if (this.props.handleUndoClick) this.props.handleUndoClick(event);
+    if (this.props.handleUndoClick) this.props.handleUndoClick(); // this.props.handleUndoClick(event);
   }
 
-  handleRedoClick(event) {
-
-  }
-
-  handleResetClick(event) {
+  // handleRedoClick(event: Event) {
+  handleRedoClick: MouseEventHandler<HTMLButtonElement> = (event) => {
 
   }
 
-  handleGetFENClick(event) {
+  handleResetClick: MouseEventHandler<HTMLButtonElement> = (event) => { // (event: Event) {
+    // console.log('Board#handleResetClick');
+
+    this.props.handleResetClick();
+  }
+
+  handleGetFENClick: MouseEventHandler<HTMLButtonElement> = (event) => { // (event: Event) {
     if (event && typeof event.preventDefault === 'function') {
       event.preventDefault();
       event.stopPropagation();
     }
-    if (this.props.handleGetFENClick) this.props.handleGetFENClick(event); // , this.props.id);
+    if (this.props.handleGetFENClick) this.props.handleGetFENClick(event); // , this.props.id); // add Event to type desc. 
   }
 
   render() {
@@ -59,14 +69,14 @@ class Board extends React.Component {
                                           onContextMenu={this.props.handleSquareRightClick}
                                           key={rankIndex * this.props.boardSize + fileIndex}
                                       >
-                                        {
+                                        {/* {
                                           squareProp.isPromoting && (
                                             <PawnPromotionPiecePicker
                                               onSelectPiece={() => console.log('Pawn promoted')}
                                               position={{top: 100, left: 100}}
                                             />
                                           )
-                                        }
+                                        } */}
                                       </Square>
                                     )
                                 })
@@ -83,19 +93,6 @@ class Board extends React.Component {
                 onGetFENClick={this.handleGetFENClick}
             />
         </div>
-    )
-  }
-}
-
-class BoardControlPanel extends React.Component {
-  render() {
-    return (
-      <div className="board-control-panel">
-        <button onClick={this.props.onUndoClick}>Undo</button>
-        <button onClick={this.props.onRedoClick}>Redo</button>
-        <button onClick={this.props.onResetClick}>Reset</button>
-        <button onClick={this.props.onGetFENClick}>Get FEN</button>
-      </div>
     )
   }
 }

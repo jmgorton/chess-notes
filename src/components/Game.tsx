@@ -2,7 +2,7 @@ import React from 'react';
 
 import GameStatus from './GameStatus.jsx';
 import { GameNotes } from './GameNotes';
-import Board from './Board.jsx';
+import Board from './Board.tsx';
 
 // import Piece, { keycodeToComponent } from './Piece.tsx';
 import { keycodeToComponent } from './Piece.tsx';
@@ -11,57 +11,24 @@ import {
     LightKing, 
     DarkKing
  } from './Piece.tsx';
-// import { multiUpdateState, updateState } from '../utils/helpers.ts';
+
 import * as helpers from '../utils/helpers.ts';
 import * as constants from '../utils/constants.ts';
 
-// Type definitions
-type GameProps = Record<string, unknown>;
-
-// TODO refactor this, keep e.g. highlightedSquares, etc. at the top-level Game state 
-// id not necessary (squareId)
-// keycode not necessary, use pieceKeys or similar 
-interface SquareProp {
-    keycode: string;
-    id: number;
-    isHighlighted: boolean;
-    isAltHighlighted: boolean;
-    isSelected: boolean;
-    isAltSelected: boolean;
-    isPromoting: boolean;
-}
-
-interface HistoryItem {
-    pieceKeys: string[];
-    AN: string | null;
-    JN: string | null;
-    INN: string | null;
-}
-
-interface GameState {
-    pieceKeys: string[];
-    squareProps: SquareProp[];
-    lightKingPosition: number;
-    darkKingPosition: number;
-    lightKingHasShortCastlingRights: boolean;
-    lightKingHasLongCastlingRights: boolean;
-    darkKingHasShortCastlingRights: boolean;
-    darkKingHasLongCastlingRights: boolean;
-    enPassantTargetSquare: number | null;
-    squareSelected: number | null;
-    squareAltSelected: number | null;
-    whiteToPlay: boolean;
-    FEN: string;
-    history: HistoryItem[];
-    plyNumber: number;
-    //   testState: number;
-}
+import {
+    // SquareProp,
+    GameProps,
+    GameState,
+    // HistoryItem,
+} from '../utils/types.ts';
 
 export default class Game extends React.Component<GameProps, GameState> {
-    backrankStartingPositions: string[] = ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']; // can make chess960 later 
+    // backrankStartingPositions: string[] = ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']; // can make chess960 later 
+    // startingFEN: string = 'r1b1kb1r/pp2pppp/2n2n2/1Bpq4/5P2/5N2/PPPP2PP/RNBQK2R w KQkq - 0 1'; // null 
+    backrankStartingPositions: string[] = constants.defaultStartingBackRank;
+    startingFEN: string = constants.defaultStartingFEN;
     boardSize: number = this.backrankStartingPositions.length;
-    numSquares: number = this.boardSize ** 2;
-    startingFEN: string = 'r1b1kb1r/pp2pppp/2n2n2/1Bpq4/5P2/5N2/PPPP2PP/RNBQK2R w KQkq - 0 1'; // null 
+    // numSquares: number = this.boardSize ** 2;
 
     // state = {
     //     pieceKeys = null,
@@ -118,13 +85,25 @@ export default class Game extends React.Component<GameProps, GameState> {
             // darkRooksPositions: [0, 7],
             // lightQueenPositions: [59],
             // darkQueenPositions: [3],
+
             lightKingPosition: 60,
             darkKingPosition: 4,
+            // kingPositions: {
+            //     L: 60,
+            //     D: 4,
+            // },
 
             lightKingHasShortCastlingRights: true,
             lightKingHasLongCastlingRights: true,
             darkKingHasShortCastlingRights: true,
             darkKingHasLongCastlingRights: true,
+
+            // castlingRights: {
+            //     LK: true,
+            //     LQ: true,
+            //     DK: true,
+            //     DQ: true,
+            // },
 
             enPassantTargetSquare: null,
 
@@ -159,7 +138,6 @@ export default class Game extends React.Component<GameProps, GameState> {
             //     changeKey is the number of times the square has been re-rendered, increments throughout the game 
             //       (each re-render also may or may not change the pieceKey)
             //   onSquareClick: the callback function for when the square is clicked
-            //   children: not necessary? we don't need to access the piece's props or inner state up here...? 
             //   isHighlighted: is the square highlighted (valid moves from squareSelected, if any) 
             //   isSelected: the square selected after the last click 
 
@@ -180,10 +158,13 @@ export default class Game extends React.Component<GameProps, GameState> {
             //   testState: 0,
         }
 
-        // not necessary? was working without this 
-        this.handleSquareClick = this.handleSquareClick.bind(this);
-        this.handleSquareRightClick = this.handleSquareRightClick.bind(this);
-        this.handleUndoClick = this.handleUndoClick.bind(this);
+        // not necessary? was working without this ... because they are arrow functions 
+        // more modern JS/TS method where `this` is lexically scoped to the class instance 
+        // and doesn't need to be bound explicitly
+
+        // this.handleSquareClick = this.handleSquareClick.bind(this);
+        // this.handleSquareRightClick = this.handleSquareRightClick.bind(this);
+        // this.handleUndoClick = this.handleUndoClick.bind(this);
 
         // if (this.startingFEN) {
         //     this.generateBoardStateFromFen(this.startingFEN); // const newStateKVPs = 
@@ -284,13 +265,6 @@ export default class Game extends React.Component<GameProps, GameState> {
             }
         }
 
-        // this.state.whiteToPlay = sideToMove === 'w'; // otherwise 'b' 
-        // this.state.darkKingHasLongCastlingRights = castlingAbility.includes('q');
-        // this.state.darkKingHasShortCastlingRights = castlingAbility.includes('k');
-        // this.state.lightKingHasLongCastlingRights = castlingAbility.includes('Q');
-        // this.state.lightKingHasShortCastlingRights = castlingAbility.includes('K');
-        // this.state.enPassantTargetSquare = enPassantTargetSquare;
-        // this.state.plyNumber = fullmoveCounter * 2 + halfmoveClock;
         const newStateKVPs = {
             pieceKeys: newPieceKeys,
             squareProps: newPieceKeys.map((pieceKey, squareId) => {
@@ -338,6 +312,11 @@ export default class Game extends React.Component<GameProps, GameState> {
         //     [playerCode, pieceCode] = futureBoardState[squareMovedTo].split('');
         // }
 
+        if (helpers.isMoveCastling(squareMovedFrom, squareMovedTo, currentBoardState)) { 
+            const isShortCastling: boolean = Math.abs(squareMovedFrom - squareMovedTo) === 3;
+            return isShortCastling ? 'O-O' : 'O-O-O'; 
+        }
+
         let pieceAN, clarifierAN, isCaptureAN, destFileAN, destRankAN, promotionAN, isCheckOrCheckmateAN = '';
 
         let kingPosition = this.state.whiteToPlay ? 
@@ -372,7 +351,7 @@ export default class Game extends React.Component<GameProps, GameState> {
             if (isCaptureAN === 'x') clarifierAN = 'abcdefgh'.charAt(squareMovedFrom % 8);
         } else {
             pieceAN = pieceCode;
-            const movesThatNecessitateFurtherClarification = this.getOccupiedSquaresThatCanAttackThisSquare(squareMovedTo, [playerCode], futureBoardState)
+            const movesThatNecessitateFurtherClarification = helpers.getOccupiedSquaresThatCanAttackThisSquare(squareMovedTo, [playerCode], futureBoardState)
                 .filter((squareId) => futureBoardState[squareId].charAt(1) === pieceCode) // get only self-attacks from the same type of piece 
                 // .filter((squareId) => squareId !== squareMovedFrom); // state issue TODO fix ... including this piece 
                 .filter(squareId => !this.wouldOwnKingBeInCheckAfterMove(squareId, squareMovedTo)) // don't allow illegal moves ... use current state, not future 
@@ -408,41 +387,41 @@ export default class Game extends React.Component<GameProps, GameState> {
         return [pieceAN, clarifierAN, isCaptureAN, destFileAN, destRankAN, promotionAN, isCheckOrCheckmateAN].join('');
     }
 
-    // returns a list of *any* piece that can attack this square by default, not just the opponent's pieces 
-    // any piece can block identically to any other piece
-    // any capture is equivalently effective at removing a check 
-    // evading a check must be performed by the king with respect to the other pieces that really exist on the board (no imagination) 
-    // but these optional parameters would have to be passed down to the generate...LegalMoves methods as well 
-    // which in turn would have to get passed all the way down to the generatePieceValidMoves method 
-    getOccupiedSquaresThatCanAttackThisSquare = (
-        squareId: number,
-        includeAttacksFrom: string[] = ['L','D'],
-        boardState: string[] = this.state.pieceKeys,
-    ): number[] => {
+    // // returns a list of *any* piece that can attack this square by default, not just the opponent's pieces 
+    // // any piece can block identically to any other piece
+    // // any capture is equivalently effective at removing a check 
+    // // evading a check must be performed by the king with respect to the other pieces that really exist on the board (no imagination) 
+    // // but these optional parameters would have to be passed down to the generate...LegalMoves methods as well 
+    // // which in turn would have to get passed all the way down to the generatePieceValidMoves method 
+    // getOccupiedSquaresThatCanAttackThisSquare = (
+    //     squareId: number,
+    //     includeAttacksFrom: string[] = ['L','D'],
+    //     boardState: string[] = this.state.pieceKeys,
+    // ): number[] => {
 
-        let squaresTargetingThisOne: number[] = [];
+    //     let squaresTargetingThisOne: number[] = [];
 
-        // Object.keys(this.validMoveMap).forEach(pieceKey => {
-        //     // those nulls are now includeNonCaptures, and for pawns includeSelfCaptures is still there, removing now 
-        //     this.validMoveMap[pieceKey](squareId, boardState, false, includeAttacksFrom) 
-        //     // TODO remove squareToImagine{Empty,Friendly} vars ... DONE? 
-        //         .filter(square => boardState[square].charAt(1) === pieceKey)
-        //         .forEach(square => squaresTargetingThisOne.push(square));
-        // });
+    //     // Object.keys(this.validMoveMap).forEach(pieceKey => {
+    //     //     // those nulls are now includeNonCaptures, and for pawns includeSelfCaptures is still there, removing now 
+    //     //     this.validMoveMap[pieceKey](squareId, boardState, false, includeAttacksFrom) 
+    //     //     // TODO remove squareToImagine{Empty,Friendly} vars ... DONE? 
+    //     //         .filter(square => boardState[square].charAt(1) === pieceKey)
+    //     //         .forEach(square => squaresTargetingThisOne.push(square));
+    //     // });
 
-        Object.keys(keycodeToComponent).forEach(keycode => {
-            const keycodeMapKey = keycode as keyof typeof keycodeToComponent;
-            keycodeToComponent[keycodeMapKey]
-                .generatePieceValidMoves(squareId, boardState, undefined, {
-                    includeNonCaptures: false, 
-                    includeCapturesOf: includeAttacksFrom,
-                })
-                .filter((square: number) => boardState[square] === keycode)
-                .forEach((square: number) => squaresTargetingThisOne.push(square));
-        });
+    //     Object.keys(keycodeToComponent).forEach(keycode => {
+    //         const keycodeMapKey = keycode as keyof typeof keycodeToComponent;
+    //         keycodeToComponent[keycodeMapKey]
+    //             .generatePieceValidMoves(squareId, boardState, undefined, {
+    //                 includeNonCaptures: false, 
+    //                 includeCapturesOf: includeAttacksFrom,
+    //             })
+    //             .filter((square: number) => boardState[square] === keycode)
+    //             .forEach((square: number) => squaresTargetingThisOne.push(square));
+    //     });
 
-        return squaresTargetingThisOne;
-    }
+    //     return squaresTargetingThisOne;
+    // }
 
     // generatePieceValidMoves = (
     //     squareId: number,
@@ -725,7 +704,6 @@ export default class Game extends React.Component<GameProps, GameState> {
             // let functionArgs: any[] = [squareId, this.state.pieceKeys.slice()];
             const baseFunctionArgs: [number, string[]] = [squareId, this.state.pieceKeys.slice()];
             // let additionalFunctionArgs: [boolean?, string[]?, boolean?, Game?] = [undefined, undefined, undefined, undefined];
-            let additionalFunctionArgs: [number[]?, {}?, boolean?, Game?] = [undefined, undefined, undefined, undefined];
             if (pieceCode === 'K') {
                 // additionalFunctionArgs = [
                 //     true, // includeNonCaptures 
@@ -733,6 +711,7 @@ export default class Game extends React.Component<GameProps, GameState> {
                 //     true, // includeCastling
                 //     this, // currentGameState ... this one is necessary 
                 // ];
+                let additionalFunctionArgs: [number[]?, {}?, boolean?, Game?] = [undefined, undefined, undefined, undefined];
                 additionalFunctionArgs = [
                     undefined, // directions
                     {}, // object
@@ -745,6 +724,8 @@ export default class Game extends React.Component<GameProps, GameState> {
                 // validMoves = kingPiece.generatePieceValidMoves(...baseFunctionArgs, ...additionalFunctionArgs)
                 const kingPiece = keycode.charAt(0) === 'L' ? LightKing : DarkKing;
                 validMoves = kingPiece.generatePieceValidMoves(...baseFunctionArgs, ...additionalFunctionArgs);
+            // } else if (pieceCode === 'P') {
+            //     let additionalFunctionArgs = // not necessary, LP/DP don't take additional args 
             } else {
                 validMoves = piece.generatePieceValidMoves(...baseFunctionArgs);
             }
@@ -953,11 +934,14 @@ export default class Game extends React.Component<GameProps, GameState> {
 
     undoLastMove = (): void => {
         console.log(`undoLastMove`);
-        // TODO undo castling and rights, pawn promotions, king locations, etc. 
+        // TODO undo castling and rights, pawn promotions, king locations, etc. ...
+        // are we gonna have to store the *whole state* (except history) for every position in history? might be wise 
+        // let's just do that now to avoid a headache later 
         const newPieceKeys = this.state.history[this.state.history.length - 1].pieceKeys;
         this.setState({
             ...this.state,
-            history: this.state.history.slice(0, -1),
+            history: this.state.history.slice(0, -1), // TODO don't get rid of it,
+            // maybe make side-lines or store analysis positions ... highlight current move in list 
             whiteToPlay: !this.state.whiteToPlay, // this.state.history.length % 2 === 0,
             pieceKeys: newPieceKeys,
             // squareProps: this.state.history[this.state.history.length - 1].pieceKeys.map((pk, sqId) => {
@@ -970,17 +954,33 @@ export default class Game extends React.Component<GameProps, GameState> {
             //     isAltSelected: false,
             //   }
             // }),
-            squareProps: this.state.squareProps.map((oldSquareProp, squareId) => {
+
+            // state is updating but board isn't re-rendering ... why??? 
+            // squareProps: this.state.squareProps.map((oldSquareProp, squareId) => {
+            //     return {
+            //         ...oldSquareProp,
+            //         keycode: newPieceKeys[squareId],
+            //         id: squareId,
+            //         isHighlighted: false,
+            //         isAltHighlighted: false,
+            //         isSelected: false,
+            //         isAltSelected: false,
+            //     }
+            // }),
+            squareProps: newPieceKeys.map((pieceKey, squareId) => {
                 return {
-                    ...oldSquareProp,
-                    keycode: newPieceKeys[squareId],
+                    // ...oldSquareProp,
+                    keycode: pieceKey,
                     id: squareId,
+                    // key: `brand-new-key-yuck-TODO-change-this-${squareId}`, // tried to force re-render ... didn't work 
                     isHighlighted: false,
                     isAltHighlighted: false,
                     isSelected: false,
                     isAltSelected: false,
+                    isPromoting: false,
                 }
             }),
+
             plyNumber: this.state.plyNumber - 1,
         });
 
@@ -1144,6 +1144,8 @@ export default class Game extends React.Component<GameProps, GameState> {
                 // this.state.squareProps[squareMovedTo] = this.setState({...this.state.squareProps[squareMovedTo], isPromoting: true});
                 // newPieceKeys[squareMovedTo] = this.state.pieceKeys[squareMovedFrom].charAt(0) + 'Q';
 
+                console.log('Trying to promote on ' + squareMovedTo);
+
                 squareOfPawnPromotion = squareMovedTo;
             }
         }
@@ -1215,13 +1217,11 @@ export default class Game extends React.Component<GameProps, GameState> {
 
         // select an unselected square and highlight the legal moves for that piece on this turn 
         if (squareId !== this.state.squareAltSelected) {
-            // default args for getOccupiedSquaresThatCanAttackThisSquare:
-            //   includeSelfAttacks: true
-            //   includeAttacksFrom: ['L','D']
-            //   squareToImagineEmpty: null
-            //   squareToImagineFriendly: null
-            //   boardState: this.state.pieceKeys
-            const squaresToAltHighlight = this.getOccupiedSquaresThatCanAttackThisSquare(squareId);
+            const squaresToAltHighlight = helpers.getOccupiedSquaresThatCanAttackThisSquare(
+                squareId,
+                ['L','D'],
+                this.state.pieceKeys.slice(),
+            );
             this.setState({
                 ...this.state,
                 squareSelected: null,
@@ -1255,7 +1255,43 @@ export default class Game extends React.Component<GameProps, GameState> {
     handleUndoClick = (event?: React.SyntheticEvent | null): void => {
         if (event && typeof event.preventDefault === 'function') event.preventDefault();
         console.log(`handleUndoClick`);
-        this.undoLastMove();
+        // this.undoLastMove();
+
+        const newPieceKeys = this.state.history[this.state.history.length - 1].pieceKeys;
+        this.setState({
+            ...this.state,
+            history: this.state.history.slice(0, -1), // TODO don't get rid of it,
+            // maybe make side-lines or store analysis positions ... highlight current move in list 
+            whiteToPlay: !this.state.whiteToPlay, // this.state.history.length % 2 === 0,
+            pieceKeys: newPieceKeys,
+            squareProps: newPieceKeys.map((pieceKey, squareId) => {
+                return {
+                    // ...oldSquareProp,
+                    keycode: pieceKey,
+                    id: squareId,
+                    // key: `brand-new-key-yuck-TODO-change-this-${squareId}`, // tried to force re-render ... didn't work 
+                    isHighlighted: false,
+                    isAltHighlighted: false,
+                    isSelected: false,
+                    isAltSelected: false,
+                    isPromoting: false,
+                }
+            }),
+            plyNumber: this.state.plyNumber - 1,
+        });
+    }
+
+    handleRedoClick = (event?: React.SyntheticEvent | null): void => {
+        console.error("Not implemented");
+        throw Error("Not implemented");
+    }
+
+    handleResetClick = (event?: React.MouseEvent | React.SyntheticEvent | undefined): void => {
+        console.log('Resetting...');
+        // un-parameterized the component input argument here ... TODO get this working later 
+        helpers.initializeState(this);
+
+        console.log(this.state);
     }
 
     render() {
@@ -1270,13 +1306,16 @@ export default class Game extends React.Component<GameProps, GameState> {
                     boardSize={this.boardSize}
                     // promotionSquare={this.state.promotionSquare}
                     handleUndoClick={this.handleUndoClick}
-                    handleRedoClick={() => { }}
-                    handleResetClick={() => { }}
+                    handleRedoClick={this.handleRedoClick}
+                    handleResetClick={this.handleResetClick}
                     handleGetFENClick={this.generateBoardFEN}
                 />
                 <GameStatus
                     whiteToPlay={this.state.whiteToPlay}
                     history={this.state.history}
+                    handleUndoClick={this.handleUndoClick}
+                    handleRedoClick={this.handleRedoClick}
+                    handleResetClick={this.handleResetClick}
                 />
                 <GameNotes
                     zobristHash=''

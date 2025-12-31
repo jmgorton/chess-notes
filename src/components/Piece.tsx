@@ -3,6 +3,8 @@ import React from 'react';
 import * as helpers from '../utils/helpers.ts';
 import Game from './Game.tsx';
 
+import { PieceProps } from '../utils/types.ts'
+
 // Use public resources so filenames remain predictable in production.
 // Put the PNGs in `public/resources` and reference them via PUBLIC_URL.
 const PUBLIC = process.env.PUBLIC_URL || '';
@@ -21,9 +23,6 @@ const keycodeToIcon = {
   'DQ': PUBLIC + '/resources/qdt60.png',
   'DK': PUBLIC + '/resources/kdt60.png',
 }
-
-// Type definitions TODO specify with detail 
-type PieceProps = Record<string, unknown>;
 
 class Piece extends React.Component {
   icon: string = '';
@@ -205,7 +204,12 @@ class Pawn extends Piece {
     //   ((squareFrom: number, squareTo: number) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState)),
     //   // TODO we need to pass in the enPassantTargetSquare or something 
     // ];
+    // helpers.isMoveEnPassant only works *after* the move's been played
     captureValidators.push(((squareFrom: number, squareTo: number) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState)));
+    // // We need to generate the option to play it. That means we need access to history or enPassantTargetSquare Game state
+    // captureValidators.push((squareFrom: number, squareTo: number) => {
+
+    // });
     let nextSquareValidators = [((squareFrom: number, squareTo: number) => Math.abs(squareFrom % 8 - squareTo % 8) === 1)];
 
     // adding more pawn moves (captures)
@@ -439,7 +443,7 @@ class Knight extends Piece {
     return Piece.generatePieceValidMoves(
       squareId,
       boardState,
-      directions || this.directions,
+      this.directions, // directions || this.directions,
       {
           distance: this.distance,
           nextSquareValidators: this.nextSquareValidators,
@@ -594,7 +598,7 @@ class Bishop extends Piece {
       directions || this.directions,
       {
           // distance: this.distance,
-          nextSquareValidators: nextMoveValidators || this.nextSquareValidators,
+          nextSquareValidators: this.nextSquareValidators, // nextMoveValidators || this.nextSquareValidators,
           // captureValidators: [],
           includeNonCaptures: includeNonCaptures,
           includeAttacksFrom: includeCapturesOf,
@@ -748,7 +752,7 @@ class Rook extends Piece {
       directions || this.directions,
       {
           // distance: this.distance,
-          nextSquareValidators: nextMoveValidators || this.nextSquareValidators,
+          nextSquareValidators: this.nextSquareValidators, // nextMoveValidators || this.nextSquareValidators,
           // captureValidators: [],
           includeNonCaptures: includeNonCaptures,
           includeAttacksFrom: includeCapturesOf,
@@ -953,7 +957,7 @@ class LightQueen extends Queen {
       LightBishop.directions,
       {
         includeNonCaptures, 
-        includeCapturesOf
+        includeCapturesOf,
       }
     ).concat(LightRook.generatePieceValidMoves(
       squareId, 
@@ -1007,8 +1011,9 @@ class DarkQueen extends Queen {
       DarkBishop.directions, 
       {
         includeNonCaptures, 
-        includeCapturesOf
-      }).concat(DarkRook.generatePieceValidMoves(
+        includeCapturesOf,
+      }
+    ).concat(DarkRook.generatePieceValidMoves(
         squareId, 
         boardState, 
         DarkRook.directions, 
@@ -1133,7 +1138,7 @@ export class LightKing extends King {
     let kingMoves = King.generatePieceValidMoves(
       squareId,
       boardState,
-      directions || this.directions,
+      this.directions, // directions || this.directions,
       {
         includeNonCaptures,
         includeCapturesOf,
@@ -1200,7 +1205,7 @@ export class DarkKing extends King {
     let kingMoves = King.generatePieceValidMoves(
       squareId,
       boardState,
-      directions || this.directions,
+      this.directions, // directions || this.directions,
       {
         includeNonCaptures,
         includeCapturesOf,

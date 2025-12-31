@@ -1,5 +1,10 @@
 import React from 'react';
 
+import IconButton from '@mui/material/IconButton';
+import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
+import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
+
 class GameStatus extends React.Component {
 //   constructor(props) {
 //     super(props);
@@ -19,18 +24,18 @@ class GameStatus extends React.Component {
   // });
 
   render() {
-    const winner = null; //calculateWinner(current.squares);
+    // const winner = null; //calculateWinner(current.squares);
 
-    let status;
-    if (winner) {
-      status = 'Winner: ' + winner;
-    } else {
-      status = 'Next player: ' + (this.props.whiteToPlay ? 'White' : 'Black');
-    }
+    // let status;
+    // if (winner) {
+    //   status = 'Winner: ' + winner;
+    // } else {
+    //   status = 'Next player: ' + (this.props.whiteToPlay ? 'White' : 'Black');
+    // }
 
     return (
       <div className="game-info">
-        <div>{status}</div>
+        {/* <div>{status}</div> */}
         {/* <ol>{this.moves}</ol> */}
         <ol>
           {
@@ -45,12 +50,54 @@ class GameStatus extends React.Component {
                 }
                 return (
                   <li key={plyNumber}>
-                    {whiteMoveHistoryPly.AN} {correspondingBlackMoveHistoryPlyAN}
+                    <div className="move-row">
+                      <span className="white-move">{whiteMoveHistoryPly.AN}</span><span className="black-move">{correspondingBlackMoveHistoryPlyAN}</span>
+                    </div>
                   </li> 
                 )
               })
           }
         </ol>
+        <div className="game-controls">
+          <IconButton
+            color="inherit"
+            aria-label="undo move"
+            onClick={this.props.handleUndoMove}
+            // edge="start"
+            // sx={[
+            //   {
+            //     marginRight: 5,
+            //   },
+            // ]}
+          >
+            <NavigateBeforeIcon fontSize='small'/>
+          </IconButton>
+          <IconButton
+            color="inherit"
+            aria-label="reset board"
+            onClick={this.props.handleResetMove}
+            // sx={[
+            //   {
+            //     marginRight: 5,
+            //   },
+            // ]}
+          >
+            <RestartAltIcon fontSize='small'/>
+          </IconButton>
+          <IconButton
+            color="inherit"
+            aria-label="redo move"
+            onClick={this.props.handleRedoMove}
+            // edge="end"
+            // sx={[
+            //   {
+            //     marginRight: 5,
+            //   },
+            // ]}
+          >
+            <NavigateNextIcon fontSize='small'/>
+          </IconButton>
+        </div>
       </div>
     )
   }

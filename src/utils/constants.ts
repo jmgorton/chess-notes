@@ -17,5 +17,10 @@ export enum PLAYER {
     BLACK = 'D',
 };
 
+export const defaultBoardSize: number = 8;
+
 // starting position in Forsyth-Edwards Notation 
-export const defaultStartingFEN = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"; 
+export const defaultStartingFEN: string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"; 
+
+// default starting back rank order
+export const defaultStartingBackRank: string[] = ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'];
