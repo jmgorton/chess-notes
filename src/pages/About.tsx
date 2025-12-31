@@ -8,7 +8,7 @@ import ReactMarkdown from 'react-markdown';
 
 // Import the markdown file (bundler handles the path)
 import markdownFilePath from '../README.md';
-// WHY ISN'T THIS WORKING??? 
+// WHY ISN'T THIS WORKING??? It was the AWS Amplify Redirect/Rewrite smh 
 
 // export default function About() {
 //     return <h2 style={{ color: 'white' }}>About</h2>;
@@ -106,22 +106,22 @@ const About = () => {
 //   const mermaidMarkdownOutput = convertHtmlToMarkdown(mermaidChart.toString());
 
   useEffect(() => {
-    // Fetch the content of the imported file path
-    let filePathToFetch = process.env.PUBLIC_URL + '/resources/README.md'; // markdownFilePath;
-    console.log("PUBLIC_URL: " + process.env.PUBLIC_URL);
-    console.log("PWD: " + process.env.PWD);
-    const matcher: RegExp = /\/static\/media\/README/;
-    console.log(markdownFilePath);
-    if (markdownFilePath.match(matcher)) {
-        console.log(`${markdownFilePath} matches ${matcher}`);
-        // filePathToFetch = process.env.PUBLIC_URL + '/README.md';
-        filePathToFetch = markdownFilePath;
-    } else {
-        console.log(`No match between ${matcher} and ${markdownFilePath}`);
-    }
-    fetch(filePathToFetch)
+    // // Fetch the content of the imported file path
+    // let filePathToFetch = process.env.PUBLIC_URL + '/resources/README.md'; // markdownFilePath;
+    // // console.log("PUBLIC_URL: " + process.env.PUBLIC_URL);
+    // // console.log("PWD: " + process.env.PWD);
+    // const matcher: RegExp = /\/static\/media\/README/;
+    // console.log(markdownFilePath);
+    // if (markdownFilePath.match(matcher)) {
+    //     console.log(`${markdownFilePath} matches ${matcher}`);
+    //     // filePathToFetch = process.env.PUBLIC_URL + '/README.md';
+    //     filePathToFetch = markdownFilePath;
+    // } else {
+    //     console.log(`No match between ${matcher} and ${markdownFilePath}`);
+    // }
+    fetch(markdownFilePath)
         .then((response) => {
-            console.log(response);
+            // console.log(response);
             return response.text()
         }, (error) => {
             console.error(error)
@@ -129,7 +129,7 @@ const About = () => {
         }).then((text) => {
             // text = text.replace(/```mermaid[\s\S]*```/g, `${mermaidMarkdownOutput}`);
             // console.log(mermaidMarkdownOutput);
-            console.log(text);
+            // console.log(text);
             // if (text) setMarkdown(text);
             if (text) setMarkdown(text);
         }, (error) => {

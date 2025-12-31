@@ -4,6 +4,7 @@ import * as React from 'react';
 import {
     // BrowserRouter, Routes, Route,
     RouterProvider,
+    Outlet,
     createBrowserRouter,
     useNavigate,
 } from 'react-router-dom';
@@ -13,6 +14,7 @@ import Game from './Game.tsx';
 import About from '../pages/About.tsx';
 import Error from '../pages/Error.tsx';
 import Home from '../pages/Home.tsx';
+import Play from '../pages/Play.tsx';
 
 // this file taken and adapted from https://mui.com/material-ui/react-drawer/
 import { styled, useTheme, Theme, CSSObject } from '@mui/material/styles';
@@ -202,6 +204,10 @@ export default function MiniDrawer(props: any) {
             <DrawerHeader />
             {
                 props.children || 
+                <Outlet /> // || 
+                
+                // <AnimatedLogo size={480} />
+
                 // <>
                 //     <Typography sx={{ marginBottom: 2 }}>
                 //         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
@@ -231,7 +237,6 @@ export default function MiniDrawer(props: any) {
                 //         posuere sollicitudin aliquam ultrices sagittis orci a.
                 //     </Typography>
                 // </>
-                <AnimatedLogo size={480} />
             }
         </Box>
     );
@@ -359,27 +364,51 @@ export function Nav() {
     const router = createBrowserRouter([
         {
             path: "/",
-            element: <MiniDrawer />, // <Root />, 
+            element: <MiniDrawer children={<AnimatedLogo size={600}/>} />, // <Root />, 
+            errorElement: <MiniDrawer children={<Error />} />,
+            // children: [
+            //     {
+            //         path: "play",
+            //         element: <><div style={{color: 'white'}}><h1>Play</h1></div><ul><li><a>Solo</a></li><li><a>Computer</a></li><li><a>Online</a></li></ul></>,
+            //         children: [
+            //             {
+            //                 path: "play/solo",
+            //                 element: <Game />,
+            //             }
+            //         ]
+            //     }
+            // ],
         },
         {
             path: "/home",
             element: <MiniDrawer children={<Home />} />, // <Home />,
+            errorElement: <MiniDrawer children={<Error />} />,
         },
         {
             path: "/about",
             element: <MiniDrawer children={<About />} />, // <About />,
+            errorElement: <MiniDrawer children={<Error />} />,
         },
         {
             path: "/users",
             element: <MiniDrawer children={<Users />} />, // <Users />,
+            errorElement: <MiniDrawer children={<Error />} />,
         },
         {
             path: "/play", // /[variants/{variantType}]/{bot/,user/}
-            element: <MiniDrawer children={null} />,
+            element: <MiniDrawer children={<Play />} />,
+            errorElement: <MiniDrawer children={<Error />} />,
+            children: [
+                {
+                    path: "/play/:game",
+                    element: <><h2 style={{color: 'white'}}>Playing Game</h2></>
+                }
+            ]
         },
         {
             path: "/study",
             element: <MiniDrawer children={<Game />} />, // <Game />, // notes/ 
+            errorElement: <MiniDrawer children={<Error />} />,
         },
         {
             path: "/error",
