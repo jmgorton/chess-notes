@@ -144,62 +144,84 @@ export const isMoveCastling = (squareMovedFrom: number, squareMovedTo: number, c
 export function getCastlingOptions(player: string, currentGame: Game): number[] {
     let castlingOptions: number[] = [];
 
+    // console.log(`Checking castling options for player:${player} in game:${currentGame}`);
+
     // if (!['L','D'].includes(player)) return [];
     if (!constants.validPlayers.includes(player)) return [];
 
     const kingStartingSquare: number = player === 'L' ? 60 : 4;
     const rookStartingSquares: number[] = player === 'L' ? [56, 63] : [0, 7];
 
-    rookStartingSquares
-        .forEach((rookStartingSquare: number) => {
-            const squaresBetween: number = Math.abs(rookStartingSquare - kingStartingSquare);
-            // var dir: number; // = constants.DIR.E;
-            let castlingSliceStart: number, castlingSliceEnd: number; 
-            let castlingSafetySquares: number[]; 
-            if (squaresBetween === 4) {
-                // long castling (qs)
-                const qsCastlingRights: boolean = 
-                    player === constants.PLAYER.WHITE ? 
-                        currentGame.state.lightKingHasLongCastlingRights :
-                        currentGame.state.darkKingHasLongCastlingRights;
-                if (!qsCastlingRights) return;
-
-                castlingSliceStart = rookStartingSquare + 1;
-                castlingSliceEnd = kingStartingSquare;
-
-                castlingSafetySquares = player === 'L' ? [60, 59, 58] : [4, 3, 2];
-            } else if (squaresBetween === 3) {
-                // short castling (ks) 
-                const ksCastlingRights: boolean = 
-                    player === constants.PLAYER.WHITE ? 
-                        currentGame.state.lightKingHasShortCastlingRights :
-                        currentGame.state.darkKingHasShortCastlingRights;
-                if (!ksCastlingRights) return;
-
-                castlingSliceStart = kingStartingSquare + 1;
-                castlingSliceEnd = rookStartingSquare;
-                
-                castlingSafetySquares = player === 'L' ? [60, 61, 62] : [4, 5, 6];
-            } else {
-                // should never happen, but just to make sure and avoid compiler errors 
+    rookStartingSquares.forEach((rookStartingSquare: number) => {
+        const squaresBetween: number = Math.abs(rookStartingSquare - kingStartingSquare);
+        // var dir: number; // = constants.DIR.E;
+        let castlingSliceStart: number, castlingSliceEnd: number; 
+        let castlingSafetySquares: number[]; 
+        if (squaresBetween === 4) {
+            // long castling (qs)
+            const qsCastlingRights: boolean = 
+                player === constants.PLAYER.WHITE ? 
+                    currentGame.state.lightKingHasLongCastlingRights :
+                    currentGame.state.darkKingHasLongCastlingRights;
+            if (!qsCastlingRights) {
+                // console.log(`Player ${player} does not have long castling rights.`);
                 return;
             }
 
-            const ourPiecesAreBlockingCastling = currentGame.state.pieceKeys
-                .slice(castlingSliceStart, castlingSliceEnd)
-                .some(pieceKey => pieceKey !== '') || true;
-            if (ourPiecesAreBlockingCastling) return;
+            castlingSliceStart = rookStartingSquare + 1;
+            castlingSliceEnd = kingStartingSquare;
 
-            const theirPiecesAreBlockingCastling = castlingSafetySquares
-                .some(castlingSafetySquare => getOccupiedSquaresThatCanAttackThisSquare(
-                    castlingSafetySquare,
-                    constants.validPlayers.filter(validPlayer => validPlayer !== player),
-                    currentGame.state.pieceKeys,
-                ).length > 0);
-            if (theirPiecesAreBlockingCastling) return;
+            castlingSafetySquares = player === 'L' ? [60, 59, 58] : [4, 3, 2];
+        } else if (squaresBetween === 3) {
+            // short castling (ks) 
+            const ksCastlingRights: boolean = 
+                player === constants.PLAYER.WHITE ? 
+                    currentGame.state.lightKingHasShortCastlingRights :
+                    currentGame.state.darkKingHasShortCastlingRights;
+            if (!ksCastlingRights) {
+                // console.log(`Player ${player} does not have short castling rights.`);
+                return;
+            }
 
-            castlingOptions.push(rookStartingSquare);
-        })
+            castlingSliceStart = kingStartingSquare + 1;
+            castlingSliceEnd = rookStartingSquare;
+            
+            castlingSafetySquares = player === 'L' ? [60, 61, 62] : [4, 5, 6];
+        } else {
+            // should never happen, but just to make sure and avoid compiler errors 
+            console.warn("What the hell type of castling is this??");
+            return;
+        }
+
+        const ourPiecesAreBlockingCastling = currentGame.state.pieceKeys
+            .slice(castlingSliceStart, castlingSliceEnd)
+            .some(pieceKey => pieceKey !== '');
+        if (ourPiecesAreBlockingCastling) {
+            // console.log(`Our pieces are blocking castling: ${currentGame.state.pieceKeys.slice(castlingSliceStart, castlingSliceEnd)}`);
+            return;
+        }
+
+        const theirPiecesAreBlockingCastling = castlingSafetySquares
+            .some(castlingSafetySquare => getOccupiedSquaresThatCanAttackThisSquare(
+                castlingSafetySquare,
+                constants.validPlayers.filter(validPlayer => validPlayer !== player),
+                currentGame.state.pieceKeys,
+            ).length > 0);
+        if (theirPiecesAreBlockingCastling) {
+            // console.log(`Their pieces are blocking castling.`);
+            // castlingSafetySquares
+            //     .forEach(castlingSafetySquare => console.log(`At square ${castlingSafetySquare}: ${getOccupiedSquaresThatCanAttackThisSquare(
+            //         castlingSafetySquare,
+            //         constants.validPlayers.filter(validPlayer => validPlayer !== player),
+            //         currentGame.state.pieceKeys,
+            //     )}`))
+            return;
+        }
+
+        castlingOptions.push(rookStartingSquare);
+    })
+    
+    console.log(`Castling options: ${castlingOptions}`);
 
     return castlingOptions;
 }
@@ -238,8 +260,9 @@ export function isKingInCheck(kingPositionArg?: number, boardStateArg?: string[]
         boardState[kingPosition] === '' ||
         boardState[kingPosition].charAt(1) !== 'K'
     ) {
+        // TODO what about when we're checking a future position?? 
         console.error(`No king found at ${kingPosition}; found ${boardState[kingPosition]}`);
-        throw Error(`No king found at ${kingPosition}; found ${boardState[kingPosition]}`);
+        // throw Error(`No king found at ${kingPosition}; found ${boardState[kingPosition]}`);
     }
 
     const defender: string = boardState[kingPosition].charAt(0);
@@ -284,16 +307,49 @@ export function wouldOwnKingBeInCheckAfterMove(squareMovedFrom: number, squareMo
         // TODO handle kingPosition and boardState if currentGame is undefined 
         throw Error("Must supply currentGame arg (for now)...");
     }
-    let ownKingPosition = currentGame.state.whiteToPlay ? currentGame.state.lightKingPosition : currentGame.state.darkKingPosition;
-    if (ownKingPosition === squareMovedFrom) ownKingPosition = squareMovedTo;
 
     const futureState = getNewPieceKeysCopyWithMoveApplied(currentGame.state.pieceKeys, squareMovedFrom, squareMovedTo);
-    return isKingInCheck(ownKingPosition, futureState); // , this);
+    
+    let ownKingPosition = currentGame.state.whiteToPlay ? currentGame.state.lightKingPosition : currentGame.state.darkKingPosition;
+    if (ownKingPosition === squareMovedFrom) {
+        if (isMoveCastling(squareMovedFrom, squareMovedTo, currentGame.state.pieceKeys)) {
+            if (squareMovedFrom === 4) {
+                if (squareMovedTo === 7) ownKingPosition = 6;
+                else if (squareMovedTo === 0) ownKingPosition = 2;
+                else ownKingPosition = -1;
+            } else if (squareMovedFrom === 60) {
+                if (squareMovedTo === 63) ownKingPosition = 62;
+                else if (squareMovedTo === 56) ownKingPosition = 58;
+                else ownKingPosition = -1;
+            } else {
+                ownKingPosition = -1;
+            }
+        } else {
+            ownKingPosition = squareMovedTo;
+        }
+    }
+
+    return isKingInCheck(ownKingPosition, futureState); // , currentGame);
 }
 
 const isArgumentStringArray = (arg: any): boolean => {
     if (!Array.isArray(arg)) return false;
     return arg.every(element => typeof element === 'string');
+}
+
+function isArgumentArrayOfType<T>(arg: any, type: T): boolean {
+    if (!Array.isArray(arg)) return false;
+    // return arg.every(element => element instanceof type);
+    return arg.every(element => typeof element === type);
+}
+
+// function isArgumentDictionary(arg: any): boolean {
+function isArgumentDictionary(arg: any): arg is Record<string, unknown> {
+    if (arg === null) return false;
+    if (typeof arg !== 'object') return false;
+    // functions and arrays are also object types in TS bc they have properties and methods 
+    if (Array.isArray(arg)) return false; 
+    return true;
 }
 
 const isArgumentReactComponent = (arg: any): boolean => {
@@ -463,6 +519,118 @@ export function getNewBoardStateKVPsFromFen(inputFEN: string): { [key: string]: 
     return newStateKVPs;
 }
 
+// export function generateFENFromGameState(event?: React.SyntheticEvent | null, boardState?: string[]): string {
+export function generateFENFromGameState(gameState: GameState): string;
+export function generateFENFromGameState(gameState: { [key: string]: any }): string;
+export function generateFENFromGameState(gameState: unknown): string {
+    // if (event && typeof event.preventDefault === 'function') event.preventDefault();
+
+    let boardState: string[];
+    let castlingRightsState: { [key: string]: any} = {};
+    let whiteToPlay: boolean;
+    let halfmoveClock: number;
+    let fullmoveCounter: number;
+
+    const requiredKeys: string[] = ['pieceKeys','whiteToPlay','halfmoveClock','fullmoveCounter'];
+    const moreRequiredKeys: string[] = [
+        'lightKingHasShortCastlingRights',
+        'lightKingHasLongCastlingRights',
+        'darkKingHasShortCastlingRights',
+        'darkKingHasLongCastlingRights'
+    ];
+
+    if (gameState instanceof GameState) {
+        boardState = gameState.state.pieceKeys; // || gameState.pieceKeys;
+        whiteToPlay = gameState.state.whiteToPlay;
+        halfmoveClock = gameState.state.halfmoveClock;
+        fullmoveCounter = Math.floor(gameState.state.plyNumber / 2);
+        if ('castlingRights' in gameState.state) {
+            const castlingRightsInput = (gameState.state.castlingRights as { [key: string]: any });
+            castlingRightsState.DQ = castlingRightsInput.darkKingHasLongCastlingRights;
+            castlingRightsState.DK = castlingRightsInput.darkKingHasShortCastlingRights;
+            castlingRightsState.LQ = castlingRightsInput.lightKingHasLongCastlingRights;
+            castlingRightsState.LK = castlingRightsInput.lightKingHasShortCastlingRights;
+        } else {
+            castlingRightsState.DQ = gameState.state.darkKingHasLongCastlingRights;
+            castlingRightsState.DK = gameState.state.darkKingHasShortCastlingRights;
+            castlingRightsState.LQ = gameState.state.lightKingHasLongCastlingRights;
+            castlingRightsState.LK = gameState.state.lightKingHasShortCastlingRights;
+        }
+    } else if (isArgumentDictionary(gameState)) {
+        // gameState = (gameState as { [key: string]: any });
+        if (requiredKeys.some(key => !(key in gameState))) return '';
+        if (moreRequiredKeys.some(key => !(key in gameState))) {
+            if ('castlingRights' in gameState) {
+                if (moreRequiredKeys.some(key => !(key in (gameState.castlingRights as Record<string, boolean>)))) {
+                    return '';
+                } else {
+                    const castlingRightsInput = (gameState.castlingRights as { [key: string]: any });
+                    castlingRightsState.DQ = castlingRightsInput.darkKingHasLongCastlingRights;
+                    castlingRightsState.DK = castlingRightsInput.darkKingHasShortCastlingRights;
+                    castlingRightsState.LQ = castlingRightsInput.lightKingHasLongCastlingRights;
+                    castlingRightsState.LK = castlingRightsInput.lightKingHasShortCastlingRights;
+                }
+            } else return '';
+        }
+        boardState = gameState.pieceKeys as string[]; // TODO validate these 
+        whiteToPlay = gameState.whiteToPlay as boolean;
+        halfmoveClock = gameState.halfmoveClock as number;
+        fullmoveCounter = gameState.fullmoveCounter as number;
+    } else {
+        console.error("Unsupported gameState argument supplied.");
+        return '';
+    }
+
+    // lowercase is black, upper is white, standard piece keys for pieces, numbers for consecutive empty squares,
+    // followed by next player's move, then castling rights still available, the en passant target square (if applicable),
+    // and finally, the "half-move clock" and the full-move counter 
+    // see: https://www.chessprogramming.org/Forsyth-Edwards_Notation for more info 
+
+    // console.log(boardState);
+    const piecePlacementWithSpaces = boardState.map((pieceKey, index) => {
+        const [playerCode, pieceCode] = pieceKey.split('');
+        const translator = playerCode === 'L' ? (x: string) => x.toUpperCase() : (playerCode === 'D' ? (x: string) => x.toLowerCase() : (x: string) => ' ');
+        const translated = translator(pieceCode);
+        // if (index % 8 === 7) return `${translated}/`;
+        // else return translated;
+        return translated;
+    });
+    // console.log(piecePlacementWithSpaces);
+    let consecutiveSpaces = 0;
+    let newPiecePlacement = '';
+    // for (const char in piecePlacement) {
+    for (let i = 0; i < piecePlacementWithSpaces.length; i++) {
+        const char = piecePlacementWithSpaces[i];
+        if (i && i % 8 === 0) {
+            if (consecutiveSpaces) {
+                newPiecePlacement += `${consecutiveSpaces}`;
+                consecutiveSpaces = 0;
+            }
+            newPiecePlacement += '/';
+        }
+        if (char === ' ') {
+            consecutiveSpaces += 1;
+        } else {
+            if (consecutiveSpaces) {
+                // piecePlacement.splice(i - consecutiveSpaces, consecutiveSpaces)
+                newPiecePlacement += `${consecutiveSpaces}`;
+            }
+            newPiecePlacement += char;
+            consecutiveSpaces = 0;
+        }
+    }
+    // console.log(newPiecePlacement);
+
+    const castlingRights = `${castlingRightsState.LK ? 'K' : ''}${castlingRightsState.LQ ? 'Q' : ''}${castlingRightsState.DK ? 'k' : ''}${castlingRightsState.DQ ? 'q' : ''}`;
+    const enPassantTargetSquare = "-";
+    // TODO use history or smth to find enPassantTargetSquare ... or use this.state.enPassantTargetSquare 
+
+    const fullFEN = `${newPiecePlacement} ${whiteToPlay ? 'w' : 'b'} ${castlingRights} ${enPassantTargetSquare} ${halfmoveClock} ${fullmoveCounter}`;
+    console.log(`Full FEN: ${fullFEN}`);
+
+    return fullFEN;
+}
+
 // returns a list of *any* piece that can attack this square by default, not just the opponent's pieces 
 // any piece can block identically to any other piece
 // any capture is equivalently effective at removing a check 
@@ -501,10 +669,12 @@ export const getOccupiedSquaresThatCanAttackThisSquare = (
 
 // // ********* SETTERS *********
 
-export const initializeState = (component: React.Component<any, any>, stateToLoad?: unknown): void => {
+export function initializeState(component: React.Component<any, any>, stateToLoad?: GameState): void;
+export function initializeState(component: React.Component<any, any>, stateToLoad?: string): void;
+export function initializeState(component: React.Component<any, any>, stateToLoad?: unknown): void {
 // export const initializeState = (component: React.Component<GameProps, GameState>): void => {
     if (typeof stateToLoad === 'string') {
-        console.log(`Passed string stateToLoad: ${stateToLoad}`);
+        // console.log(`Passed string stateToLoad: ${stateToLoad}`);
         if (doesStringMatchPatternFEN(stateToLoad)) {
             // wipe out existing state, if any (shouldn't be)
             component.setState({

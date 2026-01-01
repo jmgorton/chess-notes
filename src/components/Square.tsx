@@ -56,14 +56,14 @@ class Square extends React.Component<SquareProp, SquareState> {
 
     console.log(`Square#handleClick... ${this.props.isPromoting ? 'Passing ' + event + ' to this#handleStartPromotion' : 'Not promoting.'}`)
 
-    if (this.props.isPromoting || (this.props.isHighlighted && this.props.id < 8)) {
-      console.log('Before this.props.onSquareClick');
-      this.handleStartPromotion(event);
-    }
+    // if (this.props.isPromoting) { // || (this.props.isHighlighted && this.props.id < 8)) { // uhhh, not a pawn 
+    //   console.log('Before this.props.onSquareClick');
+    //   this.handleStartPromotion(event);
+    // }
 
     if (this.props.onSquareClick) this.props.onSquareClick(this.props.id);
 
-    if (this.props.isPromoting || (this.props.isHighlighted && this.props.id < 8)) {
+    if (this.props.isPromoting) { // || (this.props.isHighlighted && this.props.id < 8)) {
       console.log('After this.props.onSquareClick');
       this.handleStartPromotion(event);
     }

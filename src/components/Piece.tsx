@@ -1145,6 +1145,8 @@ export class LightKing extends King {
       },
     )
 
+    // console.log(`In LightKing#generatePieceValidMoves\n\tFound regular moves valid: ${kingMoves}\n\tincludeCastling: ${includeCastling}\n\tcurrentGameState: ${currentGameState}`);
+
     if (includeCastling && currentGameState) {
       kingMoves = kingMoves.concat(helpers.getCastlingOptions(this.playercode, currentGameState));
     }
@@ -1211,6 +1213,8 @@ export class DarkKing extends King {
         includeCapturesOf,
       },
     )
+
+    // console.log(`In DarkKing#generatePieceValidMoves\n\tFound regular moves valid: ${kingMoves}\n\tincludeCastling: ${includeCastling}\n\tcurrentGameState: ${currentGameState}`);
 
     if (includeCastling && currentGameState) {
       kingMoves = kingMoves.concat(helpers.getCastlingOptions(this.playercode, currentGameState));
