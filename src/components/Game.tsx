@@ -1,6 +1,6 @@
 import React from 'react';
 
-import GameStatus from './GameStatus.jsx';
+import GameStatus from './GameStatus.tsx';
 import { GameNotes } from './GameNotes';
 import Board from './Board.tsx';
 

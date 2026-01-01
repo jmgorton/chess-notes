@@ -23,6 +23,18 @@ export interface GameState {
     //   testState: number;
 }
 
+export interface GameStatusProps {
+    whiteToPlay: boolean;
+    history: HistoryItem[];
+    handleUndoClick: (event?: React.SyntheticEvent | null) => void;
+    handleRedoClick: (event?: React.SyntheticEvent | null) => void; 
+    handleResetClick: (event?: React.MouseEvent | React.SyntheticEvent | undefined) => void;
+}
+
+export interface GameStatusState {
+
+}
+
 export interface BoardProps {
     squareProps: SquareProp[];
     handleSquareClick: (squareId: number) => Promise<void>; // (event: Event) => void; // ={this.handleSquareClick}
@@ -37,7 +49,7 @@ export interface BoardProps {
 }
 
 export interface BoardState {
-
+    isFlipped: boolean;
 }
 
 export interface BoardControlPanelProps {
@@ -45,6 +57,7 @@ export interface BoardControlPanelProps {
     onRedoClick: MouseEventHandler<HTMLButtonElement>; // (event: Event) => void; 
     onResetClick: MouseEventHandler<HTMLButtonElement>; // (event: Event) => void; 
     onGetFENClick: MouseEventHandler<HTMLButtonElement>; // (event: Event) => void;
+    onFlipBoard: MouseEventHandler<HTMLButtonElement>;
 }
 
 export interface BoardControlPanelState {
@@ -68,7 +81,6 @@ export interface SquareState {
 
 }
 
-// Type definitions TODO specify with detail 
 export type PieceProps = Record<string, unknown>;
 
 export interface HistoryItem {

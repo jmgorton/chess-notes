@@ -1,14 +1,19 @@
-import React from 'react';
+import React, { MouseEventHandler } from 'react';
+
+import {
+  GameStatusProps,
+  GameStatusState,
+} from '../utils/types.ts';
 
 import IconButton from '@mui/material/IconButton';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 
-class GameStatus extends React.Component {
-//   constructor(props) {
-//     super(props);
-//   }
+class GameStatus extends React.Component<GameStatusProps, GameStatusState> {
+  //   constructor(props) {
+  //     super(props);
+  //   }
 
   // gameHistory = this.props.history;
   // const current = history[this.state.stepNumber];
@@ -22,6 +27,25 @@ class GameStatus extends React.Component {
   //     </li>
   //   );
   // });
+
+  handleUndoClick: MouseEventHandler<HTMLButtonElement> = (event) => { // (event: Event) {
+    if (event && typeof event.preventDefault === 'function') {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    if (this.props.handleUndoClick) this.props.handleUndoClick(); // this.props.handleUndoClick(event);
+  }
+
+  // handleRedoClick(event: Event) {
+  handleRedoClick: MouseEventHandler<HTMLButtonElement> = (event) => {
+
+  }
+
+  handleResetClick: MouseEventHandler<HTMLButtonElement> = (event) => { // (event: Event) {
+    // console.log('Board#handleResetClick');
+
+    this.props.handleResetClick();
+  }
 
   render() {
     // const winner = null; //calculateWinner(current.squares);
@@ -53,7 +77,7 @@ class GameStatus extends React.Component {
                     <div className="move-row">
                       <span className="white-move">{whiteMoveHistoryPly.AN}</span><span className="black-move">{correspondingBlackMoveHistoryPlyAN}</span>
                     </div>
-                  </li> 
+                  </li>
                 )
               })
           }
@@ -62,40 +86,40 @@ class GameStatus extends React.Component {
           <IconButton
             color="inherit"
             aria-label="undo move"
-            onClick={this.props.handleUndoMove}
-            // edge="start"
-            // sx={[
-            //   {
-            //     marginRight: 5,
-            //   },
-            // ]}
+            onClick={this.props.handleUndoClick}
+          // edge="start"
+          // sx={[
+          //   {
+          //     marginRight: 5,
+          //   },
+          // ]}
           >
-            <NavigateBeforeIcon fontSize='small'/>
+            <NavigateBeforeIcon fontSize='small' />
           </IconButton>
           <IconButton
             color="inherit"
             aria-label="reset board"
-            onClick={this.props.handleResetMove}
-            // sx={[
-            //   {
-            //     marginRight: 5,
-            //   },
-            // ]}
+            onClick={this.props.handleResetClick}
+          // sx={[
+          //   {
+          //     marginRight: 5,
+          //   },
+          // ]}
           >
-            <RestartAltIcon fontSize='small'/>
+            <RestartAltIcon fontSize='small' />
           </IconButton>
           <IconButton
             color="inherit"
             aria-label="redo move"
-            onClick={this.props.handleRedoMove}
-            // edge="end"
-            // sx={[
-            //   {
-            //     marginRight: 5,
-            //   },
-            // ]}
+            onClick={this.props.handleRedoClick}
+          // edge="end"
+          // sx={[
+          //   {
+          //     marginRight: 5,
+          //   },
+          // ]}
           >
-            <NavigateNextIcon fontSize='small'/>
+            <NavigateNextIcon fontSize='small' />
           </IconButton>
         </div>
       </div>

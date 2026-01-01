@@ -24,7 +24,7 @@ This repository is a React SPA built with Create React App and uses React Router
 - `src/components/Board.tsx` — visual chessboard and moves rendering.
 - `src/components/Game.tsx` — page/container for a full game view.
 - `src/components/GameNotes.tsx` — component handling notes tied to board state.
-- `src/components/GameStatus.jsx`, `Piece.tsx`, `Square.tsx` — smaller UI components.
+- `src/components/GameStatus.tsx`, `Piece.tsx`, `Square.tsx` — smaller UI components.
 
 Routing:
 
