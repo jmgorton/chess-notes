@@ -28,7 +28,7 @@ export default class Game extends React.Component<GameProps, GameState> {
     backrankStartingPositions: string[] = constants.defaultStartingBackRank;
     startingFEN: string = constants.defaultStartingFEN;
     boardSize: number = this.backrankStartingPositions.length;
-    // numSquares: number = this.boardSize ** 2;
+    numSquares: number = this.boardSize ** 2;
 
     // state = {
     //     pieceKeys = null,
@@ -51,112 +51,134 @@ export default class Game extends React.Component<GameProps, GameState> {
     constructor(props: GameProps) {
         super(props);
 
-        let startingConfig = Array(64).fill("");
-        startingConfig.fill("DP", 8, 16);
-        startingConfig.splice(0, 8, ...this.backrankStartingPositions.map((piece) => "D" + piece));
+        // let startingConfig = Array(64).fill("");
+        // startingConfig.fill("DP", 8, 16);
+        // startingConfig.splice(0, 8, ...this.backrankStartingPositions.map((piece) => "D" + piece));
 
-        startingConfig.fill("LP", 48, 56);
-        startingConfig.splice(56, 8, ...this.backrankStartingPositions.map((piece) => "L" + piece));
+        // startingConfig.fill("LP", 48, 56);
+        // startingConfig.splice(56, 8, ...this.backrankStartingPositions.map((piece) => "L" + piece));
 
+        // this.state = {
+        //     pieceKeys: startingConfig, // we could get rid of this state entirely as well, or use it internally for testing moves?? 
+        //     squareProps: startingConfig.map((pieceKey, squareId) => {
+        //         return {
+        //             keycode: pieceKey, // pieceId 
+        //             id: squareId, // squareId
+        //             // key: `${squareId}-${pieceKey}-0`, // element key, must be unique, and change to force re-render 
+        //             // TODO  don't use the reserved React keyword `key` as it gets stripped from component props. Use another name
+        //             isHighlighted: false,
+        //             isAltHighlighted: false,
+        //             isSelected: false,
+        //             isAltSelected: false,
+        //             isPromoting: false,
+        //         }
+        //     }),
+
+        //     // // TODO not yet maintained (except for light/dark king positions) 
+        //     // lightPawnPositions: [48, 49, 50, 51, 52, 53, 54, 55],
+        //     // darkPawnPositions: [8, 9, 10, 11, 12, 13, 14, 15],
+        //     // lightKnightPositions: [57, 62],
+        //     // darkKnightPositions: [1, 6],
+        //     // lightBishopPositions: [58, 61],
+        //     // darkBishopPositions: [2, 5],
+        //     // lightRooksPositions: [56, 63],
+        //     // darkRooksPositions: [0, 7],
+        //     // lightQueenPositions: [59],
+        //     // darkQueenPositions: [3],
+
+        //     lightKingPosition: 60,
+        //     darkKingPosition: 4,
+        //     // kingPositions: {
+        //     //     L: 60,
+        //     //     D: 4,
+        //     // },
+
+        //     lightKingHasShortCastlingRights: true,
+        //     lightKingHasLongCastlingRights: true,
+        //     darkKingHasShortCastlingRights: true,
+        //     darkKingHasLongCastlingRights: true,
+
+        //     // castlingRights: {
+        //     //     LK: true,
+        //     //     LQ: true,
+        //     //     DK: true,
+        //     //     DQ: true,
+        //     // },
+
+        //     enPassantTargetSquare: null,
+
+        //     // // TODO not yet used or maintained 
+        //     // // warning: numeric literals with absolute values equal to 2^53 or greater are too large to be represented accurately as integers.
+        //     // // append an `n` to use the BigInt javascript type 
+        //     // bitmapLightPawns: 0x000000000000ff00n, // 6th (7th) rank full of 1s
+        //     // bitmapDarkPawns: 0x00ff000000000000n, // 1st (2nd) rank full of 1s
+        //     // bitmapLightKnights: 0x0000000000000042n,
+        //     // bitmapDarkKnights: 0x2400000000000000n,
+        //     // bitmapLightBishops: 0x0000000000000024n,
+        //     // bitmapDarkBishops: 0x4200000000000000n,
+        //     // bitmapLightRooks: 0x0000000000000081n,
+        //     // bitmapDarkRooks: 0x1800000000000000n,
+        //     // bitmapLightQueens: 0x0000000000000010n,
+        //     // bitmapDarkQueens: 0x1000000000000000n,
+        //     // bitmapLightKing: 0x0000000000000008n,
+        //     // bitmapDarkKing: 0x0800000000000000n,
+
+        //     // squaresAttackedByWhite: new Set(40, 41, 42, 43, 44, 45, 46, 47), 
+        //     // squaresAttackedByBlack: new Set(16, 17, 18, 19, 20, 21, 22, 23), 
+        //     // TODO also store squares that can be discover-attacked by a piece after moving another piece 
+
+
+        //     // props:
+        //     //   color: not necessary, doesn't change, just use rank + file data in Board render method 
+        //     //   keycode: the pieceKey ... if you think about it, this is not necessary either, data already in the pieceKeys state
+        //     //   id: squareId [0-63] ... same with this one, data already stored in pieceKeys state by definition of their locations
+        //     //   key: `${squareId}-${pieceKey}-${changeKey}`
+        //     //     squareId is the id from 0-63 of the square
+        //     //     pieceKey is the piece id, e.g. "LK" or "DP" ... it's also not necessary to make this a part of the key since we have the changeCode/changeKey
+        //     //     changeKey is the number of times the square has been re-rendered, increments throughout the game 
+        //     //       (each re-render also may or may not change the pieceKey)
+        //     //   onSquareClick: the callback function for when the square is clicked
+        //     //   isHighlighted: is the square highlighted (valid moves from squareSelected, if any) 
+        //     //   isSelected: the square selected after the last click 
+
+        //     // boardSize: this.boardSize,
+        //     squareSelected: null,
+        //     squareAltSelected: null,
+        //     whiteToPlay: true,
+        //     FEN: constants.defaultStartingFEN,
+        //     history: [],
+        //     // history: [{
+        //     //   pieceKeys: startingConfig, // full state of keycodes on board at this move // don't store the initial state 
+        //     //   AN: null, // Algebraic Notation
+        //     //   JN: null, // Jared's Notation
+        //     //   INN: null, // International Numeric Notation (Computer Notation, e.g. 5254 == e2->e4)
+        //     // }],
+        //     plyNumber: 0,
+
+        //     //   testState: 0,
+        // }
+
+        // set this state info w helpers.initializeState(this);
         this.state = {
-            pieceKeys: startingConfig, // we could get rid of this state entirely as well, or use it internally for testing moves?? 
-            squareProps: startingConfig.map((pieceKey, squareId) => {
-                return {
-                    keycode: pieceKey, // pieceId 
-                    id: squareId, // squareId
-                    // key: `${squareId}-${pieceKey}-0`, // element key, must be unique, and change to force re-render 
-                    // TODO  don't use the reserved React keyword `key` as it gets stripped from component props. Use another name
-                    isHighlighted: false,
-                    isAltHighlighted: false,
-                    isSelected: false,
-                    isAltSelected: false,
-                    isPromoting: false,
-                }
-            }),
-
-            // // TODO not yet maintained (except for light/dark king positions) 
-            // lightPawnPositions: [48, 49, 50, 51, 52, 53, 54, 55],
-            // darkPawnPositions: [8, 9, 10, 11, 12, 13, 14, 15],
-            // lightKnightPositions: [57, 62],
-            // darkKnightPositions: [1, 6],
-            // lightBishopPositions: [58, 61],
-            // darkBishopPositions: [2, 5],
-            // lightRooksPositions: [56, 63],
-            // darkRooksPositions: [0, 7],
-            // lightQueenPositions: [59],
-            // darkQueenPositions: [3],
-
-            lightKingPosition: 60,
-            darkKingPosition: 4,
-            // kingPositions: {
-            //     L: 60,
-            //     D: 4,
-            // },
-
-            lightKingHasShortCastlingRights: true,
-            lightKingHasLongCastlingRights: true,
-            darkKingHasShortCastlingRights: true,
-            darkKingHasLongCastlingRights: true,
-
-            // castlingRights: {
-            //     LK: true,
-            //     LQ: true,
-            //     DK: true,
-            //     DQ: true,
-            // },
-
+            pieceKeys: [],
+            squareProps: [],
+            lightKingPosition: 0,
+            darkKingPosition: 0,
+            lightKingHasShortCastlingRights: false,
+            lightKingHasLongCastlingRights: false,
+            darkKingHasShortCastlingRights: false,
+            darkKingHasLongCastlingRights: false,
             enPassantTargetSquare: null,
-
-            // // TODO not yet used or maintained 
-            // // warning: numeric literals with absolute values equal to 2^53 or greater are too large to be represented accurately as integers.
-            // // append an `n` to use the BigInt javascript type 
-            // bitmapLightPawns: 0x000000000000ff00n, // 6th (7th) rank full of 1s
-            // bitmapDarkPawns: 0x00ff000000000000n, // 1st (2nd) rank full of 1s
-            // bitmapLightKnights: 0x0000000000000042n,
-            // bitmapDarkKnights: 0x2400000000000000n,
-            // bitmapLightBishops: 0x0000000000000024n,
-            // bitmapDarkBishops: 0x4200000000000000n,
-            // bitmapLightRooks: 0x0000000000000081n,
-            // bitmapDarkRooks: 0x1800000000000000n,
-            // bitmapLightQueens: 0x0000000000000010n,
-            // bitmapDarkQueens: 0x1000000000000000n,
-            // bitmapLightKing: 0x0000000000000008n,
-            // bitmapDarkKing: 0x0800000000000000n,
-
-            // squaresAttackedByWhite: new Set(40, 41, 42, 43, 44, 45, 46, 47), 
-            // squaresAttackedByBlack: new Set(16, 17, 18, 19, 20, 21, 22, 23), 
-            // TODO also store squares that can be discover-attacked by a piece after moving another piece 
-
-
-            // props:
-            //   color: not necessary, doesn't change, just use rank + file data in Board render method 
-            //   keycode: the pieceKey ... if you think about it, this is not necessary either, data already in the pieceKeys state
-            //   id: squareId [0-63] ... same with this one, data already stored in pieceKeys state by definition of their locations
-            //   key: `${squareId}-${pieceKey}-${changeKey}`
-            //     squareId is the id from 0-63 of the square
-            //     pieceKey is the piece id, e.g. "LK" or "DP" ... it's also not necessary to make this a part of the key since we have the changeCode/changeKey
-            //     changeKey is the number of times the square has been re-rendered, increments throughout the game 
-            //       (each re-render also may or may not change the pieceKey)
-            //   onSquareClick: the callback function for when the square is clicked
-            //   isHighlighted: is the square highlighted (valid moves from squareSelected, if any) 
-            //   isSelected: the square selected after the last click 
-
-            // boardSize: this.boardSize,
             squareSelected: null,
             squareAltSelected: null,
-            whiteToPlay: true,
-            FEN: constants.defaultStartingFEN,
+            whiteToPlay: false,
+            FEN: '',
             history: [],
-            // history: [{
-            //   pieceKeys: startingConfig, // full state of keycodes on board at this move // don't store the initial state 
-            //   AN: null, // Algebraic Notation
-            //   JN: null, // Jared's Notation
-            //   INN: null, // International Numeric Notation (Computer Notation, e.g. 5254 == e2->e4)
-            // }],
             plyNumber: 0,
-
-            //   testState: 0,
+            halfmoveClock: 0, // TODO implement 50-ply rule 
         }
+
+        // helpers.initializeState(this);
 
         // not necessary? was working without this ... because they are arrow functions 
         // more modern JS/TS method where `this` is lexically scoped to the class instance 
@@ -175,6 +197,14 @@ export default class Game extends React.Component<GameProps, GameState> {
 
         //     // return;
         // }
+    }
+
+    componentDidMount(): void {
+        if (this.startingFEN) {
+            this.generateBoardStateFromFen(this.startingFEN);
+        } else {
+            helpers.initializeState(this);
+        }
     }
 
     generateBoardFEN = (event?: React.SyntheticEvent | null, boardState: string[] = this.state.pieceKeys): string => {
@@ -224,7 +254,7 @@ export default class Game extends React.Component<GameProps, GameState> {
         const enPassantTargetSquare = "-";
         // TODO use history or smth to find enPassantTargetSquare ... or use this.state.enPassantTargetSquare 
 
-        const fullFEN = `${newPiecePlacement} ${this.state.whiteToPlay ? 'w' : 'b'} ${castlingRights} ${enPassantTargetSquare} ${this.state.plyNumber % 2} ${Math.floor(this.state.plyNumber / 2) + 1}`;
+        const fullFEN = `${newPiecePlacement} ${this.state.whiteToPlay ? 'w' : 'b'} ${castlingRights} ${enPassantTargetSquare} ${this.state.halfmoveClock} ${Math.floor(this.state.plyNumber / 2)}`;
         console.log(`Full FEN: ${fullFEN}`);
 
         return fullFEN;
@@ -233,32 +263,35 @@ export default class Game extends React.Component<GameProps, GameState> {
     // takes a FEN string and sets the Game state accordingly, also returning new state 
     // generateBoardStateFromFen = async (inputFEN: string): Promise<void> => { // { [key: string]: any } => {
     generateBoardStateFromFen = (inputFEN: string): void => {
+        // console.log("Generating board state from FEN: " + inputFEN)
         const [piecePlacement, sideToMove, castlingAbility, enPassantTargetSquare, halfmoveClock, fullmoveCounter] = inputFEN.split(' ');
+
+        // about halfmoveClock and fullmoveCounter:
+        // The halfmove clock specifies a decimal number of half moves with respect to the 50 move draw rule.
+        //   It is reset to zero after a capture or a pawn move and incremented otherwise.
+        // The fullmoveCounter is the  number of the full moves in a game. 
+        //   It starts at 1, and is incremented after each Black's move.
         const rankPiecePlacements = piecePlacement.split('/');
 
         let newPieceKeys = Array(64).fill("");
         let newLightKingPosition = null;
         let newDarkKingPosition = null;
-        // TODO this is wrong, rankPiecePlacements is an array of strings mapping to each rank 
-        // for (let i = 0, pki = 0; i < rankPiecePlacements.length; i++) {
-        //   const numEmptySquares = rankPiecePlacements
-        // }
+
         let pki = 0;
-        for (const rank in rankPiecePlacements) {
-            //   for (const char in rank) {
-            for (let i: number = 0; i < rank.length; i++) {
-                const char = rank.charAt(i);
-                // if (char.isNumeric()) {
+        for (const rank of rankPiecePlacements) { // REMEMBER: of, not in 
+              for (const char of rank) {
+            // for (let i: number = 0; i < rank.length; i++) {
+            //     const char = rank.charAt(i);
                 if (char.match(/[1-8]/)) {
                     let numEmptySquares = Number(char);
                     pki += numEmptySquares;
                 } else {
                     const pieceCode = char.toUpperCase();
-                    const playerCode = char === pieceCode ? 'L' : 'D';
+                    const playerCode = (char === pieceCode) ? 'L' : 'D';
                     newPieceKeys[pki] = `${playerCode}${pieceCode}`;
                     if (pieceCode === 'K') {
                         if (playerCode === 'L') newLightKingPosition = pki;
-                        else newDarkKingPosition = pki;
+                        else if (playerCode === 'D') newDarkKingPosition = pki;
                     }
                     pki += 1;
                 }
@@ -285,20 +318,20 @@ export default class Game extends React.Component<GameProps, GameState> {
             darkKingHasLongCastlingRights: castlingAbility.includes('q'),
             lightKingHasShortCastlingRights: castlingAbility.includes('K'),
             lightKingHasLongCastlingRights: castlingAbility.includes('Q'),
-            enPassantTargetSquare: Number(enPassantTargetSquare),
-            plyNumber: Number(fullmoveCounter) * 2 + Number(halfmoveClock),
+            enPassantTargetSquare: enPassantTargetSquare === '-' ? null : Number(enPassantTargetSquare),
+            plyNumber: Number(fullmoveCounter) * 2 + sideToMove === 'w' ? 0 : 1,
+            halfmoveClock: Number(halfmoveClock),
             FEN: inputFEN,
             history: [], // no history from loading game from FEN 
             squareSelected: null,
             squareAltSelected: null,
         }
+        // console.log(newStateKVPs);
         this.setState({
           ...this.state,
           ...newStateKVPs,
         });
-        // await multiUpdateState(this, newStateKVPs);
-        // return newStateKVPs;
-        return;
+
     }
 
     // this method is called before this move is applied to state, still current player's turn 
@@ -354,7 +387,7 @@ export default class Game extends React.Component<GameProps, GameState> {
             const movesThatNecessitateFurtherClarification = helpers.getOccupiedSquaresThatCanAttackThisSquare(squareMovedTo, [playerCode], futureBoardState)
                 .filter((squareId) => futureBoardState[squareId].charAt(1) === pieceCode) // get only self-attacks from the same type of piece 
                 // .filter((squareId) => squareId !== squareMovedFrom); // state issue TODO fix ... including this piece 
-                .filter(squareId => !this.wouldOwnKingBeInCheckAfterMove(squareId, squareMovedTo)) // don't allow illegal moves ... use current state, not future 
+                .filter(squareId => !helpers.wouldOwnKingBeInCheckAfterMove(squareId, squareMovedTo, this)) // don't allow illegal moves ... use current state, not future 
 
             // console.log(movesThatNecessitateFurtherClarification);
 
@@ -664,12 +697,10 @@ export default class Game extends React.Component<GameProps, GameState> {
     getLegalMoves = (squareId: number): number[] => {
         const keycode = this.state.pieceKeys[squareId];
         if (keycode === undefined || keycode === "") {
-            // console.log("The selected square has no piece on it, therefore there are no legal moves to make.");
             return [];
         }
         if (this.state.whiteToPlay && keycode.charAt(0) !== 'L') {
-            // console.log("It is not this player's turn, therefore there are no legal moves to make.")
-            return []; // not this player's turn 
+            return []; 
         }
 
         // TODO first, if we're in check, we have three options:
@@ -679,38 +710,19 @@ export default class Game extends React.Component<GameProps, GameState> {
         // If none of these are possible, it's checkmate
         // If we are in a *double* check, we *must* move the king. 
 
-        // One way to go about it would be to verify the proposed moves returned by the validMoveMap functions 
-        // and remove the ones where the king is attacked after making the move 
 
         // I was thinking about deleting the pieceKeys state, but actually it'll be so convenient to use it as a computer analysis board 
         // without rendering the moves I'm trying out, then set it back to match what's in squareProps or history when I'm done or in between moves 
 
-        // const playerCode = this.state.pieceKeys[squareId].charAt(0);
+        // const playerCode = keycode.charAt(0);
         const pieceCode: string = keycode.charAt(1);
         let validMoves: number[] = [];
         // if (['P','N','B','R','Q','K'].includes(pieceCode)) {
         if (constants.validPieces.includes(pieceCode)) {
             const keycodeMapKey = keycode as keyof typeof keycodeToComponent;
             const piece = keycodeToComponent[keycodeMapKey];
-            // validMoves = keycodeToComponent[keycode].generatePieceValidMoves(squareId);
-            // let extraArgs = {};
-            // switch (pieceCode) {
-                //     case 'K':
-                //         extraArgs = {
-                //             includeCastling: true,
-                //             currentGameState: this,
-                //         }
-                // }
-            // let functionArgs: any[] = [squareId, this.state.pieceKeys.slice()];
             const baseFunctionArgs: [number, string[]] = [squareId, this.state.pieceKeys.slice()];
-            // let additionalFunctionArgs: [boolean?, string[]?, boolean?, Game?] = [undefined, undefined, undefined, undefined];
             if (pieceCode === 'K') {
-                // additionalFunctionArgs = [
-                //     true, // includeNonCaptures 
-                //     ['L','D'].filter(playerOption => playerOption !== keycode.charAt(0)), // includeCapturesOf
-                //     true, // includeCastling
-                //     this, // currentGameState ... this one is necessary 
-                // ];
                 let additionalFunctionArgs: [number[]?, {}?, boolean?, Game?] = [undefined, undefined, undefined, undefined];
                 additionalFunctionArgs = [
                     undefined, // directions
@@ -718,204 +730,24 @@ export default class Game extends React.Component<GameProps, GameState> {
                     true, // includeCastling
                     this, // currentGameState
                 ]
-                // validMoves = (piece as Piece.King)
-                // validMoves = (piece as King)
                 // const kingPiece = (piece as unknown as LightKing) // ???? 
-                // validMoves = kingPiece.generatePieceValidMoves(...baseFunctionArgs, ...additionalFunctionArgs)
                 const kingPiece = keycode.charAt(0) === 'L' ? LightKing : DarkKing;
                 validMoves = kingPiece.generatePieceValidMoves(...baseFunctionArgs, ...additionalFunctionArgs);
             // } else if (pieceCode === 'P') {
-            //     let additionalFunctionArgs = // not necessary, LP/DP don't take additional args 
+            //     let additionalFunctionArgs = // not necessary, LP/DP don't take additional args ... YET 
             } else {
                 validMoves = piece.generatePieceValidMoves(...baseFunctionArgs);
             }
-            // validMoves = piece.generatePieceValidMoves(
-            //     squareId, 
-            //     this.state.pieceKeys.slice(),
-            //     true, // includeNonCaptures
-            //     ['L','D'].filter(playerOption => playerOption !== keycode.charAt(0)), // includeCapturesOf ... would love to omit this argument
-            //     // ...Object.values(extraArgs)
-            // );
         } 
-        // else if (pieceCode in this.validMoveMap) {
-        //     validMoves = this.validMoveMap[pieceCode as keyof typeof this.validMoveMap](squareId);
-        // }
+
 
         // console.log(`Generating valid moves that this ${pieceCode} can make...`);
         // const validMoves: number[] = pieceCode in this.validMoveMap ? this.validMoveMap[pieceCode as keyof typeof this.validMoveMap](squareId) : []; // use the default arguments, only supply squareId 
         // if (pieceCode === 'K') console.log(`Valid moves for this ${pieceCode} are: ${validMoves}`);
-        const legalMoves = validMoves.filter((targetMove) => !this.wouldOwnKingBeInCheckAfterMove(squareId, targetMove));
+        const legalMoves = validMoves.filter((targetMove) => !helpers.wouldOwnKingBeInCheckAfterMove(squareId, targetMove, this));
         // if (pieceCode === 'K') console.log(`Legal moves after filtering out which valid moves would result in this player's king being capturable on the next move: ${legalMoves}`);
         return legalMoves;
     }
-
-    // isKingInCheck = (player: 'w' | 'b' | 'L' | 'D', boardState: string[] = this.state.pieceKeys): boolean => {
-    //     // maybe here we can easily set like a canBlock, canCapture, canEvade boolean state system ...
-    //     // canBlock seems like the only tricky one, gotta check all piece moves 
-    //     let kingPosition = this.state.whiteToPlay ?
-    //         this.state.darkKingPosition :
-    //         this.state.lightKingPosition
-    //     if (player === 'w' || player === 'L') kingPosition = this.state.lightKingPosition;
-    //     else if (player === 'b' || player === 'D') kingPosition = this.state.darkKingPosition;
-
-    //     let attackingSquares = this.getOccupiedSquaresThatCanAttackThisSquare(
-    //         kingPosition!, // assert that it will not be null. check this TODO 
-    //         // false,
-    //         [(this.state.whiteToPlay ? 'D' : 'L')], // dupe logic as prev parameter above TODO remove 
-    //         // null,
-    //         // null,
-    //         boardState
-    //     );
-
-    //     return attackingSquares.length !== 0;
-    //     // if attackingSquares.length > 1, it's a double check, can't possible block or capture out of it 
-    //     // have to evade with the king, check if opponent attacks all of the squares around our king 
-    //     // if attackingSquares.length === 1, we can first try to capture or make a line from the attackingSquare to our king
-    //     // and see if we can put a piece on any of those squares in the line to block 
-    // }
-
-    isCheckmate = () => {
-
-    }
-
-    // isMoveEnPassant = (squareMovedFrom: number, squareMovedTo: number): boolean => {
-    //     // TODO refactor, use this.state.enPassantTargetSquare 
-    //     const pieceMoving = this.state.pieceKeys[squareMovedFrom];
-    //     return (
-    //         pieceMoving.charAt(1) === 'P' // piece moving is a pawn
-    //         // && squareMovedFrom % 8 !== squareMovedTo % 8 // signifies that the pawn performed a capture (changed files) 
-    //         // && this.state.pieceKeys[squareMovedTo] === '' // signifies that the capture was an en passant 
-    //         && squareMovedTo === this.state.enPassantTargetSquare
-    //     )
-    // }
-
-    // isMoveCastling = (squareMovedFrom: number, squareMovedTo: number): boolean => {
-    //     const pieceMoving = this.state.pieceKeys[squareMovedFrom];
-    //     return (
-    //         pieceMoving.charAt(1) === 'K'
-    //         && [60, 4].includes(squareMovedFrom) && [63, 56, 7, 0].includes(squareMovedTo)
-    //     )
-    // }
-
-    wouldOwnKingBeInCheckAfterMove = (squareMovedFrom: number, squareMovedTo: number): boolean => {
-
-        let ownKingPosition = this.state.whiteToPlay ? this.state.lightKingPosition : this.state.darkKingPosition;
-        if (ownKingPosition === squareMovedFrom) ownKingPosition = squareMovedTo;
-        // const tempBoardState = helpers.getNewPieceKeysCopyWithMoveApplied(this, squareMovedFrom, squareMovedTo);
-        const tempBoardState = helpers.getNewPieceKeysCopyWithMoveApplied(this, squareMovedFrom, squareMovedTo);
-
-        // const squaresWithPiecesThatCouldAttackOurKingAfterThisMove = this.getOccupiedSquaresThatCanAttackThisSquare(
-        //     ownKingPosition!, // TODO check, assertion that king position won't be null
-        //     // false,
-        //     [(this.state.whiteToPlay ? 'D' : 'L')], // dupe logic as prev parameter above TODO remove 
-        //     // null, // squareMovedFrom, // do this if we don't update state 
-        //     // null,
-        //     tempBoardState,
-        // );
-
-        // if (squareMovedTo === 7 || squareMovedTo === 63) {
-        //     console.log(`After checking short castling:\nSquaresWithPiecesThatCouldAttackOurKingAfterThisMove: ${squaresWithPiecesThatCouldAttackOurKingAfterThisMove}`);
-        // }
-
-        // if (squaresWithPiecesThatCouldAttackOurKingAfterThisMove.length !== 0) {
-        //     console.log(`This move would result in our king being in check from squares: ${squaresWithPiecesThatCouldAttackOurKingAfterThisMove}`);
-            
-        // }
-
-        // return squaresWithPiecesThatCouldAttackOurKingAfterThisMove.length !== 0;
-
-        return helpers.isKingInCheck(ownKingPosition, tempBoardState, this);
-
-        // // ****** ALT METHOD ******
-
-        // // const playerCode = this.state.pieceKeys[squareMovedFrom].charAt(0);
-        // // const playerCode = this.state.whiteToPlay ? "L" : "D";
-        // const pieceCode = this.state.pieceKeys[squareMovedFrom].charAt(1);
-        // const kingPosition = this.state.whiteToPlay ? this.state.lightKingPosition : this.state.darkKingPosition;
-        // if (pieceCode === 'K') {
-        //   // TODO dangerous, find a better way to do this 
-        //   // warning: do not mutate state directly. use setState()
-        //   // i still consider it dangerous from a coding practice pov even if we do it the "proper" way ... but let's use setState() i guess 
-        //   // in current state [c5df4ed], using setState instead of modifying state directly does fix the castling issue where the rook disappears
-        //   // but it causes the issue with generating the king's escape squares after check to return... the move that should be legal is not
-        //   // because the king's own pieces, and the king itself, can attack that square 
-
-        //   // // this.state.pieceKeys[squareMovedTo] = this.state.pieceKeys[squareMovedFrom];
-        //   // // this.state.pieceKeys[squareMovedFrom] = '';
-        //   const tempPieceKeys = this.getNewPieceKeysCopyWithMoveApplied(squareMovedFrom, squareMovedTo);
-        //   // this.setState({
-        //   //   ...this.state,
-        //   //   pieceKeys: tempPieceKeys,
-        //   // });
-
-        //   const squaresWithPiecesThatCouldAttackOurKingAfterThisMove = this.getOccupiedSquaresThatCanAttackThisSquare(
-        //     squareMovedTo, 
-        //     false, 
-        //     null, // squareMovedFrom, // do this if we don't update state 
-        //     null,
-        //     tempPieceKeys,
-        //   );
-
-        //   // // warning: do not mutate state directly. use setState()
-        //   // // this.state.pieceKeys[squareMovedFrom] = this.state.pieceKeys[squareMovedTo];
-        //   // // this.state.pieceKeys[squareMovedTo] = '';
-        //   // const pieceKeysAfterRevertingTempMove = this.getNewPieceKeysCopyWithMoveApplied(squareMovedTo, squareMovedFrom);
-        //   // this.setState({
-        //   //   ...this.state,
-        //   //   pieceKeys: pieceKeysAfterRevertingTempMove,
-        //   // });
-
-        //   // console.log(`\tSquares w pieces that can attack the king on square ${squareMovedTo}: ${squaresWithPiecesThatCouldAttackOurKingAfterThisMove}`);
-
-        //   return squaresWithPiecesThatCouldAttackOurKingAfterThisMove.length !== 0;
-        // }
-
-        // const squaresWithPiecesThatCouldAttackOurKingAfterThisMove = this.getOccupiedSquaresThatCanAttackThisSquare(
-        //   // playerCode === 'L' ? this.state.lightKingPosition : this.state.darkKingPosition,
-        //   kingPosition,
-        //   false,
-        //   squareMovedFrom, // imagine empty
-        //   squareMovedTo, // imagine friendly 
-        // );
-        // // if (pieceCode === 'N') {
-        // //   // console.log(`If we moved this knight from ${squareMovedFrom} to ${squareMovedTo}, our king would be capturable from these squares: ${squaresWithPiecesThatCouldAttackOurKingAfterThisMove}`);
-        // // }
-        // return squaresWithPiecesThatCouldAttackOurKingAfterThisMove.length !== 0;
-    }
-
-    // getNewPieceKeysCopyWithMoveApplied = (squareMovedFrom: number, squareMovedTo: number): string[] => {
-    //     const pieceMoving = this.state.pieceKeys[squareMovedFrom];
-    //     let squareIdOfPawnCapturedViaEnPassant = null;
-    //     let squareIdOfKingAfterCastling = null;
-    //     let squareIdOfRookAfterCastling = null;
-    //     let castlingRook = null;
-    //     // copy the array before mutating so React sees a new reference
-    //     let newPieceKeys = this.state.pieceKeys.slice();
-
-    //     if (helpers.isMoveEnPassant(squareMovedFrom, squareMovedTo, this.state.pieceKeys)) {
-    //         // alert("An en passant occurred...");
-    //         squareIdOfPawnCapturedViaEnPassant = squareMovedTo + -8 * (pieceMoving.charAt(0) === 'L' ? -1 : 1);
-    //         newPieceKeys[squareIdOfPawnCapturedViaEnPassant] = "";
-    //         newPieceKeys[squareMovedFrom] = "";
-    //         newPieceKeys[squareMovedTo] = pieceMoving;
-    //     } else if (helpers.isMoveCastling(squareMovedFrom, squareMovedTo, this.state.pieceKeys)) {
-    //         // indicates that the king is castling 
-    //         let directionFromKing = 1;
-    //         if (squareMovedTo < squareMovedFrom) directionFromKing = -1;
-    //         castlingRook = this.state.pieceKeys[squareMovedTo];
-    //         squareIdOfKingAfterCastling = squareMovedFrom + directionFromKing * 2;
-    //         squareIdOfRookAfterCastling = squareMovedFrom + directionFromKing;
-    //         newPieceKeys[squareMovedFrom] = "";
-    //         newPieceKeys[squareMovedTo] = "";
-    //         newPieceKeys[squareIdOfRookAfterCastling] = castlingRook;
-    //         newPieceKeys[squareIdOfKingAfterCastling] = pieceMoving;
-    //     } else {
-    //         newPieceKeys[squareMovedFrom] = "";
-    //         newPieceKeys[squareMovedTo] = pieceMoving;
-    //     }
-
-    //     return newPieceKeys; // , {squareIdOfPawnCapturedViaEnPassant, squareIdOfKingAfterCastling, squareIdOfRookAfterCastling};
-    // }
 
     updateMoveHistory = (squareMovedFrom: number, squareMovedTo: number, boardState: string[]): void => {
         this.setState({
@@ -1303,11 +1135,11 @@ export default class Game extends React.Component<GameProps, GameState> {
                     squareProps={this.state.squareProps}
                     handleSquareClick={this.handleSquareClick}
                     handleSquareRightClick={this.handleSquareRightClick}
-                    boardSize={this.boardSize}
+                    boardSize={'boardSize' in this ? this.boardSize as number : 8}
                     // promotionSquare={this.state.promotionSquare}
-                    handleUndoClick={this.handleUndoClick}
-                    handleRedoClick={this.handleRedoClick}
-                    handleResetClick={this.handleResetClick}
+                    handleUndoClick={this.handleUndoClick} // TODO these aren't accurate anymore 
+                    handleRedoClick={this.handleRedoClick} // not accurate
+                    handleResetClick={this.handleResetClick} // update these TODO 
                     handleGetFENClick={this.generateBoardFEN}
                 />
                 <GameStatus

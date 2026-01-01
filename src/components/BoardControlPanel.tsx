@@ -14,11 +14,11 @@ export default class BoardControlPanel extends React.Component<BoardControlPanel
   render() {
     return (
       <div className="board-control-panel">
-        <button onClick={this.props.onUndoClick}><SendIcon fontSize='small'/></button>
+        <button onClick={this.props.onUndoClick}><InfoOutlineIcon fontSize='small'/></button>
         <button onClick={this.props.onRedoClick}><UploadIcon fontSize='small'/></button>
         <button onClick={this.props.onFlipBoard}><SwapVertIcon fontSize='small'/></button>
         <button onClick={this.props.onResetClick}><DownloadIcon fontSize='small'/></button>
-        <button onClick={this.props.onGetFENClick}><InfoOutlineIcon fontSize='small'/></button>
+        <button onClick={this.props.onGetFENClick}><SendIcon fontSize='small'/></button>
       </div>
     )
   }

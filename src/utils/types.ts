@@ -4,6 +4,11 @@ import React, { MouseEventHandler } from 'react';
 
 export type GameProps = Record<string, unknown>;
 
+// export interface GameProps {
+//     // variant: Variant;
+//     // opponent: Opponent;
+// }
+
 export interface GameState {
     pieceKeys: string[];
     squareProps: SquareProp[];
@@ -20,6 +25,7 @@ export interface GameState {
     FEN: string;
     history: HistoryItem[];
     plyNumber: number;
+    halfmoveClock: number;
     //   testState: number;
 }
 
@@ -88,4 +94,8 @@ export interface HistoryItem {
     AN: string | null;
     JN: string | null;
     INN: string | null;
+}
+
+export interface Variant {
+
 }

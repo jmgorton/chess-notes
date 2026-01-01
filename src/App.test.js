@@ -7,7 +7,8 @@ import App from './App';
 //   expect(linkElement).toBeInTheDocument();
 // });
 
-test('possible positions at depth', () => {
+// test('possible positions at depth', () => {
+test('number of light pawns on starting position', () => {
   render(<App/>);
   const lightPawns = screen.findAllByAltText(/Light Pawn/);
   expect(lightPawns.length === 8);

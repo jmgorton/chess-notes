@@ -11,84 +11,95 @@ import { keycodeToComponent } from '../components/Piece.tsx';
 // // ********* GETTERS *********
 // // ***** and generators *****
 
-// // this method is called before this move is applied to state, still current player's turn 
-// // IS DEPENDENT ON CURRENT BOARD STATE 
-// // export const generateMoveAN = (component: React.Component<GameProps, GameState>, squareMovedFrom: number, squareMovedTo: number): string => { // , futureBoardState = this.state.pieceKeys) => {
-// export const generateMoveAN = (squareMovedFrom: number, squareMovedTo: number, currentBoardState: string[]): string => {
-//     // // TODO error handling 
-//     // if (!component) {
-//     //     console.error("Component was null or undefined in helpers#generateMoveAN");
-//     //     throw new Error('Component was null or undefined');
-//     // }
-//     // if (!component.state) {
-//     //     console.error("Component argument had no state attribute in helpers#generateMoveAN");
-//     //     throw new Error('Component has no state attribute');
-//     // }
-//     // if (!component.state.pieceKeys) {
-//     //     console.error("Component state had no pieceKeys attribute in helpers#generateMoveAN");
-//     //     throw new Error('Component has no pieceKeys state');
-//     // }
-//     const futureBoardState = getNewPieceKeysCopyWithMoveApplied(currentBoardState, squareMovedFrom, squareMovedTo);
-//     // const currentBoardState = component.state.pieceKeys.slice();
-//     let [playerCode, pieceCode] = currentBoardState[squareMovedFrom].split(''); // [null, null]; // futureBoardState[squareMovedTo].split('');
-//     if (playerCode === null && pieceCode === null) { // null !== undefined ... SMH 
-//       // this shouldn't happen, remnant of previous approach 
-//       [playerCode, pieceCode] = futureBoardState[squareMovedTo].split('');
-//     }
+// this method is called before this move is applied to state, still current player's turn 
+// boardState, whiteToPlay, kingPositions, this.wouldOwnKingBeInCheckAfterMove
+export const generateMoveAN = (squareMovedFrom: number, squareMovedTo: number, currentGame?: Game): string => { // , futureBoardState = this.state.pieceKeys) => {
+    if (!currentGame) {
+        throw Error("Not implemented (yet)");
+    }
+    const currentBoardState = currentGame.state.pieceKeys.slice();
+    const futureBoardState = getNewPieceKeysCopyWithMoveApplied(currentBoardState, squareMovedFrom, squareMovedTo);
 
-//     const isEnPassantCapture = isMoveEnPassant(squareMovedFrom, squareMovedTo, currentBoardState); // uses current board state, move not applied yet 
-//     const isCapture = (currentBoardState[squareMovedTo] !== '' || isEnPassantCapture ? 'x' : ''); 
-//     const opponent = component.state.whiteToPlay ? 'b' : 'w';
-//     const isCheck = component.isKingInCheck(opponent, futureBoardState) ? '+' : ''; // TODO or checkmate 
-//     // const isPawnPromotion = '=[Q,R,B,N]'; // TODO implement 
+    let [playerCode, pieceCode] = currentBoardState[squareMovedFrom].split(''); // [null, null]; // futureBoardState[squareMovedTo].split('');
+    // if (playerCode === null && pieceCode === null) { // null !== undefined ... SMH 
+    //     // this shouldn't happen, remnant of previous approach 
+    //     [playerCode, pieceCode] = futureBoardState[squareMovedTo].split('');
+    // }
 
-//     const destinationFile = 'abcdefgh'.charAt(squareMovedTo % 8);
-//     const destinationRank = 8 - Math.floor(squareMovedTo / 8); // remember that our 0-63 is kind of backwards, and 0-indexed 
+    if (isMoveCastling(squareMovedFrom, squareMovedTo, currentBoardState)) { 
+        const isShortCastling: boolean = Math.abs(squareMovedFrom - squareMovedTo) === 3;
+        return isShortCastling ? 'O-O' : 'O-O-O'; 
+    }
 
-//     const movesThatNecessitateFurtherClarification = component.getSquaresWithPiecesThatCanAttackThisSquare(squareMovedTo, true, null, null, futureBoardState) // get all pieces incl. self-attacks 
-//       .filter((squareId: number) => futureBoardState[squareId].charAt(0) === playerCode) // filter out non-self-attacks (opponent attacks)
-//       .filter((squareId: number) => futureBoardState[squareId].charAt(1) === pieceCode) // get only self-attacks from the same type of piece 
-//       .filter((squareId: number) => squareId !== squareMovedFrom); // state issue TODO fix ... including this piece 
+    let pieceAN, clarifierAN, isCaptureAN, destFileAN, destRankAN, promotionAN, isCheckOrCheckmateAN = '';
 
-//     // console.log(movesThatNecessitateFurtherClarification);
+    let kingPosition = currentGame.state.whiteToPlay ? 
+        currentGame.state.darkKingPosition : 
+        currentGame.state.lightKingPosition;
+    if (kingPosition === squareMovedFrom) kingPosition = squareMovedTo;
 
-//     if (movesThatNecessitateFurtherClarification.length === 0) {
-//       if (pieceCode === 'P') {
-//         if (isCapture !== '') {
-//           const sourceFile = 'abcdefgh'.charAt(squareMovedFrom % 8);
-//           return `${sourceFile}x${destinationFile}${destinationRank}${isCheck}`;
-//         }
-//         return `${destinationFile}${destinationRank}${isCheck}`;
-//       }
-//       return `${pieceCode}${isCapture}${destinationFile}${destinationRank}${isCheck}`;
-//     } else {
-//       // if (movesThatNecessitateFurtherClarification.length > 1) {
-//       //   // this can actually be kind of complicated, for example if one or some of the pieces are pinned, 
-//       //   // or promoting several pawns to knights and all (up to 4) attack the same square but have different rank *and* file
-//       //   // for rooks, bishops, (even queens? no...) just default with sourceFile,
-//       //   // use sourceRank if necessary due to duplicate identical sourceFile options, or use both of both have dupes 
-//       //   const sourceFile
-//       //   return 
-//       // }
-//       const sourceFile = 'abcdefgh'.charAt(squareMovedFrom % 8);
-//       const sourceRank = 8 - Math.floor(squareMovedFrom / 8);
-//       let dupeSourceFiles = false;
-//       let dupeSourceRanks = false;
-//       // for (const altMove in movesThatNecessitateFurtherClarification.items()) {
-//       for (let i = 0; i < movesThatNecessitateFurtherClarification.length; i++) {
-//         const altMove = movesThatNecessitateFurtherClarification[i];
-//         // check if piece move is actually legal here??? could expose a check 
-//         // if (this.wouldOwnKingBeInCheckAfterMove(altMove, squareMovedTo)) continue; 
-//         const altSourceFile = 'abcdefgh'.charAt(altMove % 8);
-//         const altSourceRank = 8 - Math.floor(altMove / 8);
-//         dupeSourceFiles = dupeSourceFiles || (sourceFile === altSourceFile);
-//         dupeSourceRanks = dupeSourceRanks || (sourceRank === altSourceRank);
-//         // console.log(`\tPiece at ${altMove} results in dupeSourceFiles:${dupeSourceFiles} (file:${altSourceFile}) and dupeSourceRanks:${dupeSourceRanks} (rank:${altSourceRank})`);
-//       }
-//       const pieceClarification = dupeSourceFiles ? (dupeSourceRanks ? `${sourceFile}${sourceRank}` : `${sourceRank}`) : `${sourceFile}`;
-//       return `${pieceCode}${pieceClarification}${isCapture}${destinationFile}${destinationRank}${isCheck}`;
-//     }
-// }
+    if (isKingInCheck(
+        kingPosition, 
+        futureBoardState, 
+        this
+    )) {
+        // if (this.isCheckmate()) isCheckOrCheckmateAN = '#';
+        isCheckOrCheckmateAN = '+';
+    }
+    
+    // TODO implement 
+    // const isPawnPromotion = '=[Q,R,B,N]'; 
+
+    // remember that our 0-63 is kind of backwards, and 0-indexed 
+    destRankAN = 8 - Math.floor(squareMovedTo / 8); 
+    destFileAN = 'abcdefgh'.charAt(squareMovedTo % 8);
+
+    if (
+        currentBoardState[squareMovedTo] !== '' ||
+        isMoveEnPassant(squareMovedFrom, squareMovedTo, currentBoardState)
+    ) {
+        isCaptureAN = 'x';
+    }
+
+    if (pieceCode === 'P') {
+        if (isCaptureAN === 'x') clarifierAN = 'abcdefgh'.charAt(squareMovedFrom % 8);
+    } else {
+        pieceAN = pieceCode;
+        const movesThatNecessitateFurtherClarification = getOccupiedSquaresThatCanAttackThisSquare(squareMovedTo, [playerCode], futureBoardState)
+            .filter((squareId) => futureBoardState[squareId].charAt(1) === pieceCode) // get only self-attacks from the same type of piece 
+            // .filter((squareId) => squareId !== squareMovedFrom); // state issue TODO fix ... including this piece 
+            .filter(squareId => !wouldOwnKingBeInCheckAfterMove(squareId, squareMovedTo, currentGame)) // don't allow illegal moves ... use current state, not future 
+
+        // console.log(movesThatNecessitateFurtherClarification);
+
+        if (movesThatNecessitateFurtherClarification.length > 0) {
+            // if (movesThatNecessitateFurtherClarification.length > 1) {
+            //   // this can actually be kind of complicated, for example if one or some of the pieces are pinned, 
+            //   // or promoting several pawns to knights and all (up to 4) attack the same square but have different rank *and* file
+            //   // for rooks, bishops, (even queens? no...) just default with sourceFile,
+            //   // use sourceRank if necessary due to duplicate identical sourceFile options, or use both of both have dupes 
+            // }
+            const sourceFile = 'abcdefgh'.charAt(squareMovedFrom % 8);
+            const sourceRank = 8 - Math.floor(squareMovedFrom / 8);
+            let dupeSourceFiles = false;
+            let dupeSourceRanks = false;
+            // for (const altMove in movesThatNecessitateFurtherClarification.items()) {
+            for (let i = 0; i < movesThatNecessitateFurtherClarification.length; i++) {
+                const altMove = movesThatNecessitateFurtherClarification[i];
+                const altSourceFile = 'abcdefgh'.charAt(altMove % 8);
+                const altSourceRank = 8 - Math.floor(altMove / 8);
+                dupeSourceFiles = dupeSourceFiles || (sourceFile === altSourceFile);
+                dupeSourceRanks = dupeSourceRanks || (sourceRank === altSourceRank);
+                // console.log(`\tPiece at ${altMove} results in dupeSourceFiles:${dupeSourceFiles} (file:${altSourceFile}) and dupeSourceRanks:${dupeSourceRanks} (rank:${altSourceRank})`);
+            }
+            if (dupeSourceFiles && dupeSourceRanks) clarifierAN = `${sourceFile}${sourceRank}`;
+            else if (dupeSourceFiles) clarifierAN = `${sourceRank}`;
+            else if (dupeSourceRanks) clarifierAN = `${sourceFile}`;
+        }
+    }
+
+    return [pieceAN, clarifierAN, isCaptureAN, destFileAN, destRankAN, promotionAN, isCheckOrCheckmateAN].join('');
+}
 
 // not dependent on current board state
 export const generateMoveJN = (squareMovedFrom: number, squareMovedTo: number): string => {
@@ -108,6 +119,7 @@ export const generateMoveINN = (squareMovedFrom: number, squareMovedTo: number):
 // currentBoardState does not yet have move applied from squareMovedFrom to squareMovedTo 
 // pieceMoving is still on squareMovedFrom 
 // we ASSUME that the arguments passed in represent a valid board state and a legal move to make 
+// TODO rename function to wouldMoveBeEnPassant ??? 
 export const isMoveEnPassant = (squareMovedFrom: number, squareMovedTo: number, currentBoardState: string[]): boolean => {
     if (currentBoardState[squareMovedFrom]?.charAt(1) !== 'P') return false; // not a pawn 
     if (squareMovedFrom % 8 === squareMovedTo % 8) return false; // same file, not a capture 
@@ -258,6 +270,25 @@ export function isKingInCheck(kingPositionArg?: number, boardStateArg?: string[]
     // have to evade with the king, check if opponent attacks all of the squares around our king 
     // if attackingSquares.length === 1, we can first try to capture or make a line from the attackingSquare to our king
     // and see if we can put a piece on any of those squares in the line to block 
+}
+
+export function isKingCheckmated(): boolean {
+    // is in check 
+    // can't capture/block (if single check) 
+    // can't evade 
+    return false;
+}
+
+export function wouldOwnKingBeInCheckAfterMove(squareMovedFrom: number, squareMovedTo: number, currentGame?: Game): boolean {
+    if (!currentGame) {
+        // TODO handle kingPosition and boardState if currentGame is undefined 
+        throw Error("Must supply currentGame arg (for now)...");
+    }
+    let ownKingPosition = currentGame.state.whiteToPlay ? currentGame.state.lightKingPosition : currentGame.state.darkKingPosition;
+    if (ownKingPosition === squareMovedFrom) ownKingPosition = squareMovedTo;
+
+    const futureState = getNewPieceKeysCopyWithMoveApplied(currentGame.state.pieceKeys, squareMovedFrom, squareMovedTo);
+    return isKingInCheck(ownKingPosition, futureState); // , this);
 }
 
 const isArgumentStringArray = (arg: any): boolean => {
