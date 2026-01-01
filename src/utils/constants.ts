@@ -19,6 +19,11 @@ export enum PLAYER {
 
 export const defaultBoardSize: number = 8;
 
+// Note: The below pattern validates the structure and allowed characters of a FEN string but does not check for logical game rules, 
+// such as valid run-length encoding (e.g., a rank can sum to more than 8 squares with a simple regex) or if the position is even legal within the rules of chess. 
+export const googleGeminiMatcher: RegExp = 
+    /^(((?<PiecePlacement>([pnbrqkPNBRQK1-8]+\/){7}[pnbrqkPNBRQK1-8]+))\s(?<SideToMove>[bw])\s(?<Castling>-|[KQkq]+)\s(?<EnPassant>-|[a-h][36])\s(?<HalfMoveClock>\d+)\s(?<FullMoveNumber>\d+))$/;
+
 // starting position in Forsyth-Edwards Notation 
 export const defaultStartingFEN: string = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"; 
 

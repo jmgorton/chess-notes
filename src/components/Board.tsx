@@ -19,11 +19,11 @@ class Board extends React.Component<BoardProps, BoardState> {
       isFlipped: false,
     }
 
-    // TODO explain this in more depth 
-    this.handleGetFENClick = this.handleGetFENClick.bind(this);
-    this.handleUndoClick = this.handleUndoClick.bind(this);
-    this.handleRedoClick = this.handleRedoClick.bind(this);
-    this.handleResetClick = this.handleResetClick.bind(this);
+    // binding not necessary when using newer arrow notation 
+    // this.handleGetFENClick = this.handleGetFENClick.bind(this);
+    // this.handleUndoClick = this.handleUndoClick.bind(this);
+    // this.handleRedoClick = this.handleRedoClick.bind(this);
+    // this.handleResetClick = this.handleResetClick.bind(this);
   }
 
   handleUndoClick: MouseEventHandler<HTMLButtonElement> = (event) => { // (event: Event) {
@@ -58,7 +58,7 @@ class Board extends React.Component<BoardProps, BoardState> {
       event.preventDefault();
       event.stopPropagation();
     }
-    console.log("Flipping board...");
+    // console.log("Flipping board...");
     this.setState({
       ...this.state,
       isFlipped: !this.state.isFlipped,
@@ -72,10 +72,10 @@ class Board extends React.Component<BoardProps, BoardState> {
                 <div>
                     {
                         Array.from({ length: this.props.boardSize }, (_, rankIndex) => {
-                          const sliceStart: number = this.state.isFlipped ? 
+                          const sliceStart: number = !this.state.isFlipped ? 
                             rankIndex * this.props.boardSize :
                             64 - ((rankIndex + 1) * this.props.boardSize);
-                          const sliceEnd: number = this.state.isFlipped ?
+                          const sliceEnd: number = !this.state.isFlipped ?
                             (rankIndex + 1) * this.props.boardSize :
                             64 - (rankIndex * this.props.boardSize);
                           
@@ -92,16 +92,7 @@ class Board extends React.Component<BoardProps, BoardState> {
                                           onSquareClick={this.props.handleSquareClick}
                                           onContextMenu={this.props.handleSquareRightClick}
                                           key={rankIndex * this.props.boardSize + fileIndex}
-                                      >
-                                        {/* {
-                                          squareProp.isPromoting && (
-                                            <PawnPromotionPiecePicker
-                                              onSelectPiece={() => console.log('Pawn promoted')}
-                                              position={{top: 100, left: 100}}
-                                            />
-                                          )
-                                        } */}
-                                      </Square>
+                                      />
                                     )
                                 })
                             }

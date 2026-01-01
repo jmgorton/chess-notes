@@ -24,29 +24,11 @@ import {
 
 export default class Game extends React.Component<GameProps, GameState> {
     // backrankStartingPositions: string[] = ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']; // can make chess960 later 
-    // startingFEN: string = 'r1b1kb1r/pp2pppp/2n2n2/1Bpq4/5P2/5N2/PPPP2PP/RNBQK2R w KQkq - 0 1'; // null 
+    testCastlingFEN: string = 'r1bqk2r/pp1p1ppp/2n2n2/4p3/1b2P3/1N1B4/PPPN1PPP/R1BQK2R b KQkq - 0 0'; 
     backrankStartingPositions: string[] = constants.defaultStartingBackRank;
-    startingFEN: string = constants.defaultStartingFEN;
+    startingFEN: string = this.testCastlingFEN; // constants.defaultStartingFEN;
     boardSize: number = this.backrankStartingPositions.length;
     numSquares: number = this.boardSize ** 2;
-
-    // state = {
-    //     pieceKeys = null,
-    //     squareProps = null,
-    //     lightKingPosition = null,
-    //     darkKingPosition = null;
-    //     lightKingHasShortCastlingRights = null,
-    //     lightKingHasLongCastlingRights = null,
-    //     darkKingHasShortCastlingRights = null,
-    //     darkKingHasLongCastlingRights = null,
-    //     enPassantTargetSquare = null,
-    //     squareSelected = null,
-    //     squareAltSelected = null,
-    //     whiteToPlay = null,
-    //     FEN = null,
-    //     history = null,
-    //     plyNumber = null,
-    // };
 
     constructor(props: GameProps) {
         super(props);
@@ -128,7 +110,7 @@ export default class Game extends React.Component<GameProps, GameState> {
         //     // TODO also store squares that can be discover-attacked by a piece after moving another piece 
 
 
-        //     // props:
+        //     // square props:
         //     //   color: not necessary, doesn't change, just use rank + file data in Board render method 
         //     //   keycode: the pieceKey ... if you think about it, this is not necessary either, data already in the pieceKeys state
         //     //   id: squareId [0-63] ... same with this one, data already stored in pieceKeys state by definition of their locations
@@ -154,8 +136,6 @@ export default class Game extends React.Component<GameProps, GameState> {
         //     //   INN: null, // International Numeric Notation (Computer Notation, e.g. 5254 == e2->e4)
         //     // }],
         //     plyNumber: 0,
-
-        //     //   testState: 0,
         // }
 
         // set this state info w helpers.initializeState(this);
@@ -178,8 +158,6 @@ export default class Game extends React.Component<GameProps, GameState> {
             halfmoveClock: 0, // TODO implement 50-ply rule 
         }
 
-        // helpers.initializeState(this);
-
         // not necessary? was working without this ... because they are arrow functions 
         // more modern JS/TS method where `this` is lexically scoped to the class instance 
         // and doesn't need to be bound explicitly
@@ -187,21 +165,12 @@ export default class Game extends React.Component<GameProps, GameState> {
         // this.handleSquareClick = this.handleSquareClick.bind(this);
         // this.handleSquareRightClick = this.handleSquareRightClick.bind(this);
         // this.handleUndoClick = this.handleUndoClick.bind(this);
-
-        // if (this.startingFEN) {
-        //     this.generateBoardStateFromFen(this.startingFEN); // const newStateKVPs = 
-        //     // this.setState({
-        //     //     ...this.state,
-        //     //     ...newStateKVPs,
-        //     // });
-
-        //     // return;
-        // }
     }
 
     componentDidMount(): void {
         if (this.startingFEN) {
-            this.generateBoardStateFromFen(this.startingFEN);
+            // this.generateBoardStateFromFen(this.startingFEN);
+            helpers.initializeState(this, this.startingFEN);
         } else {
             helpers.initializeState(this);
         }
@@ -258,80 +227,6 @@ export default class Game extends React.Component<GameProps, GameState> {
         console.log(`Full FEN: ${fullFEN}`);
 
         return fullFEN;
-    }
-
-    // takes a FEN string and sets the Game state accordingly, also returning new state 
-    // generateBoardStateFromFen = async (inputFEN: string): Promise<void> => { // { [key: string]: any } => {
-    generateBoardStateFromFen = (inputFEN: string): void => {
-        // console.log("Generating board state from FEN: " + inputFEN)
-        const [piecePlacement, sideToMove, castlingAbility, enPassantTargetSquare, halfmoveClock, fullmoveCounter] = inputFEN.split(' ');
-
-        // about halfmoveClock and fullmoveCounter:
-        // The halfmove clock specifies a decimal number of half moves with respect to the 50 move draw rule.
-        //   It is reset to zero after a capture or a pawn move and incremented otherwise.
-        // The fullmoveCounter is the  number of the full moves in a game. 
-        //   It starts at 1, and is incremented after each Black's move.
-        const rankPiecePlacements = piecePlacement.split('/');
-
-        let newPieceKeys = Array(64).fill("");
-        let newLightKingPosition = null;
-        let newDarkKingPosition = null;
-
-        let pki = 0;
-        for (const rank of rankPiecePlacements) { // REMEMBER: of, not in 
-              for (const char of rank) {
-            // for (let i: number = 0; i < rank.length; i++) {
-            //     const char = rank.charAt(i);
-                if (char.match(/[1-8]/)) {
-                    let numEmptySquares = Number(char);
-                    pki += numEmptySquares;
-                } else {
-                    const pieceCode = char.toUpperCase();
-                    const playerCode = (char === pieceCode) ? 'L' : 'D';
-                    newPieceKeys[pki] = `${playerCode}${pieceCode}`;
-                    if (pieceCode === 'K') {
-                        if (playerCode === 'L') newLightKingPosition = pki;
-                        else if (playerCode === 'D') newDarkKingPosition = pki;
-                    }
-                    pki += 1;
-                }
-            }
-        }
-
-        const newStateKVPs = {
-            pieceKeys: newPieceKeys,
-            squareProps: newPieceKeys.map((pieceKey, squareId) => {
-                return {
-                    keycode: pieceKey, // pieceId 
-                    id: squareId,
-                    isHighlighted: false,
-                    isAltHighlighted: false,
-                    isSelected: false,
-                    isAltSelected: false,
-                    isPromoting: false,
-                }
-            }),
-            lightKingPosition: newLightKingPosition!, // TODO could add more validation here to make sure 
-            darkKingPosition: newDarkKingPosition!, // there are kings on the board ... 
-            whiteToPlay: sideToMove === 'w',
-            darkKingHasShortCastlingRights: castlingAbility.includes('k'),
-            darkKingHasLongCastlingRights: castlingAbility.includes('q'),
-            lightKingHasShortCastlingRights: castlingAbility.includes('K'),
-            lightKingHasLongCastlingRights: castlingAbility.includes('Q'),
-            enPassantTargetSquare: enPassantTargetSquare === '-' ? null : Number(enPassantTargetSquare),
-            plyNumber: Number(fullmoveCounter) * 2 + sideToMove === 'w' ? 0 : 1,
-            halfmoveClock: Number(halfmoveClock),
-            FEN: inputFEN,
-            history: [], // no history from loading game from FEN 
-            squareSelected: null,
-            squareAltSelected: null,
-        }
-        // console.log(newStateKVPs);
-        this.setState({
-          ...this.state,
-          ...newStateKVPs,
-        });
-
     }
 
     // this method is called before this move is applied to state, still current player's turn 

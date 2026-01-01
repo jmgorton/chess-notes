@@ -387,6 +387,82 @@ export function getNewPieceKeysCopyWithMoveApplied(state: unknown, squareMovedFr
     return newPieceKeys; // , {squareIdOfPawnCapturedViaEnPassant, squareIdOfKingAfterCastling, squareIdOfRookAfterCastling};
 }
 
+export function doesStringMatchPatternFEN(input: string): boolean {
+    // const matcher: RegExp = /^.*$/;
+    const matcher = constants.googleGeminiMatcher;
+    return input.match(matcher) !== null;
+}
+
+// takes a FEN string and sets the Game state accordingly, also returning new state 
+// generateBoardStateFromFen = async (inputFEN: string): Promise<void> => { // { [key: string]: any } => {
+export function getNewBoardStateKVPsFromFen(inputFEN: string): { [key: string]: any } {
+    // console.log("Generating board state from FEN: " + inputFEN)
+    const [piecePlacement, sideToMove, castlingAbility, enPassantTargetSquare, halfmoveClock, fullmoveCounter] = inputFEN.split(' ');
+
+    // about halfmoveClock and fullmoveCounter:
+    // The halfmove clock specifies a decimal number of half moves with respect to the 50 move draw rule.
+    //   It is reset to zero after a capture or a pawn move and incremented otherwise.
+    // The fullmoveCounter is the  number of the full moves in a game. 
+    //   It starts at 1, and is incremented after each Black's move.
+    const rankPiecePlacements = piecePlacement.split('/');
+
+    let newPieceKeys = Array(64).fill("");
+    let newLightKingPosition = null;
+    let newDarkKingPosition = null;
+
+    let pki = 0;
+    for (const rank of rankPiecePlacements) { // REMEMBER: of, not in 
+            for (const char of rank) {
+        // for (let i: number = 0; i < rank.length; i++) {
+        //     const char = rank.charAt(i);
+            if (char.match(/[1-8]/)) {
+                let numEmptySquares = Number(char);
+                pki += numEmptySquares;
+            } else {
+                const pieceCode = char.toUpperCase();
+                const playerCode = (char === pieceCode) ? 'L' : 'D';
+                newPieceKeys[pki] = `${playerCode}${pieceCode}`;
+                if (pieceCode === 'K') {
+                    if (playerCode === 'L') newLightKingPosition = pki;
+                    else if (playerCode === 'D') newDarkKingPosition = pki;
+                }
+                pki += 1;
+            }
+        }
+    }
+
+    const newStateKVPs = {
+        pieceKeys: newPieceKeys,
+        squareProps: newPieceKeys.map((pieceKey, squareId) => {
+            return {
+                keycode: pieceKey, // pieceId 
+                id: squareId,
+                isHighlighted: false,
+                isAltHighlighted: false,
+                isSelected: false,
+                isAltSelected: false,
+                isPromoting: false,
+            }
+        }),
+        lightKingPosition: newLightKingPosition!, // TODO could add more validation here to make sure 
+        darkKingPosition: newDarkKingPosition!, // there are kings on the board ... 
+        whiteToPlay: sideToMove === 'w',
+        darkKingHasShortCastlingRights: castlingAbility.includes('k'),
+        darkKingHasLongCastlingRights: castlingAbility.includes('q'),
+        lightKingHasShortCastlingRights: castlingAbility.includes('K'),
+        lightKingHasLongCastlingRights: castlingAbility.includes('Q'),
+        enPassantTargetSquare: enPassantTargetSquare === '-' ? null : Number(enPassantTargetSquare),
+        plyNumber: Number(fullmoveCounter) * 2 + sideToMove === 'w' ? 0 : 1,
+        halfmoveClock: Number(halfmoveClock),
+        FEN: inputFEN,
+        history: [], // no history from loading game from FEN 
+        squareSelected: null,
+        squareAltSelected: null,
+    }
+
+    return newStateKVPs;
+}
+
 // returns a list of *any* piece that can attack this square by default, not just the opponent's pieces 
 // any piece can block identically to any other piece
 // any capture is equivalently effective at removing a check 
@@ -425,8 +501,21 @@ export const getOccupiedSquaresThatCanAttackThisSquare = (
 
 // // ********* SETTERS *********
 
-export const initializeState = (component: React.Component<any, any>): void => {
+export const initializeState = (component: React.Component<any, any>, stateToLoad?: unknown): void => {
 // export const initializeState = (component: React.Component<GameProps, GameState>): void => {
+    if (typeof stateToLoad === 'string') {
+        console.log(`Passed string stateToLoad: ${stateToLoad}`);
+        if (doesStringMatchPatternFEN(stateToLoad)) {
+            // wipe out existing state, if any (shouldn't be)
+            component.setState({
+                ...getNewBoardStateKVPsFromFen(stateToLoad),
+            });
+        } else {
+            console.warn(`Passed an un-parsable string stateToLoad argument: ${stateToLoad}`)
+        }
+        return;
+    }
+
     let startingConfig: string[] = Array(64).fill("");
     startingConfig.fill("DP", 8, 16);
     startingConfig.splice(0, 8, ...constants.defaultStartingBackRank.map((piece) => "D" + piece));
@@ -511,7 +600,7 @@ export const initializeState = (component: React.Component<any, any>): void => {
         plyNumber: 0,
     }
 
-    // wipe out existing state, if any 
+    // wipe out existing state, if any (shouldn't be)
     component.setState({
         ...newState,
     });
