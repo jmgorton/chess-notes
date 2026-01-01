@@ -59,10 +59,10 @@ export interface BoardState {
 }
 
 export interface BoardControlPanelProps {
-    onUndoClick: MouseEventHandler<HTMLButtonElement>; // | ((event: Event) => void) | undefined; 
-    onRedoClick: MouseEventHandler<HTMLButtonElement>; // (event: Event) => void; 
-    onResetClick: MouseEventHandler<HTMLButtonElement>; // (event: Event) => void; 
-    onGetFENClick: MouseEventHandler<HTMLButtonElement>; // (event: Event) => void;
+    onGetInfoClick: MouseEventHandler<HTMLButtonElement>; // | ((event: Event) => void) | undefined; 
+    onUploadClick: MouseEventHandler<HTMLButtonElement>; // (event: Event) => void; 
+    onDownloadClick: MouseEventHandler<HTMLButtonElement>; // (event: Event) => void; 
+    onSendGameClick: MouseEventHandler<HTMLButtonElement>; // (event: Event) => void;
     onFlipBoard: MouseEventHandler<HTMLButtonElement>;
 }
 
@@ -84,17 +84,22 @@ export interface SquareProp {
 }
 
 export interface SquareState {
-
+    promotionPiecePicker: React.ReactElement | null;
 }
 
 export type PieceProps = Record<string, unknown>;
 
 export interface HistoryItem {
-    pieceKeys: string[];
+    // pieceKeys: string[];
+    gameStateSnapshot: GameStateSnapshotItem;
     AN: string | null;
     JN: string | null;
     INN: string | null;
 }
+
+// Omit pieceKeys or squareProps ?? minimal info contained in pieceKeys, squareProps can be reconstructed 
+// Make a single prop item for board config or something, like squareSelected, etc. ?? 
+export type GameStateSnapshotItem = Omit<GameState, 'squareProps' | 'history' | 'squareSelected' | 'squareAltSelected' | 'FEN'>;
 
 export interface Variant {
 

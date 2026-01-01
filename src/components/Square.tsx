@@ -10,20 +10,18 @@ import {
 class Square extends React.Component<SquareProp, SquareState> {
   constructor(props: SquareProp) {
     super(props);
-    // this.state = {
-    //   ...this.state,
-    //   isHighlighted: this.props.isHighlighted || false,
-    //   isSelected: this.props.isSelected || false,
-    // }
+    this.state = {
+      ...this.state,
+      // isHighlighted: this.props.isHighlighted || false,
+      // isSelected: this.props.isSelected || false,
+      promotionPiecePicker: null,
+    }
     this.handleClick = this.handleClick.bind(this);
-    this.handleRightClick = this.handleRightClick.bind(this);
-
+    // this.handleRightClick = this.handleRightClick.bind(this); // not necessary for arrow functions 
     // this.handleStartPromotion = this.handleStartPromotion.bind(this);
-
-    // this.promotionPiecePicker = null;
   }
 
-  promotionPiecePicker: React.ReactElement | null = null; // typeof PawnPromotionPiecePicker | null = null;
+  // promotionPiecePicker: React.ReactElement | null = null; // typeof PawnPromotionPiecePicker | null = null;
 
   // React.DragEvent 
   handleStartPromotion = (event: Event) => {
@@ -36,11 +34,16 @@ class Square extends React.Component<SquareProp, SquareState> {
       return
     }
 
-    this.promotionPiecePicker = (
-      <PawnPromotionPiecePicker 
-        anchorProp={event.currentTarget}
-      />
-    )
+    // this.promotionPiecePicker = (
+    //   <PawnPromotionPiecePicker 
+    //     anchorProp={event.currentTarget}
+    //   />
+    // )
+
+    this.setState({
+      ...this.state,
+      promotionPiecePicker: <PawnPromotionPiecePicker anchorProp={event.currentTarget} />,
+    })
   }
 
   handleClick(event: any) {
@@ -122,7 +125,7 @@ class Square extends React.Component<SquareProp, SquareState> {
               React.createElement(keycodeToComponent[this.props.keycode as keyof typeof keycodeToComponent], this.props)
           }
         </button>
-        {this.promotionPiecePicker}
+        {this.state.promotionPiecePicker}
       </>
     );
   }

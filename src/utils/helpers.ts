@@ -1,10 +1,11 @@
-import React, { isValidElement } from 'react';
+import React from 'react';
 
 import Game from '../components/Game.tsx';
-import GameProps from '../components/Game.tsx';
+// import GameProps from '../components/Game.tsx';
 import GameState from '../components/Game.tsx';
 
 import * as constants from './constants.ts';
+import * as functions from './functions.ts';
 
 import { keycodeToComponent } from '../components/Piece.tsx';
 
@@ -221,7 +222,7 @@ export function getCastlingOptions(player: string, currentGame: Game): number[] 
         castlingOptions.push(rookStartingSquare);
     })
     
-    console.log(`Castling options: ${castlingOptions}`);
+    // console.log(`Castling options: ${castlingOptions}`);
 
     return castlingOptions;
 }
@@ -309,7 +310,7 @@ export function wouldOwnKingBeInCheckAfterMove(squareMovedFrom: number, squareMo
     }
 
     const futureState = getNewPieceKeysCopyWithMoveApplied(currentGame.state.pieceKeys, squareMovedFrom, squareMovedTo);
-    
+
     let ownKingPosition = currentGame.state.whiteToPlay ? currentGame.state.lightKingPosition : currentGame.state.darkKingPosition;
     if (ownKingPosition === squareMovedFrom) {
         if (isMoveCastling(squareMovedFrom, squareMovedTo, currentGame.state.pieceKeys)) {
@@ -332,51 +333,6 @@ export function wouldOwnKingBeInCheckAfterMove(squareMovedFrom: number, squareMo
     return isKingInCheck(ownKingPosition, futureState); // , currentGame);
 }
 
-const isArgumentStringArray = (arg: any): boolean => {
-    if (!Array.isArray(arg)) return false;
-    return arg.every(element => typeof element === 'string');
-}
-
-function isArgumentArrayOfType<T>(arg: any, type: T): boolean {
-    if (!Array.isArray(arg)) return false;
-    // return arg.every(element => element instanceof type);
-    return arg.every(element => typeof element === type);
-}
-
-// function isArgumentDictionary(arg: any): boolean {
-function isArgumentDictionary(arg: any): arg is Record<string, unknown> {
-    if (arg === null) return false;
-    if (typeof arg !== 'object') return false;
-    // functions and arrays are also object types in TS bc they have properties and methods 
-    if (Array.isArray(arg)) return false; 
-    return true;
-}
-
-const isArgumentReactComponent = (arg: any): boolean => {
-    const argPrototype: any | null = Object.getPrototypeOf(arg);
-    if (!argPrototype) {
-        console.log(`Arg ${arg} has no prototype property.`);
-    }
-    if (argPrototype instanceof React.Component) {
-        // alert(`${(arg as React.Component<GameProps, GameState>).name}`);
-        // console.log(argPrototype);
-        try {
-            (argPrototype as React.Component<GameProps, GameState>)
-        } catch (error) {
-            console.error(error);
-        }
-        return true;
-    }
-     if (isValidElement(arg) || isValidElement(argPrototype)) {
-        console.log(`${argPrototype || arg} is a valid React element.`);
-    }
-    // if (arg.prototype instanceof React.Component) {
-    //     // evaluates to false on regular flow ... research prototypes more 
-    //     return true;
-    // }
-    return false;
-}
-
 // TODO we need to allow this to handle pawn promotions 
 export function getNewPieceKeysCopyWithMoveApplied(boardState: string[], squareMovedFrom: number, squareMovedTo: number): string[];
 export function getNewPieceKeysCopyWithMoveApplied(component: React.Component<any, any>, squareMovedFrom: number, squareMovedTo: number): string[];
@@ -384,11 +340,11 @@ export function getNewPieceKeysCopyWithMoveApplied(component: React.Component<an
 // export const getNewPieceKeysCopyWithMoveApplied = (component: React.Component<any, any>, squareMovedFrom: number, squareMovedTo: number): string[] => {
 export function getNewPieceKeysCopyWithMoveApplied(state: unknown, squareMovedFrom: number, squareMovedTo: number): string[] {
     let currentBoardState: string[] | null = null;
-    if (isArgumentStringArray(state)) { 
+    if (functions.isArgumentStringArray(state)) { 
         currentBoardState = state as string[]; 
         // console.log(currentBoardState); 
     }
-    else if (isArgumentReactComponent(state)) {
+    else if (functions.isArgumentReactComponent(state)) {
         // try {
         //     const inputComponentState: GameProps | GameState = (state as React.Component<GameProps, GameState>).state;
         //     // currentBoardState = inputComponentState.pieceKeys;
@@ -556,7 +512,7 @@ export function generateFENFromGameState(gameState: unknown): string {
             castlingRightsState.LQ = gameState.state.lightKingHasLongCastlingRights;
             castlingRightsState.LK = gameState.state.lightKingHasShortCastlingRights;
         }
-    } else if (isArgumentDictionary(gameState)) {
+    } else if (functions.isArgumentDictionary(gameState)) {
         // gameState = (gameState as { [key: string]: any });
         if (requiredKeys.some(key => !(key in gameState))) return '';
         if (moreRequiredKeys.some(key => !(key in gameState))) {

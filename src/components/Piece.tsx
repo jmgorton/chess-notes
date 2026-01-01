@@ -159,12 +159,12 @@ class Pawn extends Piece {
       includeNonCaptures?: boolean;
       includeCapturesOf?: string[];
     } = {},
-    moveDirections?: number[], // = this.moveDirections,
-    captureDirections?: number[], // = this.captureDirections,
-    startingRank: number | null = null,
+    // moveDirections?: number[], // = this.moveDirections,
+    // captureDirections?: number[], // = this.captureDirections,
+    // startingRank: number | null = null,
   ) => {
     // // Legal pawn moves   
-    const currRank = Math.floor(squareId / 8);
+    // const currRank = Math.floor(squareId / 8);
     let pawnMoves: number[] = [];
 
     // adding pawn moves (non-captures)
@@ -173,9 +173,9 @@ class Pawn extends Piece {
       pawnMoves = pawnMoves.concat(Piece.generatePieceValidMoves(
         squareId,
         boardState,
-        moveDirections || directions || [],
+        directions || [], // moveDirections 
         {
-            distance: currRank === startingRank ? 2 : 1,
+            distance: distance, // currRank === startingRank ? 2 : 1,
             // nextSquareValidators: this.nextSquareValidators,
             // captureValidators: captureValidators,
             includeNonCaptures: true, // includeNonCaptures,
@@ -184,20 +184,6 @@ class Pawn extends Piece {
       ));
     }
 
-    // if (includeNonCaptures) {
-    //   pawnMoves = pawnMoves.concat(
-    //     this.generatePieceValidNonCaptureMoves(
-    //       squareId,
-    //       // playerCode === 'L' ? [-8] : [8],
-    //       this.moveDirections,
-    //       {
-    //         distance: (currRank === (playerCode === 'L' ? 6 : 1)) ? 2 : 1,
-    //       },
-    //       boardState
-    //     )
-    //   );
-    // }
-
     // how does this work if we reference boardState from this lambda and call it in a separate function? 
     // let captureValidators = [
     //   // this first one does not work ... 
@@ -205,7 +191,7 @@ class Pawn extends Piece {
     //   // TODO we need to pass in the enPassantTargetSquare or something 
     // ];
     // helpers.isMoveEnPassant only works *after* the move's been played
-    captureValidators.push(((squareFrom: number, squareTo: number) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState)));
+    // captureValidators.push(((squareFrom: number, squareTo: number) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState)));
     // // We need to generate the option to play it. That means we need access to history or enPassantTargetSquare Game state
     // captureValidators.push((squareFrom: number, squareTo: number) => {
 
@@ -217,7 +203,7 @@ class Pawn extends Piece {
     pawnMoves = pawnMoves.concat(Piece.generatePieceValidMoves(
       squareId,
       boardState,
-      captureDirections || directions || [],
+      directions || [], // captureDirections 
       {
           distance: 1,
           nextSquareValidators: nextSquareValidators,
@@ -227,44 +213,11 @@ class Pawn extends Piece {
       },
     ));
 
-    // pawnMoves = pawnMoves.concat(
-    //   this.generatePieceValidCaptureMoves(
-    //     squareId,
-    //     playerCode === 'L' ? [-7, -9] : [7, 9],
-    //     1,
-    //     {
-    //       // distance: 1,
-    //       captureValidators: [
-    //         (squareFrom, squareTo) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState),
-    //       ],
-    //     },
-    //     boardState,
-    //   )
-    // )
-
-    // if (includeAttacksFrom.includes(playerCode)) {
-    //   pawnMoves = pawnMoves.concat(
-    //     this.generatePieceValidSelfCaptureMoves(
-    //       squareId,
-    //       playerCode === 'L' ? [-7, -9] : [7, 9],
-    //       {
-    //         distance: 1,
-    //       },
-    //       boardState,
-    //     )
-    //   )
-    // }
-
     return pawnMoves;
   }
-
-  // handleClick() {
-  //   const squareId = this.props.id;
-  //   this.props.onPawnClick(squareId);
-  // }
 }
 
-class LightPawn extends Pawn {
+export class LightPawn extends Pawn {
   static alt = "Light Pawn";
   static playercode = "L";
   static keycode = "LP";
@@ -306,21 +259,71 @@ class LightPawn extends Pawn {
       captureValidators?: ((oldSquare: number, newSquare: number) => boolean)[];
       includeNonCaptures?: boolean;
       includeCapturesOf?: string[];
-    } = {}
+    } = {},
+    enPassantTargetSquare?: number,
   ) => {
     // return super.generatePieceValidMoves(
-    return Pawn.generatePieceValidMoves(
+    // return Pawn.generatePieceValidMoves(
+    //   squareId,
+    //   boardState,
+    //   directions, // null
+    //   { // investigate: what happens if these are not named? No KVPs, just CSVs ...
+    //     includeNonCaptures: includeNonCaptures, // Object literal may only specify known properties
+    //     includeCapturesOf: includeCapturesOf, // So variable must be named like the key of the KVP 
+    //   },
+    //   // this.moveDirections,
+    //   // this.captureDirections,
+    //   // this.startingRank,
+    // );
+
+    // // Legal pawn moves   
+    const currRank = Math.floor(squareId / 8);
+    let pawnMoves: number[] = [];
+
+    // adding pawn moves (non-captures)
+    if (includeNonCaptures) {
+      // pawnMoves = pawnMoves.concat(super.generatePieceValidMoves(
+      pawnMoves = pawnMoves.concat(Pawn.generatePieceValidMoves(
+        squareId,
+        boardState,
+        this.moveDirections || directions || [], // moveDirections 
+        {
+            distance: currRank === this.startingRank ? 2 : 1,
+            // nextSquareValidators: this.nextSquareValidators,
+            // captureValidators: captureValidators,
+            includeNonCaptures: true, // includeNonCaptures,
+            includeCapturesOf: [], // includeCapturesOf,
+        },
+      ));
+    }
+
+    // how does this work if we reference boardState from this lambda and call it in a separate function? 
+    // let captureValidators = [
+    //   ((squareFrom: number, squareTo: number) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState)),
+    // ];
+
+    // helpers.isMoveEnPassant only works *after* the move's been played
+    // captureValidators.push(((squareFrom: number, squareTo: number) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState)));
+    captureValidators.push((squareFrom: number, squareTo: number) => squareTo === enPassantTargetSquare);
+
+    nextMoveValidators.push((squareFrom: number, squareTo: number) => Math.abs(squareFrom % 8 - squareTo % 8) === 1);
+
+    // adding more pawn moves (captures)
+    // pawnMoves = pawnMoves.concat(super.generatePieceValidMoves(
+    pawnMoves = pawnMoves.concat(Pawn.generatePieceValidMoves(
       squareId,
       boardState,
-      directions, // null
-      { // investigate: what happens if these are not named? No KVPs, just CSVs ...
-        includeNonCaptures: includeNonCaptures, // Object literal may only specify known properties
-        includeCapturesOf: includeCapturesOf, // So variable must be named like the key of the KVP 
+      this.captureDirections || directions || [], // captureDirections 
+      {
+          distance: 1,
+          nextMoveValidators: nextMoveValidators,
+          captureValidators: captureValidators,
+          includeNonCaptures: false,
+          includeCapturesOf: includeCapturesOf,
       },
-      this.moveDirections,
-      this.captureDirections,
-      this.startingRank,
-    );
+    ));
+
+    return pawnMoves;
   }
 
   handleClick() {
@@ -331,7 +334,7 @@ class LightPawn extends Pawn {
   }
 }
 
-class DarkPawn extends Pawn {
+export class DarkPawn extends Pawn {
   static alt = "Dark Pawn";
   static playercode = "D";
   static keycode = "DP";
@@ -373,21 +376,70 @@ class DarkPawn extends Pawn {
       captureValidators?: ((oldSquare: number, newSquare: number) => boolean)[];
       includeNonCaptures?: boolean;
       includeCapturesOf?: string[];
-    } = {}
+    } = {},
+    enPassantTargetSquare?: number,
   ) => {
-    // return super.generatePieceValidMoves(
-    return Pawn.generatePieceValidMoves(
+    // // return super.generatePieceValidMoves(
+    // return Pawn.generatePieceValidMoves(
+    //   squareId,
+    //   boardState,
+    //   directions,
+    //   {
+    //     includeNonCaptures,
+    //     includeCapturesOf,
+    //   },
+    //   // this.moveDirections,
+    //   // this.captureDirections,
+    //   // this.startingRank,
+    // );
+
+    // // Legal pawn moves   
+    const currRank = Math.floor(squareId / 8);
+    let pawnMoves: number[] = [];
+
+    // adding pawn moves (non-captures)
+    if (includeNonCaptures) {
+      // pawnMoves = pawnMoves.concat(super.generatePieceValidMoves(
+      pawnMoves = pawnMoves.concat(Pawn.generatePieceValidMoves(
+        squareId,
+        boardState,
+        this.moveDirections || directions || [], // moveDirections 
+        {
+            distance: currRank === this.startingRank ? 2 : 1,
+            // nextSquareValidators: this.nextSquareValidators,
+            // captureValidators: captureValidators,
+            includeNonCaptures: true, // includeNonCaptures,
+            includeCapturesOf: [], // includeCapturesOf,
+        },
+      ));
+    }
+
+    // how does this work if we reference boardState from this lambda and call it in a separate function? 
+    // let captureValidators = [
+    //   ((squareFrom: number, squareTo: number) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState)),
+    // ];
+
+    // helpers.isMoveEnPassant only works *after* the move's been played
+    // captureValidators.push(((squareFrom: number, squareTo: number) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState)));
+    captureValidators.push((squareFrom: number, squareTo: number) => squareTo === enPassantTargetSquare);
+    nextMoveValidators.push((squareFrom: number, squareTo: number) => Math.abs(squareFrom % 8 - squareTo % 8) === 1);
+
+    // adding more pawn moves (captures)
+    // pawnMoves = pawnMoves.concat(super.generatePieceValidMoves(
+    pawnMoves = pawnMoves.concat(Pawn.generatePieceValidMoves(
       squareId,
       boardState,
-      directions,
+      this.captureDirections || directions || [], // captureDirections 
       {
-        includeNonCaptures,
-        includeCapturesOf,
+          distance: 1,
+          nextMoveValidators: nextMoveValidators,
+          captureValidators: captureValidators,
+          includeNonCaptures: false,
+          includeCapturesOf: includeCapturesOf,
       },
-      this.moveDirections,
-      this.captureDirections,
-      this.startingRank,
-    );
+    ));
+
+    return pawnMoves;
   }
 
   handleClick() {

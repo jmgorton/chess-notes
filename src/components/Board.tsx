@@ -26,26 +26,26 @@ class Board extends React.Component<BoardProps, BoardState> {
     // this.handleResetClick = this.handleResetClick.bind(this);
   }
 
-  handleUndoClick: MouseEventHandler<HTMLButtonElement> = (event) => { // (event: Event) {
+  handleSendGameClick: MouseEventHandler<HTMLButtonElement> = (event) => { // (event: Event) {
     if (event && typeof event.preventDefault === 'function') {
       event.preventDefault();
       event.stopPropagation();
     }
-    if (this.props.handleUndoClick) this.props.handleUndoClick(); // this.props.handleUndoClick(event);
+    // if (this.props.handleUndoClick) this.props.handleUndoClick(); // this.props.handleUndoClick(event);
   }
 
   // handleRedoClick(event: Event) {
-  handleRedoClick: MouseEventHandler<HTMLButtonElement> = (event) => {
+  handleUploadClick: MouseEventHandler<HTMLButtonElement> = (event) => {
 
   }
 
-  handleResetClick: MouseEventHandler<HTMLButtonElement> = (event) => { // (event: Event) {
+  handleDownloadClick: MouseEventHandler<HTMLButtonElement> = (event) => { // (event: Event) {
     // console.log('Board#handleResetClick');
 
-    this.props.handleResetClick();
+    // this.props.handleResetClick();
   }
 
-  handleGetFENClick: MouseEventHandler<HTMLButtonElement> = (event) => { // (event: Event) {
+  handleGetInfoClick: MouseEventHandler<HTMLButtonElement> = (event) => { // (event: Event) {
     if (event && typeof event.preventDefault === 'function') {
       event.preventDefault();
       event.stopPropagation();
@@ -103,10 +103,10 @@ class Board extends React.Component<BoardProps, BoardState> {
                 </div>
             </div>
             <BoardControlPanel 
-                onUndoClick={this.handleUndoClick} 
-                onRedoClick={this.handleRedoClick} 
-                onResetClick={this.handleResetClick} 
-                onGetFENClick={this.handleGetFENClick}
+                onGetInfoClick={this.handleGetInfoClick} 
+                onUploadClick={this.handleUploadClick} 
+                onDownloadClick={this.handleDownloadClick} 
+                onSendGameClick={this.handleSendGameClick}
                 onFlipBoard={this.flipBoard}
             />
         </div>
