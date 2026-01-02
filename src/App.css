@@ -295,6 +295,15 @@
     align-items: flex-start; */
     text-align: left;
   }
+
+  .pawn-promotion-piece-picker {
+    /* display: flex; */
+    /* align-items: center; */
+    /* justify-content: center; */
+
+    /* display: table-cell;
+    vertical-align: middle; */
+  }
 }
 
   /* --- Animated logo styles --- */

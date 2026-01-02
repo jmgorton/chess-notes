@@ -78,7 +78,7 @@ class Square extends React.Component<SquareProp, SquareState> {
 
     this.setState({
       ...this.state,
-      promotionPiecePicker: <PawnPromotionPiecePicker anchorProp={event.currentTarget} player={this.props.keycode?.charAt(0)} />,
+      promotionPiecePicker: <PawnPromotionPiecePicker anchorProp={event.currentTarget} player={this.props.id < 8 ? 'L' : 'D'} />,
     })
   }
 
@@ -102,10 +102,10 @@ class Square extends React.Component<SquareProp, SquareState> {
 
     if (this.props.onSquareClick) this.props.onSquareClick(this.props.id);
 
-    // if (this.props.isPromoting) { // || (this.props.isHighlighted && this.props.id < 8)) {
-    //   console.log('After this.props.onSquareClick');
-    //   this.handleStartPromotion(event);
-    // }
+    if (this.props.isPromoting) { // || (this.props.isHighlighted && this.props.id < 8)) {
+      console.log('After this.props.onSquareClick');
+      this.handleStartPromotion(event);
+    }
   }
 
   handleRightClick: MouseEventHandler = (event) => { // (event: any) { // Event, MouseEvent, MouseEvent<MouseElement, MouseEvent>, MouseEventHandler

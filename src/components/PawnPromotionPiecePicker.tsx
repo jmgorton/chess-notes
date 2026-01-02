@@ -136,30 +136,34 @@ const PawnPromotionPiecePicker: React.FC<PawnPromotionPiecePickerProps> = ({
             <Fade {...TransitionProps} timeout={350}> 
                 <Paper>
                     {
-                        <div>
-                        {pieces.map((piece, index) => {
-                            return (
-                                <Square 
-                                    // style={{
-                                    //     backgroundColor: '#f0f0f0',
-                                    //     border: '2px solid #333',
-                                    //     borderRadius: '8px',
-                                    //     padding: '4px',
-                                    // }}
-                                    keycode={`${player}${piece.notation}`}
-                                    key={`promotion-square-${index}`}
-                                    id={index + 64} // extra-board squares 
-                                    isHighlighted={false}
-                                    isAltHighlighted={false}
-                                    isSelected={false}
-                                    isAltSelected={false}
-                                    isPromoting={false}
-                                    // onMouseEnter={(e: Event) => (e.currentTarget.style.backgroundColor = '#e0e0e0')}
-                                    // onMouseLeave={(e: Event) => (e.currentTarget.style.backgroundColor = '#fff')}
-                                    // title={piece.name}
-                                />
-                            )
-                        })}
+                        <div
+                            className='pawn-promotion-piece-picker'
+                        >
+                            {pieces.map((piece, index) => {
+                                return (
+                                    <div>  
+                                        <Square 
+                                            // style={{
+                                            //     backgroundColor: '#f0f0f0',
+                                            //     border: '2px solid #333',
+                                            //     borderRadius: '8px',
+                                            //     padding: '4px',
+                                            // }}
+                                            keycode={`${player}${piece.notation}`}
+                                            key={`promotion-square-${index}`}
+                                            id={index + 64} // extra-board squares 
+                                            isHighlighted={false}
+                                            isAltHighlighted={false}
+                                            isSelected={false}
+                                            isAltSelected={false}
+                                            isPromoting={false}
+                                            // onMouseEnter={(e: Event) => (e.currentTarget.style.backgroundColor = '#e0e0e0')}
+                                            // onMouseLeave={(e: Event) => (e.currentTarget.style.backgroundColor = '#fff')}
+                                            // title={piece.name}
+                                        />
+                                    </div>
+                                )
+                            })}
                         </div>
                     }
                 </Paper>
