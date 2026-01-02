@@ -1,9 +1,12 @@
 import React from 'react';
 
-import * as helpers from '../utils/helpers.ts';
+import DraggableWrapper from './hoc/DraggableWrapper.tsx';
+
 import Game from './Game.tsx';
 
+import * as helpers from '../utils/helpers.ts';
 import { PieceProps } from '../utils/types.ts'
+import { useUniqueId } from '@dnd-kit/utilities';
 
 // Use public resources so filenames remain predictable in production.
 // Put the PNGs in `public/resources` and reference them via PUBLIC_URL.
@@ -112,19 +115,35 @@ class Piece extends React.Component {
   }
 
   render() {
+
+    // TODO unique id for pieces without relying on dnd-utilities ... EUGH
     return (
-      <img 
-        src={this.icon} 
-        // src={keycodeToIcon[this.state.playercode + this.state.piececode]}
-        alt={this.alt} 
-        // alt={this.state.playercode + this.state.piececode}
-        className="piece" 
-        onClick={this.handleClick} 
-        // zindex="10"
-        // onClick={() => props.onClick(props.id)} // commented out to avoid piece click interfering with square click for now ...
-        // both Piece and Square have the same onClick prop passed down from Board via Square
-        // onClick={props.onClick} // i think this would pass the event object, not the square id ...
-      />
+      <DraggableWrapper 
+        id={`draggable-${useUniqueId}`} 
+      > 
+        {
+          (attributes, listeners, setNodeRef, transform, isDragging) => (
+          <img 
+            src={this.icon} 
+            // src={keycodeToIcon[this.state.playercode + this.state.piececode]}
+            alt={this.alt} 
+            // alt={this.state.playercode + this.state.piececode}
+            className="piece" 
+            onClick={this.handleClick} 
+            zindex={transform ? '11' : '10'}
+            style={{opacity: isDragging ? 0.5 : 1}}
+            // onClick={() => props.onClick(props.id)} // commented out to avoid piece click interfering with square click for now ...
+            // both Piece and Square have the same onClick prop passed down from Board via Square
+            // onClick={props.onClick} // i think this would pass the event object, not the square id ...
+
+            ref={setNodeRef}
+            {...attributes}
+            {...listeners}
+            transform={transform ? `translate3d(${transform.x}px ${transform.y}px, 0)` : undefined}
+          />
+          )
+        }
+      </DraggableWrapper>
     );
   }
 }

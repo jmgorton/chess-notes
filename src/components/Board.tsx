@@ -1,4 +1,8 @@
 import React, { MouseEventHandler } from 'react';
+// import { DndContext, useSensors, useSensor, MouseSensor } from '@dnd-kit/core';
+import { withDndContext } from './hoc/DragDropContextWrapper.tsx';
+
+// import BoardControlPanel from './BoardControlPanel.tsx';
 import Square from './Square.tsx';
 // import PawnPromotionPiecePicker from './PawnPromotionPiecePicker.tsx';
 
@@ -7,8 +11,6 @@ import {
   BoardState,
   SquareProp,
 } from '../utils/types.ts';
-
-import BoardControlPanel from './BoardControlPanel.tsx';
 
 class Board extends React.Component<BoardProps, BoardState> {
 
@@ -26,92 +28,73 @@ class Board extends React.Component<BoardProps, BoardState> {
     // this.handleResetClick = this.handleResetClick.bind(this);
   }
 
-  handleSendGameClick: MouseEventHandler<HTMLButtonElement> = (event) => { // (event: Event) {
-    if (event && typeof event.preventDefault === 'function') {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-    // if (this.props.handleUndoClick) this.props.handleUndoClick(); // this.props.handleUndoClick(event);
-  }
+  // handleDragEnd(event: any) { // React.SyntheticEvent? 
+  //   console.log(`Board#handleDragEnd(${event})`);
+  //   const {over} = event;
 
-  // handleRedoClick(event: Event) {
-  handleUploadClick: MouseEventHandler<HTMLButtonElement> = (event) => {
+  //   // if the item is dropped over a Droppable container, set it as the parent;
+  //   //   otherwise, set it back to XX~~null~~XX what it was before, not null ... 
+  //   //   we have multiple Draggables and multiple Droppables on the board 
+  //   // it almost might be preferable to use the sorted packages
 
-  }
+  //   if (over) {
+  //     console.log(over.id);
+  //     this.props.handleSquareClick(over.id);
+  //   }
+  // }
 
-  handleDownloadClick: MouseEventHandler<HTMLButtonElement> = (event) => { // (event: Event) {
-    // console.log('Board#handleResetClick');
+  // handleDragStart(event: any) {
+  //   // determine which squares to enable as legal Droppables 
+  //   console.log(`Board#handleDragStart(${event})`);
+  //   const {over} = event;
 
-    // this.props.handleResetClick();
-  }
-
-  handleGetInfoClick: MouseEventHandler<HTMLButtonElement> = (event) => { // (event: Event) {
-    if (event && typeof event.preventDefault === 'function') {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-    if (this.props.handleGetFENClick) this.props.handleGetFENClick(event); // , this.props.id); // add Event to type desc. 
-  }
-
-  flipBoard: MouseEventHandler<HTMLButtonElement> = (event) => { // (event: Event) {
-    if (event && typeof event.preventDefault === 'function') {
-      event.preventDefault();
-      event.stopPropagation();
-    }
-    // console.log("Flipping board...");
-    this.setState({
-      ...this.state,
-      isFlipped: !this.state.isFlipped,
-    })
-  }
+  //   if (over) {
+  //     console.log(over.id);
+  //     this.props.handleSquareClick(over.id); // just imagine it as a click??? is it that easy? 
+  //   }
+  // }
 
   render() {
     return (
-        <div className="board-container">
-            <div className="game-board">
-                <div>
-                    {
-                        Array.from({ length: this.props.boardSize }, (_, rankIndex) => {
-                          const sliceStart: number = !this.state.isFlipped ? 
-                            rankIndex * this.props.boardSize :
-                            64 - ((rankIndex + 1) * this.props.boardSize);
-                          const sliceEnd: number = !this.state.isFlipped ?
-                            (rankIndex + 1) * this.props.boardSize :
-                            64 - (rankIndex * this.props.boardSize);
-                          
-                          const toRender: SquareProp[] = this.props.squareProps.slice(sliceStart, sliceEnd);
-                          if (this.state.isFlipped) toRender.reverse();
+        <div className="game-board">
+          <div>
+              {
+                Array.from({ length: this.props.boardSize }, (_, rankIndex) => {
+                  const sliceStart: number = !this.state.isFlipped ?
+                    rankIndex * this.props.boardSize :
+                    64 - ((rankIndex + 1) * this.props.boardSize);
+                  const sliceEnd: number = !this.state.isFlipped ?
+                    (rankIndex + 1) * this.props.boardSize :
+                    64 - (rankIndex * this.props.boardSize);
+
+                  const toRender: SquareProp[] = this.props.squareProps.slice(sliceStart, sliceEnd);
+                  if (this.state.isFlipped) toRender.reverse();
+                  return (
+                    <div className="board-row" key={rankIndex}>
+                      {
+                        toRender.map((squareProp, fileIndex) => {
                           return (
-                            <div className="board-row" key={rankIndex}>
-                            {
-                                toRender.map((squareProp, fileIndex) => {
-                                    return (
-                                      <Square 
-                                          {...squareProp} 
-                                          color={(rankIndex + fileIndex) % 2 === 0 ? "light" : "dark"} 
-                                          onSquareClick={this.props.handleSquareClick}
-                                          onContextMenu={this.props.handleSquareRightClick}
-                                          key={rankIndex * this.props.boardSize + fileIndex}
-                                      />
-                                    )
-                                })
-                            }
-                            </div>
-                        );
-                      })
-                    }
-                </div>
-            </div>
-            <BoardControlPanel 
-                onGetInfoClick={this.handleGetInfoClick} 
-                onUploadClick={this.handleUploadClick} 
-                onDownloadClick={this.handleDownloadClick} 
-                onSendGameClick={this.handleSendGameClick}
-                onFlipBoard={this.flipBoard}
-            />
+                            <Square
+                              {...squareProp}
+                              color={(rankIndex + fileIndex) % 2 === 0 ? "light" : "dark"}
+                              onSquareClick={this.props.handleSquareClick}
+                              onContextMenu={this.props.handleSquareRightClick}
+                              key={rankIndex * this.props.boardSize + fileIndex}
+                            />
+                          )
+                        })
+                      }
+                    </div>
+                  );
+                })
+              }
+          </div>
         </div>
-    )
+    );
   }
 }
 
-export default Board;
+// Board is 'drag-and-drop'able by default 
+export default withDndContext(Board);
+
+// export DraggableDroppableBoard // TODO enable via settings/toggle 

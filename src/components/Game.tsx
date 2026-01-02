@@ -1,4 +1,4 @@
-import React, { ReactEventHandler } from 'react';
+import React, { MouseEventHandler, ReactEventHandler } from 'react';
 
 import GameStatus from './GameStatus.tsx';
 import { GameNotes } from './GameNotes';
@@ -23,6 +23,7 @@ import {
     GameState,
     // HistoryItem,
 } from '../utils/types.ts';
+import BoardControlPanel from './BoardControlPanel.tsx';
 
 export default class Game extends React.Component<GameProps, GameState> {
     // backrankStartingPositions: string[] = ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']; // can make chess960 later 
@@ -549,22 +550,71 @@ export default class Game extends React.Component<GameProps, GameState> {
         helpers.initializeState(this);
     }
 
+    handleSendGameClick: MouseEventHandler<HTMLButtonElement> = (event) => { // (event: Event) {
+        if (event && typeof event.preventDefault === 'function') {
+        event.preventDefault();
+        event.stopPropagation();
+        }
+        // if (this.props.handleUndoClick) this.props.handleUndoClick(); // this.props.handleUndoClick(event);
+    }
+
+    // handleRedoClick(event: Event) {
+    handleUploadClick: MouseEventHandler<HTMLButtonElement> = (event) => {
+
+    }
+
+    handleDownloadClick: MouseEventHandler<HTMLButtonElement> = (event) => { // (event: Event) {
+        // console.log('Board#handleResetClick');
+
+        // this.props.handleResetClick();
+    }
+
+    handleGetInfoClick: MouseEventHandler<HTMLButtonElement> = (event) => { // (event: Event) {
+        if (event && typeof event.preventDefault === 'function') {
+        event.preventDefault();
+        event.stopPropagation();
+        }
+        // if (this.props.handleGetFENClick) this.props.handleGetFENClick(event); // , this.props.id); // add Event to type desc. 
+        helpers.generateFENFromGameState(this);
+    }
+
+    flipBoard: MouseEventHandler<HTMLButtonElement> = (event) => { // (event: Event) {
+        if (event && typeof event.preventDefault === 'function') {
+        event.preventDefault();
+        event.stopPropagation();
+        }
+        // console.log("Flipping board...");
+        this.setState({
+            ...this.state,
+            // isFlipped: !this.state.isFlipped, // TODO fix this 
+        })
+    }
+
     // handleGoToMoveClick
 
     render() {
         return (
             <div className="game">
-                <Board
-                    // pieceKeys={this.state.pieceKeys} // WAS passing this down, but it's not necessary. Info is contained in squareProps
-                    squareProps={this.state.squareProps}
-                    handleSquareClick={this.handleSquareClick}
-                    handleSquareRightClick={this.handleSquareRightClick}
-                    boardSize={'boardSize' in this ? this.boardSize as number : 8}
-                    handleUndoClick={this.handleUndoClick} // TODO these aren't accurate anymore 
-                    handleRedoClick={this.handleRedoClick} // not accurate
-                    handleResetClick={this.handleResetClick} // update these TODO 
-                    handleGetFENClick={() => helpers.generateFENFromGameState(this)}
-                />
+                <div className="board-container">
+                    <Board
+                        // pieceKeys={this.state.pieceKeys} // WAS passing this down, but it's not necessary. Info is contained in squareProps
+                        squareProps={this.state.squareProps}
+                        handleSquareClick={this.handleSquareClick}
+                        handleSquareRightClick={this.handleSquareRightClick}
+                        boardSize={'boardSize' in this ? this.boardSize as number : 8}
+                        handleUndoClick={this.handleUndoClick} // TODO these aren't accurate anymore 
+                        handleRedoClick={this.handleRedoClick} // not accurate
+                        handleResetClick={this.handleResetClick} // update these TODO 
+                        handleGetFENClick={() => helpers.generateFENFromGameState(this)}
+                    />
+                    <BoardControlPanel
+                        onGetInfoClick={this.handleGetInfoClick}
+                        onUploadClick={this.handleUploadClick}
+                        onDownloadClick={this.handleDownloadClick}
+                        onSendGameClick={this.handleSendGameClick}
+                        onFlipBoard={this.flipBoard}
+                    />
+                </div>
                 <GameStatus
                     whiteToPlay={this.state.whiteToPlay}
                     history={this.state.history}

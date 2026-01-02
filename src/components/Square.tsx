@@ -1,4 +1,7 @@
 import React, { MouseEventHandler } from 'react';
+
+import DroppableWrapper from './hoc/DroppableWrapper.tsx';
+
 import { keycodeToComponent } from './Piece';
 import PawnPromotionPiecePicker from './PawnPromotionPiecePicker';
 
@@ -131,36 +134,42 @@ class Square extends React.Component<SquareProp, SquareState> {
   render() {
     return (
       <>
-        <button 
-          className={
-              "square " + 
-              this.props.color + 
-              (this.props.isHighlighted ? " highlighted" : "") + 
-              (this.props.isAltHighlighted ? " altHighlighted" : "") + 
-              (this.props.isSelected || this.props.isAltSelected ? " selected" : "")
-          } 
-          // onClick={() => props.onClick(props.id)} // prop onClick 
+        <DroppableWrapper id={`droppable-${this.props.id}`} >
+          {(isOver, setNodeRef) => (
+            <button 
+              className={
+                  "square " + 
+                  this.props.color + 
+                  (this.props.isHighlighted ? " highlighted" : "") + 
+                  (this.props.isAltHighlighted ? " altHighlighted" : "") + 
+                  (this.props.isSelected || this.props.isAltSelected ? " selected" : "")
+              } 
+              ref={setNodeRef}
+              id={`${this.props.id}`}
+              // onClick={() => props.onClick(props.id)} // prop onClick 
 
-          // onClick={() => this.handleClick()} // for when handleClick has no arguments 
-          onClick={this.handleClick} // for when handleClick has event argument 
-          data-square-id={this.props.id}
-          onContextMenu={this.handleRightClick}
-          // testevent={() => this.testEvent()}
-          // testevent={this.testEvent}
-          // onContextMenu={() => this.handleRightClick()}
+              // onClick={() => this.handleClick()} // for when handleClick has no arguments 
+              onClick={this.handleClick} // for when handleClick has event argument 
+              data-square-id={this.props.id}
+              onContextMenu={this.handleRightClick}
+              // testevent={() => this.testEvent()}
+              // testevent={this.testEvent}
+              // onContextMenu={() => this.handleRightClick()}
 
-          // handleStartPromotion={this.props.isPromoting ? (e) => this.handleStartPromotion(e) : () => {}}
+              // handleStartPromotion={this.props.isPromoting ? (e) => this.handleStartPromotion(e) : () => {}}
 
-          // key={this.props.id}
-          // key={`${this.props.id}-${this.props.pieceCode}-0`} // update this key??? 
-          // key={this.props.key} // key is stripped from props in React -- can't do this here 
-        >
-          {
-              this.props.keycode && 
-              this.props.keycode in keycodeToComponent && 
-              React.createElement(keycodeToComponent[this.props.keycode as keyof typeof keycodeToComponent], this.props)
-          }
-        </button>
+              // key={this.props.id}
+              // key={`${this.props.id}-${this.props.pieceCode}-0`} // update this key??? 
+              // key={this.props.key} // key is stripped from props in React -- can't do this here 
+            >
+              {
+                  this.props.keycode && 
+                  this.props.keycode in keycodeToComponent && 
+                  React.createElement(keycodeToComponent[this.props.keycode as keyof typeof keycodeToComponent], this.props)
+              }
+            </button>
+          )}
+        </DroppableWrapper>
         {/* {this.state.promotionPiecePicker} */}
         {
           this.props.isPromoting && this.state.promotionPiecePicker
