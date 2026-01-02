@@ -1,5 +1,6 @@
 import React, { ReactNode } from 'react';
 import { useDroppable, UniqueIdentifier } from '@dnd-kit/core';
+import { useUniqueId } from '@dnd-kit/utilities';
 
 interface DroppableWrapperProps {
   id: UniqueIdentifier;
@@ -22,19 +23,27 @@ export default DroppableWrapper;
 //   Its type 'ReactElement<unknown, string | JSXElementConstructor<any>>' is not a valid JSX element type.
 // Should be React.ComponentType (or ComponentType<P> if <P extends something>)
 export const withDroppable = <P extends {}>(WrappedComponent: React.ComponentType<P>) => {
-  const Wrapper = (props: any) => {
+  const Wrapper = (props: P) => {
+    // let droppableId: string;
+    // if ('droppableId' in props) {
+    //   droppableId = props.droppableId as string;
+    // } else {
+
+    //   // droppableId = `droppable-${String(Math.random() * 100)}`; // useUniqueId('droppable', String(Math.random() * 100));
+    // }
     const { isOver, setNodeRef } = useDroppable({
-      id: props.droppableId, // || 'droppable', // Allow ID to be passed
+      id: 'id' in props ? props.id as string : '', // props.droppableId // || 'droppable', // Allow ID to be passed
     });
 
-    console.log(`In the withDroppable Wrapper!`);
+    // console.log(`In the withDroppable Wrapper!\nProps: ${JSON.stringify(props)}`);
 
     return (
       <WrappedComponent
         {...props}
         isOver={isOver}
-        color={isOver ? 'green' : props.color}
-        setNodeRef={setNodeRef}
+        // setNodeRef={setNodeRef}
+        // ref={setNodeRef} // Hmm... nope 
+        forwardedRef={setNodeRef}
       />
     );
   };

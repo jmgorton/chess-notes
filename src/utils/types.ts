@@ -1,6 +1,6 @@
 // Type definitions and interfaces 
 
-import React, { MouseEventHandler } from 'react';
+import React, { MouseEventHandler, Ref } from 'react';
 
 export type GameProps = Record<string, unknown>;
 
@@ -76,6 +76,8 @@ export interface SquareProp {
     id: number;
     color?: string; // not in Game SquareProp ?? 
     enableDragAndDrop?: boolean;
+    droppableId?: string;
+    forwardedRef?: Ref<HTMLButtonElement>;
     isHighlighted: boolean;
     isAltHighlighted: boolean;
     isSelected: boolean;

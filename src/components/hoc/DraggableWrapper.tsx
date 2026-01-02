@@ -32,7 +32,7 @@ export const withDraggable = <P extends {}>(WrappedComponent: React.ComponentTyp
       id: props.draggableId || 'draggable', // Allow ID to be passed
     });
 
-    console.log(`In the withDraggable Wrapper!`);
+    // console.log(`In the withDraggable Wrapper!`);
     // console.debug(``)
 
     return (

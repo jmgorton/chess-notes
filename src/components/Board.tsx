@@ -75,23 +75,25 @@ class Board extends React.Component<BoardProps, BoardState> {
                         toRender.map((squareProp, fileIndex) => {
                           return (
                             // (this.props.enableDragAndDrop) ? 
-                            // <DroppableSquare 
-                            //   {...squareProp}
-                            //   droppableId={`droppable-${rankIndex * this.props.boardSize + fileIndex}`}
-                            //   enableDragAndDrop={this.props.enableDragAndDrop}
-                            //   color={(rankIndex + fileIndex) % 2 === 0 ? "light" : "dark"}
-                            //   onSquareClick={this.props.handleSquareClick}
-                            //   onContextMenu={this.props.handleSquareRightClick}
-                            //   key={rankIndex * this.props.boardSize + fileIndex}
-                            // /> :
-                            <Square
+                            <DroppableSquare 
                               {...squareProp}
-                              // enableDragAndDrop={this.props.enableDragAndDrop}
+                              droppableId={`droppable-${rankIndex * this.props.boardSize + fileIndex}`}
+                              enableDragAndDrop={this.props.enableDragAndDrop}
                               color={(rankIndex + fileIndex) % 2 === 0 ? "light" : "dark"}
                               onSquareClick={this.props.handleSquareClick}
                               onContextMenu={this.props.handleSquareRightClick}
                               key={rankIndex * this.props.boardSize + fileIndex}
-                            />
+                            /> 
+                            // :
+                            // <Square
+                            //   {...squareProp}
+                            //   // enableDragAndDrop={this.props.enableDragAndDrop}
+                            //   // droppableId={`droppable-${rankIndex * this.props.boardSize + fileIndex}`}
+                            //   color={(rankIndex + fileIndex) % 2 === 0 ? "light" : "dark"}
+                            //   onSquareClick={this.props.handleSquareClick}
+                            //   onContextMenu={this.props.handleSquareRightClick}
+                            //   key={rankIndex * this.props.boardSize + fileIndex}
+                            // />
                           )
                         })
                       }

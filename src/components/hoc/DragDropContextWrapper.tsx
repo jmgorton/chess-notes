@@ -13,7 +13,7 @@ import {
 // import type { ActivationConstraint } from '@dnd-kit/core'; // DNE 
 
 function handleDragEnd(event: DragEndEvent) { // React.SyntheticEvent? any? Drag{Start,End}Event from dnd-kit 
-    // console.log(`DragDropContextWrapper#handleDragEnd(${event})`);
+    console.log(`DragDropContextWrapper#handleDragEnd(${event})`);
     const {over} = event;
 
     // if the item is dropped over a Droppable container, set it as the parent;
@@ -34,6 +34,8 @@ function handleDragEnd(event: DragEndEvent) { // React.SyntheticEvent? any? Drag
             const squareId = Number(matchResult[1]);
             return squareId;
         }
+    } else {
+        console.log(`Over was null on DragEndEvent: ${event}`);
     }
 
     // const splitDroppableWrapperIdWhereDragEnded = over?.id.split('-');
@@ -132,7 +134,7 @@ export const withDndContext = <P extends {}>(
     // whereas in the handleDragStart function above, it just logs an [object Object] 
     const onDragStart = (event: DragStartEvent) => {
         // Handle drag start logic here
-        // console.log('Drag started:', event);
+        console.log('Drag started:', event);
         // event === DragStartEvent
         // event.activatorEvent === MouseEvent
         
@@ -152,7 +154,7 @@ export const withDndContext = <P extends {}>(
 
     const onDragEnd = (event: DragEndEvent) => {
         // Handle drag end logic here
-        // console.log('Drag ended:', event);
+        console.log('Drag ended:', event);
         const squareIdOfDragEnd = handleDragEnd(event);
         if (
             'handleSquareClick' in props && 

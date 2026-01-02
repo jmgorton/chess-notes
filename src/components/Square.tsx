@@ -136,19 +136,23 @@ class Square extends React.Component<SquareProp, SquareState> {
   render() {
     return (
       <>
-        <DroppableWrapper id={`droppable-${this.props.id}`} >
-          {(isOver, setNodeRef) => (
+        {/* <DroppableWrapper id={`droppable-${this.props.id}`} >
+          {(isOver, setNodeRef) => ( */}
             <button 
               className={
                   "square " + 
                   this.props.color + 
-                  (this.props.isHighlighted || isOver ? " highlighted" : "") + 
+                  (this.props.isHighlighted ? " highlighted" : "") + 
                   (this.props.isAltHighlighted ? " altHighlighted" : "") + 
                   (this.props.isSelected || this.props.isAltSelected ? " selected" : "")
               } 
-              // DROPPABLE attributes
-              ref={setNodeRef}
-              id={`${this.props.id}`}
+              // DROPPABLE attribute
+              // ref={setNodeRef}
+              // forwardedRef={this.props.forwardedRef}
+              ref={this.props.forwardedRef}
+
+              id={`${this.props.id}`} // access this via parentElement of piece ... 
+
               // onClick={() => props.onClick(props.id)} // prop onClick 
 
               // onClick={() => this.handleClick()} // for when handleClick has no arguments 
@@ -196,8 +200,8 @@ class Square extends React.Component<SquareProp, SquareState> {
                   // )
               }
             </button>
-          )}
-        </DroppableWrapper>
+          {/* )}
+        </DroppableWrapper> */}
 
         {/* {this.state.promotionPiecePicker} */}
         {
@@ -217,5 +221,15 @@ class Square extends React.Component<SquareProp, SquareState> {
 // }
 
 export default Square;
+
+// // Wrap the class component with forwardRef using a functional wrapper
+// export const SquareFC = React.forwardRef<HTMLDivElement, ChildComponentProps>(
+//   (props, ref) => {
+//     return <div ref={ref} {...props} />; // This div replaces the inner class component's root
+//     // or, if you need to use the class component for its logic:
+//     // return <ChildComponentInner {...props} forwardedRef={ref} />; 
+//     // ... which would require changing ChildComponentInner to accept a special prop for ref
+//   }
+// );
 
 export const DroppableSquare = withDroppable(Square);

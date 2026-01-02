@@ -120,7 +120,8 @@ class Piece extends React.Component {
     // TODO unique id for pieces without relying on dnd-utilities ... EUGH
     return (
       <DraggableWrapper 
-        id={`draggable-${useUniqueId}`} 
+        // id={`draggable-${useUniqueId('', String(Math.random() * 100))}`} 
+        id={`draggable-${Math.random() * 100}`}
       > 
         {
           (attributes, listeners, setNodeRef, transform, isDragging) => (
@@ -142,7 +143,7 @@ class Piece extends React.Component {
             ref={setNodeRef}
             {...attributes}
             {...listeners}
-            transform={transform ? `translate3d(${transform.x}px ${transform.y}px, 0)` : undefined}
+            // transform={transform ? `translate3d(${transform.x}px ${transform.y}px, 0)` : undefined}
           />
           )
         }
