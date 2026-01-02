@@ -149,7 +149,10 @@ class Square extends React.Component<SquareProp, SquareState> {
               // DROPPABLE attribute
               // ref={setNodeRef}
               // forwardedRef={this.props.forwardedRef}
-              ref={this.props.forwardedRef}
+              ref={this.props.forwardedRef} // this is critical for getting 
+              // the forwarded ref from the DroppableWrapper 
+              // if the Square is used in the base un-Droppable form, this
+              // doesn't mess anything up (so far) 
 
               id={`${this.props.id}`} // access this via parentElement of piece ... 
 

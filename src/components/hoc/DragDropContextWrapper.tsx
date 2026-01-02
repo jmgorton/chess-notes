@@ -23,6 +23,7 @@ function handleDragEnd(event: DragEndEvent) { // React.SyntheticEvent? any? Drag
 
     if (over) {
         console.log(over.id);
+        if (typeof over.id === 'number') return over.id;
         // this.props.handleSquareClick(over.id);
         const droppableWrapperId = over.id as string;
         const droppableIdMatcher: RegExp = /droppable-(\d+)/;
