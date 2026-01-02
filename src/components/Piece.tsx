@@ -1,12 +1,13 @@
 import React from 'react';
 
-import DraggableWrapper from './hoc/DraggableWrapper.tsx';
+import DraggableWrapper, { withDraggable } from './hoc/DraggableWrapper.tsx';
 
 import Game from './Game.tsx';
 
 import * as helpers from '../utils/helpers.ts';
 import { PieceProps } from '../utils/types.ts'
 import { useUniqueId } from '@dnd-kit/utilities';
+// import { withDraggable } from './hoc/DraggableWrapper.tsx';
 
 // Use public resources so filenames remain predictable in production.
 // Put the PNGs in `public/resources` and reference them via PUBLIC_URL.
@@ -125,17 +126,19 @@ class Piece extends React.Component {
           (attributes, listeners, setNodeRef, transform, isDragging) => (
           <img 
             src={this.icon} 
-            // src={keycodeToIcon[this.state.playercode + this.state.piececode]}
             alt={this.alt} 
-            // alt={this.state.playercode + this.state.piececode}
             className="piece" 
             onClick={this.handleClick} 
-            zindex={transform ? '11' : '10'}
-            style={{opacity: isDragging ? 0.5 : 1}}
+            // zindex={10}
+
             // onClick={() => props.onClick(props.id)} // commented out to avoid piece click interfering with square click for now ...
             // both Piece and Square have the same onClick prop passed down from Board via Square
             // onClick={props.onClick} // i think this would pass the event object, not the square id ...
 
+            // DRAGGABLE attributes
+            zindex={transform ? '11' : '10'}
+            style={{opacity: isDragging ? 0.5 : 1}}
+            // DRAGGABLE attributes
             ref={setNodeRef}
             {...attributes}
             {...listeners}
@@ -147,6 +150,8 @@ class Piece extends React.Component {
     );
   }
 }
+
+// const DraggablePiece = withDraggable(Piece); 
 
 class Pawn extends Piece {
   static alt = "Pawn";
@@ -1318,5 +1323,19 @@ export const keycodeToComponent = {
   'DQ': DarkQueen,
   'DK': DarkKing,
 };
+
+// export function getPieceByKeycode<P extends Piece>(keycode: string, getDraggablePiece: boolean): React.Component<P> {
+export function getPieceByKeycode(keycode: string, getDraggablePiece: boolean = false): typeof Piece { // | ((props: any) => React.JSX.Element) {
+  if (!(keycode in keycodeToComponent)) {
+    throw Error('Invalid keycode provided!');
+  }
+
+  if (getDraggablePiece) {
+    // return withDraggable(keycodeToComponent[keycode as keyof typeof keycodeToComponent]);
+    throw Error("Fix implementation before using...");
+  } else {
+    return keycodeToComponent[keycode as keyof typeof keycodeToComponent];
+  }
+}
 
 export default Piece;

@@ -2,6 +2,7 @@ import React, { ReactNode } from 'react';
 import { useDraggable, UniqueIdentifier, DraggableAttributes } from '@dnd-kit/core';
 import { Transform } from '@dnd-kit/utilities';
 
+import Piece from '../Piece.tsx';
 
 interface DraggableWrapperProps {
   id: UniqueIdentifier;
@@ -24,11 +25,15 @@ const DraggableWrapper: React.FC<DraggableWrapperProps> = ({ id, children }) => 
 
 export default DraggableWrapper;
 
+// only Pieces are draggable here ... but this doesn't work for me <P extends Piece>
 export const withDraggable = <P extends {}>(WrappedComponent: React.ComponentType<P>) => {
   const Wrapper = (props: any) => {
-  const {attributes, listeners, setNodeRef, transform, isDragging} = useDraggable({
-      id: props.droppableId || 'droppable', // Allow ID to be passed
+    const {attributes, listeners, setNodeRef, transform, isDragging} = useDraggable({
+      id: props.draggableId || 'draggable', // Allow ID to be passed
     });
+
+    console.log(`In the withDraggable Wrapper!`);
+    // console.debug(``)
 
     return (
       <WrappedComponent

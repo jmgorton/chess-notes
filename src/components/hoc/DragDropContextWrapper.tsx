@@ -117,7 +117,7 @@ export const withDndContext = <P extends {}>(
     // Configure activation constraints (e.g., a distance of 10 pixels)
     // const activationConstraint: ActivationConstraint = {
     const activationConstraint = {
-      distance: 15, // Require the pointer to move 10px before dragging starts
+      distance: 10, // Require the pointer to move 10px before dragging starts
     };
 
     const sensors = useSensors(
@@ -142,6 +142,10 @@ export const withDndContext = <P extends {}>(
             typeof props.handleSquareClick === 'function' && 
             squareIdOfDragStart
         ) {
+            // TODO refactor and also clear any existing highlighting first
+            //   treat as a brand new click
+            //   if squares are highlighted and we try to drag the piece,
+            //   it is considered a second click and unhighlights the squares 
             props.handleSquareClick(squareIdOfDragStart);
         }
     }
@@ -155,9 +159,15 @@ export const withDndContext = <P extends {}>(
             typeof props.handleSquareClick === 'function' && 
             squareIdOfDragEnd
         ) {
+            // TODO refactor and also clear any existing highlighting first
+            //   treat as a brand new click
+            //   if squares are highlighted and we try to drag the piece,
+            //   it is considered a second click and unhighlights the squares 
             props.handleSquareClick(squareIdOfDragEnd);
         }
     };
+
+    // console.log('In the withDndContext Wrapper!');
 
     return (
       <DndContext
@@ -177,25 +187,3 @@ export const withDndContext = <P extends {}>(
   };
   return ComponentWithDnd;
 };
-
-
-//   sensors = useSensors(
-//     useSensor(MouseSensor, {
-//       activationConstraint: {
-//         distance: 15, // drag starts when pointer moves 15px
-//       }
-//     })
-//   )
-
-//     <DndContext 
-//         sensors={this.sensors}
-//         onDragStart={this.handleDragStart} 
-//         onDragEnd={this.handleDragEnd}
-//         // onDragAbort={() => {}}
-//         // onDragCancel={}
-//         // onDragMove={}
-//         // onDragOver={}
-//         // onDragPending={}
-//     >
-//         {children()}
-//     </DndContext>

@@ -24,13 +24,16 @@ export default DroppableWrapper;
 export const withDroppable = <P extends {}>(WrappedComponent: React.ComponentType<P>) => {
   const Wrapper = (props: any) => {
     const { isOver, setNodeRef } = useDroppable({
-      id: props.droppableId || 'droppable', // Allow ID to be passed
+      id: props.droppableId, // || 'droppable', // Allow ID to be passed
     });
+
+    console.log(`In the withDroppable Wrapper!`);
 
     return (
       <WrappedComponent
         {...props}
         isOver={isOver}
+        color={isOver ? 'green' : props.color}
         setNodeRef={setNodeRef}
       />
     );

@@ -2,7 +2,7 @@ import React, { MouseEventHandler, ReactEventHandler } from 'react';
 
 import GameStatus from './GameStatus.tsx';
 import { GameNotes } from './GameNotes';
-import Board from './Board.tsx';
+import Board, { DraggableDroppableBoard } from './Board.tsx';
 
 // import Piece, { keycodeToComponent } from './Piece.tsx';
 import { keycodeToComponent } from './Piece.tsx';
@@ -596,7 +596,8 @@ export default class Game extends React.Component<GameProps, GameState> {
         return (
             <div className="game">
                 <div className="board-container">
-                    <Board
+                    <DraggableDroppableBoard // DraggableDroppableBoard vs. Board
+                    
                         // pieceKeys={this.state.pieceKeys} // WAS passing this down, but it's not necessary. Info is contained in squareProps
                         squareProps={this.state.squareProps}
                         handleSquareClick={this.handleSquareClick}
@@ -606,6 +607,7 @@ export default class Game extends React.Component<GameProps, GameState> {
                         handleRedoClick={this.handleRedoClick} // not accurate
                         handleResetClick={this.handleResetClick} // update these TODO 
                         handleGetFENClick={() => helpers.generateFENFromGameState(this)}
+                        enableDragAndDrop={true}
                     />
                     <BoardControlPanel
                         onGetInfoClick={this.handleGetInfoClick}

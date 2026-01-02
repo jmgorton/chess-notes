@@ -1,14 +1,16 @@
 import React, { MouseEventHandler } from 'react';
 
-import DroppableWrapper from './hoc/DroppableWrapper.tsx';
+import DroppableWrapper, { withDroppable } from './hoc/DroppableWrapper.tsx';
+import DraggableWrapper, { withDraggable } from './hoc/DraggableWrapper.tsx';
 
-import { keycodeToComponent } from './Piece';
+import { keycodeToComponent, getPieceByKeycode } from './Piece';
 import PawnPromotionPiecePicker from './PawnPromotionPiecePicker';
 
 import { 
   SquareProp,
   SquareState,
 } from '../utils/types.ts';
+import { useUniqueId } from '@dnd-kit/utilities';
 
 class Square extends React.Component<SquareProp, SquareState> {
   constructor(props: SquareProp) {
@@ -140,10 +142,11 @@ class Square extends React.Component<SquareProp, SquareState> {
               className={
                   "square " + 
                   this.props.color + 
-                  (this.props.isHighlighted ? " highlighted" : "") + 
+                  (this.props.isHighlighted || isOver ? " highlighted" : "") + 
                   (this.props.isAltHighlighted ? " altHighlighted" : "") + 
                   (this.props.isSelected || this.props.isAltSelected ? " selected" : "")
               } 
+              // DROPPABLE attributes
               ref={setNodeRef}
               id={`${this.props.id}`}
               // onClick={() => props.onClick(props.id)} // prop onClick 
@@ -166,10 +169,36 @@ class Square extends React.Component<SquareProp, SquareState> {
                   this.props.keycode && 
                   this.props.keycode in keycodeToComponent && 
                   React.createElement(keycodeToComponent[this.props.keycode as keyof typeof keycodeToComponent], this.props)
+
+                  // React.createElement(getPieceByKeycode(this.props.keycode), this.props)
+
+                  // (
+                  //   (this.props.enableDragAndDrop && false) ? // TODO testing remove later
+                  //   // withDraggable(getPieceByKeycode(this.props.keycode))(this.props) 
+                  //   <DraggableWrapper 
+                  //     id={`draggable-${this.props.id}-${useUniqueId}`}
+                  //     children={withDraggable(getPieceByKeycode(this.props.keycode))}
+                  //   />
+                  //     :
+                  //   React.createElement(getPieceByKeycode(this.props.keycode), this.props)
+                  // )
+
+                  // (this.props.enableDragAndDrop ? 
+                  //   React.createElement(
+                  //     getPieceByKeycode(this.props.keycode, true)!, 
+                  //     this.props
+                  //   )
+                  //     :
+                  //   React.createElement(
+                  //     getPieceByKeycode(this.props.keycode)!,
+                  //     this.props
+                  //   )
+                  // )
               }
             </button>
           )}
         </DroppableWrapper>
+
         {/* {this.state.promotionPiecePicker} */}
         {
           this.props.isPromoting && this.state.promotionPiecePicker
@@ -188,3 +217,5 @@ class Square extends React.Component<SquareProp, SquareState> {
 // }
 
 export default Square;
+
+export const DroppableSquare = withDroppable(Square);

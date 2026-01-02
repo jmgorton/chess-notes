@@ -3,7 +3,7 @@ import React, { MouseEventHandler } from 'react';
 import { withDndContext } from './hoc/DragDropContextWrapper.tsx';
 
 // import BoardControlPanel from './BoardControlPanel.tsx';
-import Square from './Square.tsx';
+import Square, { DroppableSquare } from './Square.tsx';
 // import PawnPromotionPiecePicker from './PawnPromotionPiecePicker.tsx';
 
 import {
@@ -74,8 +74,19 @@ class Board extends React.Component<BoardProps, BoardState> {
                       {
                         toRender.map((squareProp, fileIndex) => {
                           return (
+                            // (this.props.enableDragAndDrop) ? 
+                            // <DroppableSquare 
+                            //   {...squareProp}
+                            //   droppableId={`droppable-${rankIndex * this.props.boardSize + fileIndex}`}
+                            //   enableDragAndDrop={this.props.enableDragAndDrop}
+                            //   color={(rankIndex + fileIndex) % 2 === 0 ? "light" : "dark"}
+                            //   onSquareClick={this.props.handleSquareClick}
+                            //   onContextMenu={this.props.handleSquareRightClick}
+                            //   key={rankIndex * this.props.boardSize + fileIndex}
+                            // /> :
                             <Square
                               {...squareProp}
+                              // enableDragAndDrop={this.props.enableDragAndDrop}
                               color={(rankIndex + fileIndex) % 2 === 0 ? "light" : "dark"}
                               onSquareClick={this.props.handleSquareClick}
                               onContextMenu={this.props.handleSquareRightClick}
@@ -95,6 +106,6 @@ class Board extends React.Component<BoardProps, BoardState> {
 }
 
 // Board is 'drag-and-drop'able by default 
-export default withDndContext(Board);
+export default Board;
 
-// export DraggableDroppableBoard // TODO enable via settings/toggle 
+export const DraggableDroppableBoard = withDndContext(Board); // TODO enable via settings/toggle 

@@ -46,6 +46,7 @@ export interface BoardProps {
     handleSquareClick: (squareId: number) => Promise<void>; // (event: Event) => void; // ={this.handleSquareClick}
     handleSquareRightClick: (event: React.MouseEvent | null, squareId: number) => void; // (event: Event) => void; // ={this.handleSquareRightClick}
     boardSize: number; // ={this.boardSize}
+    enableDragAndDrop: boolean;
     // promotionSquare={this.state.promotionSquare}
     handleUndoClick: () => void; // Function; ?? no, that makes it an object, I guess? // ={this.handleUndoClick}
     handleRedoClick: () => void; // ={() => { }}
@@ -74,6 +75,7 @@ export interface SquareProp {
     keycode: string;
     id: number;
     color?: string; // not in Game SquareProp ?? 
+    enableDragAndDrop?: boolean;
     isHighlighted: boolean;
     isAltHighlighted: boolean;
     isSelected: boolean;
