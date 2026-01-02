@@ -19,9 +19,45 @@ class Square extends React.Component<SquareProp, SquareState> {
     this.handleClick = this.handleClick.bind(this);
     // this.handleRightClick = this.handleRightClick.bind(this); // not necessary for arrow functions 
     // this.handleStartPromotion = this.handleStartPromotion.bind(this);
+
+    // const button = (
+    //   <button 
+    //     className={
+    //       "square " + 
+    //       this.props.color + 
+    //       (this.props.isHighlighted ? " highlighted" : "") + 
+    //       (this.props.isAltHighlighted ? " altHighlighted" : "") + 
+    //       (this.props.isSelected || this.props.isAltSelected ? " selected" : "")
+    //     } 
+    //     // onClick={() => this.handleClick()} // for when handleClick has no arguments 
+    //     onClick={this.handleClick} // for when handleClick has event argument 
+    //     data-square-id={this.props.id}
+    //     onContextMenu={this.handleRightClick}
+    //   >
+    //     {
+    //         this.props.keycode && 
+    //         this.props.keycode in keycodeToComponent && 
+    //         React.createElement(keycodeToComponent[this.props.keycode as keyof typeof keycodeToComponent], this.props)
+    //     }
+    //   </button>
+    // )
+
+    // const promotionPiecePicker = (
+    //   <PawnPromotionPiecePicker anchorProp={button} />
+    // )
   }
 
+  // promotionPiecePicker = (
+  //   <PawnPromotionPiecePicker />
+  // )
+
   // promotionPiecePicker: React.ReactElement | null = null; // typeof PawnPromotionPiecePicker | null = null;
+
+    // promotionPiecePicker = (
+    //   <PawnPromotionPiecePicker 
+    //     anchorProp={event.currentTarget}
+    //   />
+    // )
 
   // React.DragEvent 
   handleStartPromotion = (event: Event) => {
@@ -42,7 +78,7 @@ class Square extends React.Component<SquareProp, SquareState> {
 
     this.setState({
       ...this.state,
-      promotionPiecePicker: <PawnPromotionPiecePicker anchorProp={event.currentTarget} />,
+      promotionPiecePicker: <PawnPromotionPiecePicker anchorProp={event.currentTarget} player={this.props.keycode?.charAt(0)} />,
     })
   }
 
@@ -57,19 +93,19 @@ class Square extends React.Component<SquareProp, SquareState> {
     //   this.props.onPawnClick(this.props.id);
     // }
 
-    console.log(`Square#handleClick... ${this.props.isPromoting ? 'Passing ' + event + ' to this#handleStartPromotion' : 'Not promoting.'}`)
+    // console.log(`Square#handleClick... ${this.props.isPromoting ? 'Passing ' + event + ' to this#handleStartPromotion' : 'Not promoting.'}`)
 
-    // if (this.props.isPromoting) { // || (this.props.isHighlighted && this.props.id < 8)) { // uhhh, not a pawn 
-    //   console.log('Before this.props.onSquareClick');
-    //   this.handleStartPromotion(event);
-    // }
+    if (this.props.isPromoting) { // || (this.props.isHighlighted && this.props.id < 8)) { // uhhh, not a pawn 
+      console.log('Before this.props.onSquareClick');
+      this.handleStartPromotion(event);
+    }
 
     if (this.props.onSquareClick) this.props.onSquareClick(this.props.id);
 
-    if (this.props.isPromoting) { // || (this.props.isHighlighted && this.props.id < 8)) {
-      console.log('After this.props.onSquareClick');
-      this.handleStartPromotion(event);
-    }
+    // if (this.props.isPromoting) { // || (this.props.isHighlighted && this.props.id < 8)) {
+    //   console.log('After this.props.onSquareClick');
+    //   this.handleStartPromotion(event);
+    // }
   }
 
   handleRightClick: MouseEventHandler = (event) => { // (event: any) { // Event, MouseEvent, MouseEvent<MouseElement, MouseEvent>, MouseEventHandler
@@ -125,7 +161,10 @@ class Square extends React.Component<SquareProp, SquareState> {
               React.createElement(keycodeToComponent[this.props.keycode as keyof typeof keycodeToComponent], this.props)
           }
         </button>
-        {this.state.promotionPiecePicker}
+        {/* {this.state.promotionPiecePicker} */}
+        {
+          this.props.isPromoting && this.state.promotionPiecePicker
+        }
       </>
     );
   }

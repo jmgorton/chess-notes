@@ -6,7 +6,7 @@ import Popper, { PopperPlacementType } from '@mui/material/Popper';
 // import Grid from '@mui/material/Grid';
 // import Button from '@mui/material/Button';
 import Fade from '@mui/material/Fade';
-// import Paper from '@mui/material/Paper';
+import Paper from '@mui/material/Paper';
 
 import Square from './Square.tsx';
 
@@ -104,7 +104,7 @@ const PawnPromotionPiecePicker: React.FC<PawnPromotionPiecePickerProps> = ({
         { notation: 'B', name: 'Bishop', symbol: '♗' },
     ];
 
-    const anchorEl: HTMLButtonElement | undefined = anchorProp;
+    const anchorEl: HTMLButtonElement | React.ReactElement<any, any> | undefined = anchorProp; 
     const open: boolean = true;
     const placement: PopperPlacementType = 'bottom';
 
@@ -134,33 +134,35 @@ const PawnPromotionPiecePicker: React.FC<PawnPromotionPiecePickerProps> = ({
 
             {({ TransitionProps }) => (
             <Fade {...TransitionProps} timeout={350}> 
-                {
-                    <>
-                    {pieces.map((piece, index) => {
-                        return (
-                            <Square 
-                                // style={{
-                                //     backgroundColor: '#f0f0f0',
-                                //     border: '2px solid #333',
-                                //     borderRadius: '8px',
-                                //     padding: '4px',
-                                // }}
-                                keycode={`${player}${piece.notation}`}
-                                key={`promotion-square-${index}`}
-                                id={index + 64} // extra-board squares 
-                                isHighlighted={false}
-                                isAltHighlighted={false}
-                                isSelected={false}
-                                isAltSelected={false}
-                                isPromoting={false}
-                                // onMouseEnter={(e: Event) => (e.currentTarget.style.backgroundColor = '#e0e0e0')}
-                                // onMouseLeave={(e: Event) => (e.currentTarget.style.backgroundColor = '#fff')}
-                                // title={piece.name}
-                            />
-                        )
-                    })}
-                    </>
-                }
+                <Paper>
+                    {
+                        <div>
+                        {pieces.map((piece, index) => {
+                            return (
+                                <Square 
+                                    // style={{
+                                    //     backgroundColor: '#f0f0f0',
+                                    //     border: '2px solid #333',
+                                    //     borderRadius: '8px',
+                                    //     padding: '4px',
+                                    // }}
+                                    keycode={`${player}${piece.notation}`}
+                                    key={`promotion-square-${index}`}
+                                    id={index + 64} // extra-board squares 
+                                    isHighlighted={false}
+                                    isAltHighlighted={false}
+                                    isSelected={false}
+                                    isAltSelected={false}
+                                    isPromoting={false}
+                                    // onMouseEnter={(e: Event) => (e.currentTarget.style.backgroundColor = '#e0e0e0')}
+                                    // onMouseLeave={(e: Event) => (e.currentTarget.style.backgroundColor = '#fff')}
+                                    // title={piece.name}
+                                />
+                            )
+                        })}
+                        </div>
+                    }
+                </Paper>
             </Fade> 
             )}
         </Popper>

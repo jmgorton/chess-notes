@@ -28,7 +28,8 @@ export default class Game extends React.Component<GameProps, GameState> {
     // backrankStartingPositions: string[] = ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']; // can make chess960 later 
     // testCastlingFEN: string = 'r1bqk2r/pp1p1ppp/2n2n2/4p3/1b2P3/1N1B4/PPPN1PPP/R1BQK2R b KQkq - 0 0'; 
     // testLongCastlingFEN: string = 'r3k2r/pp3ppp/2n2n2/q1p1p3/4P1b1/P2BQ3/1PPB1PPP/R3K2R b KQkq - 0 0';
-    testPawnPromotionFEN: string = 'r3kr2/pp6/2q4p/2p1Pp2/7p/8/PP3PPP/R2QR1K w q - 0 0';
+    // testPawnPromotionFEN: string = 'r3kr2/pp6/2q4p/2p1Pp2/7p/8/PP3PPP/R2QR1K w q - 0 0';
+    testPawnPromotionFEN: string = 'r1bqkbnr/pppp2Pp/2n1p3/8/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 0';
     backrankStartingPositions: string[] = constants.defaultStartingBackRank;
     startingFEN: string = this.testPawnPromotionFEN; // constants.defaultStartingFEN;
     boardSize: number = this.backrankStartingPositions.length;
@@ -326,10 +327,6 @@ export default class Game extends React.Component<GameProps, GameState> {
     }
 
     handleSquareClick = async (squareId: number): Promise<void> => {
-        // console.log(this);
-        // console.log(this instanceof React.Component)
-        // await updateState(this, 'testState', 10);
-
         // clicking the same square again removes all highlighting and selections 
         if (this.state.squareSelected === squareId) {
             this.deselectAndRemoveHighlightFromAllSquares();
@@ -337,7 +334,6 @@ export default class Game extends React.Component<GameProps, GameState> {
         }
         // otherwise, we're either clicking on a square for the first time, or clicking on a different square 
         // disallow multi-piece selection for now 
-        // if (this.state.squareSelected === null || this.state.squareSelected !== squareId) { 
 
         // if we clicked on an un-highlighted and unselected square square
         // we're either clicking on a square for the first time, 
@@ -352,17 +348,38 @@ export default class Game extends React.Component<GameProps, GameState> {
         }
 
         // otherwise, a square is already selected, and we clicked on one of its legal move squares 
-        // if (this.state.squareProps[squareId].isHighlighted) {
         // Move piece at selected square to clicked highlighted square
+        // TODO ... *UNLESS* it is a pawn promotion, then we just update the isPromoting prop without moving the piece
+        // or making other state updates, just yet (until we know what it promotes to)
+        // WRONG - I should just set isPromoting in the squareProps when it highlights... 
+        // Or maybe not, idk, this should work if I write the Square properly 
+        
+
         const squareMovedFrom: number | null = this.state.squareSelected; // TODO by the time we get here in this method, squareMovedFrom can't be null 
         const squareMovedTo: number = squareId;
-        const newPieceKeys = helpers.getNewPieceKeysCopyWithMoveApplied(this.state.pieceKeys, squareMovedFrom!, squareMovedTo);
+        let squareOfPawnPromotion: number | null = null;
 
-        let squareOfPawnPromotion = null;
+        const isPromoting = 
+            Math.floor(squareMovedTo / 8) === (this.state.whiteToPlay ? 0 : 7) && 
+            this.state.pieceKeys[squareMovedFrom!].charAt(1) === 'P';
+        if (isPromoting) {
+            squareOfPawnPromotion = squareMovedTo;
+            this.setState({
+                ...this.state,
+                squareProps: this.state.squareProps.map((squareProps, squareId) => {
+                    return {
+                        ...squareProps,
+                        isPromoting: (squareId === squareOfPawnPromotion),
+                    }
+                }),
+            });
+            return;
+        }
+
+        const newPieceKeys = helpers.getNewPieceKeysCopyWithMoveApplied(this.state.pieceKeys, squareMovedFrom!, squareMovedTo);
         const { squareProps, history, squareSelected, squareAltSelected, FEN, ...filteredGameState} = this.state;
 
         // this.setState({...this.state, isKingInCheck: this.isKingInCheck()});
-        // this.setState({...this.state, enPassantTargetSquare: null});
 
         if (this.state.pieceKeys[squareMovedFrom!].charAt(1) === 'K') {
             if (this.state.pieceKeys[squareMovedFrom!].charAt(0) === 'L') {
@@ -421,23 +438,6 @@ export default class Game extends React.Component<GameProps, GameState> {
             ) {
                 await helpers.updateState(this, "darkKingHasLongCastlingRights", false);
             }
-            // if (this.state.pieceKeys[squareMovedFrom!].charAt(0) === 'L') {
-            //     if (squareMovedFrom === 63) {
-            //         //   this.setState({...this.state, lightKingHasShortCastlingRights: false});
-            //         await helpers.updateState(this, "lightKingHasShortCastlingRights", false);
-            //     } else if (squareMovedFrom === 56) {
-            //         //   this.setState({...this.state, lightKingHasLongCastlingRights: false});
-            //         await helpers.updateState(this, "lightKingHasLongCastlingRights", false);
-            //     }
-            // } else {
-            //     if (squareMovedFrom === 7) {
-            //         //   this.setState({...this.state, darkKingHasShortCastlingRights: false});
-            //         await helpers.updateState(this, "darkKingHasShortCastlingRights", false);
-            //     } else if (squareMovedFrom === 0) {
-            //         //   this.setState({...this.state, darkKingHasLongCastlingRights: false});
-            //         await helpers.updateState(this, "darkKingHasLongCastlingRights", false);
-            //     }
-            // }
         }
         if (this.state.pieceKeys[squareMovedFrom!].charAt(1) === 'P') {
             if (Math.abs(squareMovedFrom! - squareMovedTo) === 16) {
@@ -447,12 +447,10 @@ export default class Game extends React.Component<GameProps, GameState> {
             } else {
                 await helpers.updateState(this, 'enPassantTargetSquare', null);
             }
-            const isPromoting = Math.floor(squareMovedTo / 8) === (this.state.whiteToPlay ? 0 : 7);
-            if (isPromoting) {
-                // console.log('Trying to promote on ' + squareMovedTo);
-
-                squareOfPawnPromotion = squareMovedTo;
-            }
+            // const isPromoting = Math.floor(squareMovedTo / 8) === (this.state.whiteToPlay ? 0 : 7);
+            // if (isPromoting) {
+            //     squareOfPawnPromotion = squareMovedTo;
+            // }
         } else {
             await helpers.updateState(this, 'enPassantTargetSquare', null);
         }
@@ -544,15 +542,11 @@ export default class Game extends React.Component<GameProps, GameState> {
 
     handleRedoClick = (event?: React.SyntheticEvent | null): void => {
         console.error("Not implemented");
-        throw Error("Not implemented");
+        // throw Error("Not implemented");
     }
 
     handleResetClick = (event?: React.MouseEvent | React.SyntheticEvent | undefined): void => {
-        // console.log('Resetting...');
-
         helpers.initializeState(this);
-
-        // console.log(this.state);
     }
 
     // handleGoToMoveClick
@@ -582,12 +576,6 @@ export default class Game extends React.Component<GameProps, GameState> {
                     zobristHash=''
                     metadata={{}}
                 />
-
-                {
-                    // this.state.showNotes && (
-                    //   <GameNotes />
-                    // )
-                }
             </div>
         );
     }
