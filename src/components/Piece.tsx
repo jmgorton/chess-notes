@@ -5,8 +5,7 @@ import DraggableWrapper, { withDraggable } from './hoc/DraggableWrapper.tsx';
 import Game from './Game.tsx';
 
 import * as helpers from '../utils/helpers.ts';
-import { PieceProps } from '../utils/types.ts'
-import { useUniqueId } from '@dnd-kit/utilities';
+import { DraggableDroppableChild, PieceProps } from '../utils/types.ts'
 // import { withDraggable } from './hoc/DraggableWrapper.tsx';
 
 // Use public resources so filenames remain predictable in production.
@@ -28,6 +27,7 @@ const keycodeToIcon = {
   'DK': PUBLIC + '/resources/kdt60.png',
 }
 
+// implements DraggableDroppableChild<HTMLImageElement> ?? 
 class Piece extends React.Component {
   icon: string = '';
   alt: string = 'Generic Piece';
@@ -38,15 +38,8 @@ class Piece extends React.Component {
     //   ...this.state,
     // }
     this.handleClick = this.handleClick.bind(this);
-    // if (this.state.piececode === 'Q') alert("Piece constructor"); 
   }
 
-  // in order to allow generatePawnValidMoves to call this method, we also have to include a captureValidator input function
-  // all other pieces' captureValidator inputs will be the same, what exists: the piece at the target is not the same color as the piece at the source 
-  // the existing nextSquareValidators input is more like a validPieceMovenextSquareValidators input 
-  // it would be nice if I could access the Piece objects and use their internal properties to store/call these methods, but whatever 
-
-  // TODO refactoring includeCaptures and includeSelfCaptures to instead be contained in one includeAttacksFrom (or rename to includeCapturesOf or smth) 
   static generatePieceValidMoves = (
     squareId: number,
     boardState: string[],
@@ -74,9 +67,6 @@ class Piece extends React.Component {
 
     captureValidators.push((squareFrom, squareTo) => includeAttacksFrom?.includes(boardState[squareTo]?.charAt(0)) || false);
     // captureValidators.push((squareFrom, squareTo) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState));
-
-    // selfCaptureValidators.push((squareFrom: number, squareTo: number) => boardState[squareFrom]?.charAt(0) === boardState[squareTo]?.charAt(0));
-    // selfCaptureValidators.push((squareFrom: number, squareTo: number) => squareTo === squareToImagineFriendly);
 
 
     directions.forEach((direction) => {
@@ -111,10 +101,6 @@ class Piece extends React.Component {
     //   " (icon: " + this.state.icon + " | " + keycodeToIcon[this.state.playercode + this.state.piececode]);
   }
 
-  testEvent() {
-    alert("This is a test event from Piece");
-  }
-
   render() {
 
     // TODO unique id for pieces without relying on dnd-utilities ... EUGH
@@ -143,7 +129,8 @@ class Piece extends React.Component {
             ref={setNodeRef}
             {...attributes}
             {...listeners}
-            // transform={transform ? `translate3d(${transform.x}px ${transform.y}px, 0)` : undefined}
+            transform={transform ? `translate3d(${transform.x}px ${transform.y}px, 0)` : undefined}
+            // ref={this.props.forwardedRef}
           />
           )
         }
@@ -242,7 +229,7 @@ class Pawn extends Piece {
   }
 }
 
-export class LightPawn extends Pawn {
+class LightPawn extends Pawn {
   static alt = "Light Pawn";
   static playercode = "L";
   static keycode = "LP";
@@ -359,7 +346,7 @@ export class LightPawn extends Pawn {
   }
 }
 
-export class DarkPawn extends Pawn {
+class DarkPawn extends Pawn {
   static alt = "Dark Pawn";
   static playercode = "D";
   static keycode = "DP";
@@ -1103,7 +1090,7 @@ class DarkQueen extends Queen {
   }
 }
 
-export class King extends Piece {
+class King extends Piece {
   static alt = "King";
   static piececode = "K";
 
@@ -1169,7 +1156,7 @@ export class King extends Piece {
   }
 }
 
-export class LightKing extends King {
+class LightKing extends King {
   static alt = "Light King";
   static playercode = "L";
   static keycode = "LK";
@@ -1232,7 +1219,7 @@ export class LightKing extends King {
   }
 }
 
-export class DarkKing extends King {
+class DarkKing extends King {
   static alt = "Dark King";
   static playercode = "D";
   static keycode = "DK";
@@ -1326,9 +1313,10 @@ export const keycodeToComponent = {
 };
 
 // export function getPieceByKeycode<P extends Piece>(keycode: string, getDraggablePiece: boolean): React.Component<P> {
-export function getPieceByKeycode(keycode: string, getDraggablePiece: boolean = false): typeof Piece { // | ((props: any) => React.JSX.Element) {
+export function getPieceByKeycode(keycode: string, getDraggablePiece: boolean = false): typeof Piece | undefined { // | ((props: any) => React.JSX.Element) {
   if (!(keycode in keycodeToComponent)) {
-    throw Error('Invalid keycode provided!');
+    // throw Error('Invalid keycode provided!');
+    return undefined;
   }
 
   if (getDraggablePiece) {

@@ -1,4 +1,5 @@
 import React, { isValidElement } from 'react';
+import Piece from '../components/Piece';
 
 // general purpose helper functions
 // not specific to chess or react game state
@@ -47,7 +48,18 @@ export const isArgumentReactComponent = (arg: any): boolean => {
     return false;
 }
 
-// not possible at runtime ?? 
+// // handle piece creation dynamically with extra properties
+
+// accepts objects as input
+export function createPiece<T extends Piece>( // SpecialPiece?? 
+    basePiece: Piece,
+    specialAttributes?: T,
+): Piece & T { // TODO should this be | union or? 
+    // overwrites any possible duplicates in basePiece w value in specialAttributes
+    return Object.assign(basePiece, specialAttributes);
+}
+
+// the below is not possible at runtime ?? 
 // export function isReactComponentOfType<P, S>(arg: React.Component<P, S>, type: ) {
 
 // }

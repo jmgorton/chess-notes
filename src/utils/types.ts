@@ -9,16 +9,26 @@ export type GameProps = Record<string, unknown>;
 //     // opponent: Opponent;
 // }
 
+export type RoyalKey = 'LK' | 'LQ' | 'DK' | 'DQ';
+
 export interface GameState {
     pieceKeys: string[];
+    // piecePositions: Map<string, Map<string, number[]>>;
+    piecePositions: { [player: string]: { [piece: string]: number[] }};
+    pieceBitmaps: { [player: string]: bigint };
     squareProps: SquareProp[];
 
-    lightKingPosition: number;
-    darkKingPosition: number;
-    lightKingHasShortCastlingRights: boolean;
-    lightKingHasLongCastlingRights: boolean;
+    lightKingPosition: number; // TODO remove in lieu of piecePositions 
+    darkKingPosition: number; // TODO remove 
+
+    lightKingHasShortCastlingRights: boolean; // TODO remove in lieue of castlingRights 
+    lightKingHasLongCastlingRights: boolean; 
     darkKingHasShortCastlingRights: boolean;
-    darkKingHasLongCastlingRights: boolean;
+    darkKingHasLongCastlingRights: boolean; // TODO remove 
+
+    // castlingRights: { [key: 'LK' | 'LQ' | 'DK' | 'DQ']: boolean }; // This doesn't work
+    castlingRights: { [key in RoyalKey]: boolean }; // This does work 
+
     enPassantTargetSquare: number | null;
     whiteToPlay: boolean;
     FEN: string;
@@ -96,7 +106,53 @@ export interface SquareState {
     // playerPromoting?: string,
 }
 
-export type PieceProps = Record<string, unknown>;
+// export type PieceProps = Record<string, unknown>; 
+export interface PieceProps {
+
+}
+
+export type KingSpecificProps = { // or interface? 
+
+}
+
+export type PawnSpecificProps = {
+
+}
+
+// export type PieceState = Record<string, unknown>;
+
+// export type Piece<PieceProps, PieceState> = {
+//     props: PieceProps,
+//     state: PieceState,
+// }
+
+export interface DraggableDroppableChild<T> {
+    droppableId?: string;
+    forwardedRef?: Ref<T>;
+}
+
+// export interface PieceProps {
+//     forwardedRef: Ref<HTMLImageElement>;
+// }
+
+export interface Move {
+    squareMovedFrom: number;
+    squareMovedTo: number;
+    pieceMoving: string; // Piece
+}
+
+export interface MoveEnPassant extends Move {
+    squareOfPawnCapturedViaEnPassant: number;
+}
+
+export interface MoveCastling extends Move {
+
+}
+
+export interface MovePawnPromotion extends Move {
+    // or Square, but do we have to attach the popper to the button ?? 
+    promotionSquare: HTMLButtonElement; // Square (DNE yet) 
+}
 
 export interface HistoryItem {
     // pieceKeys: string[];

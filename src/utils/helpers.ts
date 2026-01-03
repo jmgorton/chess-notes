@@ -6,6 +6,7 @@ import GameState from '../components/Game.tsx';
 
 import * as constants from './constants.ts';
 import * as functions from './functions.ts';
+import { Move } from './types.ts';
 
 import { keycodeToComponent } from '../components/Piece.tsx';
 
@@ -399,6 +400,12 @@ export function getNewPieceKeysCopyWithMoveApplied(state: unknown, squareMovedFr
     return newPieceKeys; // , {squareIdOfPawnCapturedViaEnPassant, squareIdOfKingAfterCastling, squareIdOfRookAfterCastling};
 }
 
+
+export function getNewStateAfterMoveIsApplied(currentState: object, moveToApply: Move): object {
+    // TODO implement 
+    return currentState;
+}
+
 export function doesStringMatchPatternFEN(input: string): boolean {
     // const matcher: RegExp = /^.*$/;
     const matcher = constants.googleGeminiMatcher;
@@ -500,7 +507,7 @@ export function generateFENFromGameState(gameState: unknown): string {
         whiteToPlay = gameState.state.whiteToPlay;
         halfmoveClock = gameState.state.halfmoveClock;
         fullmoveCounter = Math.floor(gameState.state.plyNumber / 2);
-        if ('castlingRights' in gameState.state) {
+        if ('castlingRightsXX' in gameState.state) {
             const castlingRightsInput = (gameState.state.castlingRights as { [key: string]: any });
             castlingRightsState.DQ = castlingRightsInput.darkKingHasLongCastlingRights;
             castlingRightsState.DK = castlingRightsInput.darkKingHasShortCastlingRights;
@@ -625,8 +632,66 @@ export const getOccupiedSquaresThatCanAttackThisSquare = (
 
 // // ********* SETTERS *********
 
+//     // lightPawnPositions: [48, 49, 50, 51, 52, 53, 54, 55],
+//     // darkPawnPositions: [8, 9, 10, 11, 12, 13, 14, 15],
+//     // lightKnightPositions: [57, 62],
+//     // darkKnightPositions: [1, 6],
+//     // lightBishopPositions: [58, 61],
+//     // darkBishopPositions: [2, 5],
+//     // lightRooksPositions: [56, 63],
+//     // darkRooksPositions: [0, 7],
+//     // lightQueenPositions: [59],
+//     // darkQueenPositions: [3],
+//     // lightKingPosition: 60,
+//     // darkKingPosition: 4,
+function getStartingPiecePositionMaps(): { [player: string]: { [piece: string]: number[] }} {
+// Map<string, Map<string, number[]>> {
+    // const pieceMap: Map<string, Map<string, number[]>> = new Map();
+    let pieceMap: { [player: string]: { [piece: string]: number[] }} = {};
+    for (const player of constants.validPlayers) {
+        // pieceMap.set(player, new Map());
+        pieceMap[player] = { P: [] };
+        const indexQR = (player === 'D') ? 0 : 56;
+        const indexQRP = (player === 'D') ? 8 : 48;
+        // const op = (player === 'D') ? (a: number) => a++ : (a: number) => a--;
+        // for (const piece of constants.defaultStartingBackRank) {
+        for (let i = 0; i < constants.defaultStartingBackRank.length; i++) {
+            const piece = constants.defaultStartingBackRank[i];
+            if (!(piece in pieceMap[player])) {
+                pieceMap[player][piece] = [i + indexQR];
+            } else {
+                pieceMap[player][piece].push(i + indexQR);
+            }
+            pieceMap[player]['P'].push(i + indexQRP);
+        }
+    }
+    return pieceMap;
+}
+
+
+// // warning: numeric literals with absolute values equal to 2^53 or greater are too large to be represented accurately as integers.
+// // append an `n` to use the BigInt javascript type 
+// bitmapLightPawns: 0x000000000000ff00n, // 6th (7th) rank full of 1s
+// bitmapDarkPawns: 0x00ff000000000000n, // 1st (2nd) rank full of 1s
+// bitmapLightKnights: 0x0000000000000042n,
+// bitmapDarkKnights: 0x2400000000000000n,
+// bitmapLightBishops: 0x0000000000000024n,
+// bitmapDarkBishops: 0x4200000000000000n,
+// bitmapLightRooks: 0x0000000000000081n,
+// bitmapDarkRooks: 0x1800000000000000n,
+// bitmapLightQueens: 0x0000000000000010n,
+// bitmapDarkQueens: 0x1000000000000000n,
+// bitmapLightKing: 0x0000000000000008n,
+// bitmapDarkKing: 0x0800000000000000n,
+function getStartingPiecePositionBitmaps(): { [player: string]: { [piece: string]: bigint }} {
+    let pieceBitmap: { [player: string]: { [piece: string]: bigint }} = {};
+
+    return pieceBitmap;
+}
+
 export function initializeState(component: React.Component<any, any>, stateToLoad?: GameState): void;
 export function initializeState(component: React.Component<any, any>, stateToLoad?: string): void;
+// export function initializeState(component: React.Component<any, any>, stateToLoad?: object): void;
 export function initializeState(component: React.Component<any, any>, stateToLoad?: unknown): void {
 // export const initializeState = (component: React.Component<GameProps, GameState>): void => {
     if (typeof stateToLoad === 'string') {
@@ -651,7 +716,9 @@ export function initializeState(component: React.Component<any, any>, stateToLoa
 
     const newState: { [key: string]: any } = {
     // const newState: GameState = {
-        pieceKeys: startingConfig, // we could get rid of this state entirely as well, or use it internally for testing moves?? 
+        pieceKeys: startingConfig,
+        piecePositions: getStartingPiecePositionMaps(),
+        pieceBitmaps: getStartingPiecePositionBitmaps(),
         squareProps: startingConfig.map((pieceKey, squareId) => {
             return {
                 keycode: pieceKey, // pieceId 
@@ -665,54 +732,22 @@ export function initializeState(component: React.Component<any, any>, stateToLoa
                 isPromoting: false,
             }
         }),
-
-        // // TODO not yet maintained (except for light/dark king positions) 
-        // lightPawnPositions: [48, 49, 50, 51, 52, 53, 54, 55],
-        // darkPawnPositions: [8, 9, 10, 11, 12, 13, 14, 15],
-        // lightKnightPositions: [57, 62],
-        // darkKnightPositions: [1, 6],
-        // lightBishopPositions: [58, 61],
-        // darkBishopPositions: [2, 5],
-        // lightRooksPositions: [56, 63],
-        // darkRooksPositions: [0, 7],
-        // lightQueenPositions: [59],
-        // darkQueenPositions: [3],
         
         lightKingPosition: 60,
         darkKingPosition: 4,
-        // kingPositions: {
-        //     L: 60,
-        //     D: 4,
-        // },
 
         lightKingHasShortCastlingRights: true,
         lightKingHasLongCastlingRights: true,
         darkKingHasShortCastlingRights: true,
         darkKingHasLongCastlingRights: true,
-        // castlingRights: {
-        //     LK: true,
-        //     LQ: true,
-        //     DK: true,
-        //     DQ: true,
-        // },
+        castlingRights: {
+            LK: true,
+            LQ: true,
+            DK: true,
+            DQ: true,
+        },
 
         enPassantTargetSquare: null,
-
-        // // TODO not yet used or maintained 
-        // // warning: numeric literals with absolute values equal to 2^53 or greater are too large to be represented accurately as integers.
-        // // append an `n` to use the BigInt javascript type 
-        // bitmapLightPawns: 0x000000000000ff00n, // 6th (7th) rank full of 1s
-        // bitmapDarkPawns: 0x00ff000000000000n, // 1st (2nd) rank full of 1s
-        // bitmapLightKnights: 0x0000000000000042n,
-        // bitmapDarkKnights: 0x2400000000000000n,
-        // bitmapLightBishops: 0x0000000000000024n,
-        // bitmapDarkBishops: 0x4200000000000000n,
-        // bitmapLightRooks: 0x0000000000000081n,
-        // bitmapDarkRooks: 0x1800000000000000n,
-        // bitmapLightQueens: 0x0000000000000010n,
-        // bitmapDarkQueens: 0x1000000000000000n,
-        // bitmapLightKing: 0x0000000000000008n,
-        // bitmapDarkKing: 0x0800000000000000n,
 
         // squaresAttackedByWhite: new Set(40, 41, 42, 43, 44, 45, 46, 47), 
         // squaresAttackedByBlack: new Set(16, 17, 18, 19, 20, 21, 22, 23), 

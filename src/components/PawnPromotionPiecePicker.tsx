@@ -149,6 +149,7 @@ const PawnPromotionPiecePicker: React.FC<PawnPromotionPiecePickerProps> = ({
                                             //     borderRadius: '8px',
                                             //     padding: '4px',
                                             // }}
+                                            color={index % 2 ? 'light' : 'dark'}
                                             keycode={`${player}${piece.notation}`}
                                             key={`promotion-square-${index}`}
                                             id={index + 64} // extra-board squares 

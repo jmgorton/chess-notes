@@ -4,15 +4,7 @@ import GameStatus from './GameStatus.tsx';
 import { GameNotes } from './GameNotes';
 import Board, { DraggableDroppableBoard } from './Board.tsx';
 
-// import Piece, { keycodeToComponent } from './Piece.tsx';
-import { keycodeToComponent } from './Piece.tsx';
-import {
-    // King, 
-    LightKing, 
-    DarkKing,
-    LightPawn,
-    DarkPawn,
- } from './Piece.tsx';
+// import { keycodeToComponent } from './Piece.tsx';
 
 import * as helpers from '../utils/helpers.ts';
 import * as constants from '../utils/constants.ts';
@@ -24,6 +16,7 @@ import {
     // HistoryItem,
 } from '../utils/types.ts';
 import BoardControlPanel from './BoardControlPanel.tsx';
+import { keycodeToComponent, getPieceByKeycode } from './Piece.tsx';
 
 export default class Game extends React.Component<GameProps, GameState> {
     // backrankStartingPositions: string[] = ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']; // can make chess960 later 
@@ -39,47 +32,8 @@ export default class Game extends React.Component<GameProps, GameState> {
     constructor(props: GameProps) {
         super(props);
 
-        // let startingConfig = Array(64).fill("");
-        // startingConfig.fill("DP", 8, 16);
-        // startingConfig.splice(0, 8, ...this.backrankStartingPositions.map((piece) => "D" + piece));
-
-        // startingConfig.fill("LP", 48, 56);
-        // startingConfig.splice(56, 8, ...this.backrankStartingPositions.map((piece) => "L" + piece));
-
         // this.state = {
-        //     pieceKeys: startingConfig, // we could get rid of this state entirely as well, or use it internally for testing moves?? 
-        //     squareProps: startingConfig.map((pieceKey, squareId) => {
-        //         return {
-        //             keycode: pieceKey, // pieceId 
-        //             id: squareId, // squareId
-        //             // key: `${squareId}-${pieceKey}-0`, // element key, must be unique, and change to force re-render 
-        //             // TODO  don't use the reserved React keyword `key` as it gets stripped from component props. Use another name
-        //             isHighlighted: false,
-        //             isAltHighlighted: false,
-        //             isSelected: false,
-        //             isAltSelected: false,
-        //             isPromoting: false,
-        //         }
-        //     }),
 
-        //     // // TODO not yet maintained (except for light/dark king positions) 
-        //     // lightPawnPositions: [48, 49, 50, 51, 52, 53, 54, 55],
-        //     // darkPawnPositions: [8, 9, 10, 11, 12, 13, 14, 15],
-        //     // lightKnightPositions: [57, 62],
-        //     // darkKnightPositions: [1, 6],
-        //     // lightBishopPositions: [58, 61],
-        //     // darkBishopPositions: [2, 5],
-        //     // lightRooksPositions: [56, 63],
-        //     // darkRooksPositions: [0, 7],
-        //     // lightQueenPositions: [59],
-        //     // darkQueenPositions: [3],
-
-        //     lightKingPosition: 60,
-        //     darkKingPosition: 4,
-        //     // kingPositions: {
-        //     //     L: 60,
-        //     //     D: 4,
-        //     // },
 
         //     lightKingHasShortCastlingRights: true,
         //     lightKingHasLongCastlingRights: true,
@@ -147,6 +101,8 @@ export default class Game extends React.Component<GameProps, GameState> {
         // set this state info w helpers.initializeState(this);
         this.state = {
             pieceKeys: [],
+            piecePositions: {},
+            pieceBitmaps: {},
             squareProps: [],
             lightKingPosition: 0,
             darkKingPosition: 0,
@@ -154,6 +110,12 @@ export default class Game extends React.Component<GameProps, GameState> {
             lightKingHasLongCastlingRights: false,
             darkKingHasShortCastlingRights: false,
             darkKingHasLongCastlingRights: false,
+            castlingRights: {
+                LK: false,
+                LQ: false,
+                DK: false,
+                DQ: false,
+            },
             enPassantTargetSquare: null,
             squareSelected: null,
             squareAltSelected: null,
@@ -165,10 +127,9 @@ export default class Game extends React.Component<GameProps, GameState> {
             enableDragAndDrop: true,
         }
 
-        // not necessary? was working without this ... because they are arrow functions 
+        // not necessary ... because they are arrow functions 
         // more modern JS/TS method where `this` is lexically scoped to the class instance 
         // and doesn't need to be bound explicitly
-
         // this.handleSquareClick = this.handleSquareClick.bind(this);
         // this.handleSquareRightClick = this.handleSquareRightClick.bind(this);
         // this.handleUndoClick = this.handleUndoClick.bind(this);
@@ -207,9 +168,11 @@ export default class Game extends React.Component<GameProps, GameState> {
         if (constants.validPieces.includes(pieceCode)) {
             const keycodeMapKey = keycode as keyof typeof keycodeToComponent;
             const piece = keycodeToComponent[keycodeMapKey];
+            // const piece = getPieceByKeycode(keycode);
             const baseFunctionArgs: [number, string[]] = [squareId, this.state.pieceKeys.slice()];
+            let additionalFunctionArgs: any[] = [];
             if (pieceCode === 'K') {
-                let additionalFunctionArgs: [number[]?, {}?, boolean?, Game?] = [undefined, undefined, undefined, undefined];
+                // let additionalFunctionArgs: [number[]?, {}?, boolean?, Game?] = [undefined, undefined, undefined, undefined];
                 additionalFunctionArgs = [
                     undefined, // directions
                     {}, // un-named object input (distance, validators, etc.)
@@ -217,16 +180,22 @@ export default class Game extends React.Component<GameProps, GameState> {
                     this, // currentGameState
                 ]
                 // const kingPiece = (piece as unknown as LightKing) // ???? 
-                const kingPiece = keycode.charAt(0) === 'L' ? LightKing : DarkKing;
-                validMoves = kingPiece.generatePieceValidMoves(...baseFunctionArgs, ...additionalFunctionArgs);
+                // const kingPiece = keycode.charAt(0) === 'L' ? LightKing : DarkKing;
+                // validMoves = kingPiece.generatePieceValidMoves(...baseFunctionArgs, ...additionalFunctionArgs);
             } else if (pieceCode === 'P') {
                 // let additionalFunctionArgs: [number?] = [undefined];
                 // if (this.state.enPassantTargetSquare) additionalFunctionArgs[0] = this.state.enPassantTargetSquare;
-                const pawnPiece = keycode.charAt(0) === 'L' ? LightPawn : DarkPawn;
-                validMoves = pawnPiece.generatePieceValidMoves(...baseFunctionArgs, undefined, {}, this.state.enPassantTargetSquare || undefined);
-            } else {
-                validMoves = piece.generatePieceValidMoves(...baseFunctionArgs);
+                additionalFunctionArgs = [
+                    undefined,
+                    {},
+                    this.state.enPassantTargetSquare || undefined,
+                ]
+                // const pawnPiece = keycode.charAt(0) === 'L' ? LightPawn : DarkPawn;
+                // validMoves = pawnPiece.generatePieceValidMoves(...baseFunctionArgs, undefined, {}, this.state.enPassantTargetSquare || undefined);
+            // } else {
+            //     validMoves = piece.generatePieceValidMoves(...baseFunctionArgs);
             }
+            validMoves = piece.generatePieceValidMoves(...baseFunctionArgs, ...additionalFunctionArgs)
         } 
 
         const legalMoves = validMoves.filter((targetMove) => !helpers.wouldOwnKingBeInCheckAfterMove(squareId, targetMove, this));
@@ -618,7 +587,7 @@ export default class Game extends React.Component<GameProps, GameState> {
                         handleRedoClick={this.handleRedoClick} // not accurate
                         handleResetClick={this.handleResetClick} // update these TODO 
                         handleGetFENClick={() => helpers.generateFENFromGameState(this)}
-                        enableDragAndDrop={this.state.enableDragAndDrop || false}
+                        enableDragAndDrop={this.state.enableDragAndDrop || true}
                     />
                     <BoardControlPanel
                         onGetInfoClick={this.handleGetInfoClick}

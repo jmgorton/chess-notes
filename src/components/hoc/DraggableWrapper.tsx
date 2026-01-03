@@ -2,7 +2,7 @@ import React, { ReactNode } from 'react';
 import { useDraggable, UniqueIdentifier, DraggableAttributes } from '@dnd-kit/core';
 import { Transform } from '@dnd-kit/utilities';
 
-import Piece from '../Piece.tsx';
+import { DraggableDroppableChild } from '../../utils/types.ts';
 
 interface DraggableWrapperProps {
   id: UniqueIdentifier;
@@ -26,21 +26,21 @@ const DraggableWrapper: React.FC<DraggableWrapperProps> = ({ id, children }) => 
 export default DraggableWrapper;
 
 // only Pieces are draggable here ... but this doesn't work for me <P extends Piece>
-export const withDraggable = <P extends {}>(WrappedComponent: React.ComponentType<P>) => {
+// what about DraggableDroppableChild<T> or <T extends HTMLAllCollection> or smth... 
+// ok, we got it with <T, P extends DraggableDroppableChild<T>> 
+export const withDraggable = <T, P extends DraggableDroppableChild<T>>(WrappedComponent: React.ComponentType<P>) => {
   const Wrapper = (props: any) => {
     const {attributes, listeners, setNodeRef, transform, isDragging} = useDraggable({
       id: props.draggableId || 'draggable', // Allow ID to be passed
     });
-
-    // console.log(`In the withDraggable Wrapper!`);
-    // console.debug(``)
 
     return (
       <WrappedComponent
         {...props}
         {...attributes}
         {...listeners}
-        setNodeRef={setNodeRef}
+        // setNodeRef={setNodeRef}
+        forwardedRef={setNodeRef}
         transform={transform ? `translate3d(${transform.x}px ${transform.y}px, 0)` : undefined}
         style={{opacity: isDragging ? 0.5 : 1}}
         zindex={transform ? '11' : '10'}

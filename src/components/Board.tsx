@@ -48,7 +48,7 @@ class Board extends React.Component<BoardProps, BoardState> {
                             (this.props.enableDragAndDrop) ? 
                             <DroppableSquare 
                               {...squareProp}
-                              droppableId={`droppable-${rankIndex * this.props.boardSize + fileIndex}`}
+                              // droppableId={`droppable-${rankIndex * this.props.boardSize + fileIndex}`}
                               enableDragAndDrop={this.props.enableDragAndDrop}
                               color={(rankIndex + fileIndex) % 2 === 0 ? "light" : "dark"}
                               onSquareClick={this.props.handleSquareClick}
@@ -58,6 +58,7 @@ class Board extends React.Component<BoardProps, BoardState> {
                             :
                             <Square
                               {...squareProp}
+                              enableDragAndDrop={this.props.enableDragAndDrop}
                               color={(rankIndex + fileIndex) % 2 === 0 ? "light" : "dark"}
                               onSquareClick={this.props.handleSquareClick}
                               onContextMenu={this.props.handleSquareRightClick}
