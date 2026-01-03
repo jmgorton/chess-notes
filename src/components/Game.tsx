@@ -162,6 +162,7 @@ export default class Game extends React.Component<GameProps, GameState> {
             history: [],
             plyNumber: 0,
             halfmoveClock: 0, // TODO implement 50-ply rule 
+            enableDragAndDrop: true,
         }
 
         // not necessary? was working without this ... because they are arrow functions 
@@ -327,7 +328,7 @@ export default class Game extends React.Component<GameProps, GameState> {
         });
     }
 
-    handleSquareClick = async (squareId: number): Promise<void> => {
+    handleSquareClick = async (squareId: number, event?: Event): Promise<void> => {
         // clicking the same square again removes all highlighting and selections 
         if (this.state.squareSelected === squareId) {
             this.deselectAndRemoveHighlightFromAllSquares();
@@ -356,7 +357,7 @@ export default class Game extends React.Component<GameProps, GameState> {
         // Or maybe not, idk, this should work if I write the Square properly 
         
 
-        const squareMovedFrom: number | null = this.state.squareSelected; // TODO by the time we get here in this method, squareMovedFrom can't be null 
+        const squareMovedFrom: number | null = this.state.squareSelected || null; // TODO by the time we get here in this method, squareMovedFrom can't be null 
         const squareMovedTo: number = squareId;
         let squareOfPawnPromotion: number | null = null;
 
@@ -365,12 +366,17 @@ export default class Game extends React.Component<GameProps, GameState> {
             this.state.pieceKeys[squareMovedFrom!].charAt(1) === 'P';
         if (isPromoting) {
             squareOfPawnPromotion = squareMovedTo;
+            let promotionSquare: HTMLButtonElement
+            if (event && event.currentTarget instanceof HTMLButtonElement) {
+                promotionSquare = event?.currentTarget;
+            }
             this.setState({
                 ...this.state,
                 squareProps: this.state.squareProps.map((squareProps, squareId) => {
                     return {
                         ...squareProps,
                         isPromoting: (squareId === squareOfPawnPromotion),
+                        promotionSquare: (squareId === squareOfPawnPromotion) ? promotionSquare : undefined,
                     }
                 }),
             });
@@ -556,6 +562,10 @@ export default class Game extends React.Component<GameProps, GameState> {
         event.stopPropagation();
         }
         // if (this.props.handleUndoClick) this.props.handleUndoClick(); // this.props.handleUndoClick(event);
+        this.setState({
+            ...this.state,
+            enableDragAndDrop: !this.state.enableDragAndDrop,
+        })
     }
 
     // handleRedoClick(event: Event) {
@@ -596,8 +606,9 @@ export default class Game extends React.Component<GameProps, GameState> {
         return (
             <div className="game">
                 <div className="board-container">
-                    <DraggableDroppableBoard // DraggableDroppableBoard vs. Board
                     
+                    <DraggableDroppableBoard // DraggableDroppableBoard vs. Board
+                        // if we pass enableDragAndDrop prop as false, this acts as a regular Board
                         // pieceKeys={this.state.pieceKeys} // WAS passing this down, but it's not necessary. Info is contained in squareProps
                         squareProps={this.state.squareProps}
                         handleSquareClick={this.handleSquareClick}
@@ -607,7 +618,7 @@ export default class Game extends React.Component<GameProps, GameState> {
                         handleRedoClick={this.handleRedoClick} // not accurate
                         handleResetClick={this.handleResetClick} // update these TODO 
                         handleGetFENClick={() => helpers.generateFENFromGameState(this)}
-                        enableDragAndDrop={true}
+                        enableDragAndDrop={this.state.enableDragAndDrop || false}
                     />
                     <BoardControlPanel
                         onGetInfoClick={this.handleGetInfoClick}

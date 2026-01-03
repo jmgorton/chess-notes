@@ -1,7 +1,6 @@
 import React, { MouseEventHandler } from 'react';
 
-import DroppableWrapper, { withDroppable } from './hoc/DroppableWrapper.tsx';
-import DraggableWrapper, { withDraggable } from './hoc/DraggableWrapper.tsx';
+import { withDroppable } from './hoc/DroppableWrapper.tsx';
 
 import { keycodeToComponent, getPieceByKeycode } from './Piece';
 import PawnPromotionPiecePicker from './PawnPromotionPiecePicker';
@@ -10,20 +9,38 @@ import {
   SquareProp,
   SquareState,
 } from '../utils/types.ts';
-import { useUniqueId } from '@dnd-kit/utilities';
 
 class Square extends React.Component<SquareProp, SquareState> {
+
+  // promotionPiecePicker = React.createElement(PawnPromotionPiecePicker);
+
   constructor(props: SquareProp) {
     super(props);
     this.state = {
       ...this.state,
-      // isHighlighted: this.props.isHighlighted || false,
-      // isSelected: this.props.isSelected || false,
-      promotionPiecePicker: null,
+      // promotionPiecePicker: null,
+      // promotionSquare: undefined,
+      // playerPromoting: undefined,
     }
     this.handleClick = this.handleClick.bind(this);
-    // this.handleRightClick = this.handleRightClick.bind(this); // not necessary for arrow functions 
-    // this.handleStartPromotion = this.handleStartPromotion.bind(this);
+    // not necessary for arrow functions 
+    // this.handleRightClick = this.handleRightClick.bind(this); 
+
+
+    // const buttonToRender: HTMLButtonElement = document.createElement('button');
+    // // will this get automatically re-rendered when props change??? 
+    // buttonToRender.className = 'square ' + this.props.color;
+    // if (this.props.isHighlighted) buttonToRender.className += ' highlighted';
+    // if (this.props.isAltHighlighted) buttonToRender.className += ' althighlighted';
+    // if (this.props.isSelected || this.props.isAltHighlighted) buttonToRender.className += ' selected';
+    // buttonToRender.addEventListener('click', (event: MouseEvent) => this.handleClick(event));
+    // buttonToRender.addEventListener('contextmenu', () => this.handleRightClick);
+    // // buttonToRender.setAttribute('data-square-id', props.id);
+    // // the below does not work: You cannot directly pass a React element as a native Node
+    // // if (this.props.keycode in keycodeToComponent) {
+    // //   const pieceChild = getPieceByKeycode(this.props.keycode);
+    // //   buttonToRender.appendChild(React.createElement(pieceChild, this.props));
+    // // }
 
     // const button = (
     //   <button 
@@ -47,74 +64,19 @@ class Square extends React.Component<SquareProp, SquareState> {
     //   </button>
     // )
 
-    // const promotionPiecePicker = (
-    //   <PawnPromotionPiecePicker anchorProp={button} />
-    // )
-  }
-
-  // promotionPiecePicker = (
-  //   <PawnPromotionPiecePicker />
-  // )
-
-  // promotionPiecePicker: React.ReactElement | null = null; // typeof PawnPromotionPiecePicker | null = null;
-
-    // promotionPiecePicker = (
-    //   <PawnPromotionPiecePicker 
-    //     anchorProp={event.currentTarget}
-    //   />
-    // )
-
-  // React.DragEvent 
-  handleStartPromotion = (event: Event) => {
-    // if (event) event.preventDefault();
-    console.log("Promoting...")
-    console.log(event.currentTarget);
-
-    if (!(event.currentTarget instanceof HTMLButtonElement)) {
-      console.log('Expected HTMLButtonElement for event.currentTarget; Got ' + typeof event.currentTarget);
-      return
-    }
-
-    // this.promotionPiecePicker = (
-    //   <PawnPromotionPiecePicker 
-    //     anchorProp={event.currentTarget}
-    //   />
-    // )
-
-    this.setState({
-      ...this.state,
-      promotionPiecePicker: <PawnPromotionPiecePicker anchorProp={event.currentTarget} player={this.props.id < 8 ? 'L' : 'D'} />,
-    })
   }
 
   handleClick(event: any) {
-    // this.setState(prevState => ({
-    //   ...prevState,
-    //   isSelected: !prevState.isSelected,
-    // }));
-
-    // if (this.props.keycode === "LP") {
-    //   // alert("This is a pawn square, id: " + this.props.id);
-    //   this.props.onPawnClick(this.props.id);
+    // if (!(event.currentTarget instanceof HTMLButtonElement)) {
+    //   console.log('Expected HTMLButtonElement for event.currentTarget; Got ' + typeof event.currentTarget);
+    //   return
     // }
 
-    // console.log(`Square#handleClick... ${this.props.isPromoting ? 'Passing ' + event + ' to this#handleStartPromotion' : 'Not promoting.'}`)
-
-    if (this.props.isPromoting) { // || (this.props.isHighlighted && this.props.id < 8)) { // uhhh, not a pawn 
-      console.log('Before this.props.onSquareClick');
-      this.handleStartPromotion(event);
-    }
-
-    if (this.props.onSquareClick) this.props.onSquareClick(this.props.id);
-
-    if (this.props.isPromoting) { // || (this.props.isHighlighted && this.props.id < 8)) {
-      console.log('After this.props.onSquareClick');
-      this.handleStartPromotion(event);
-    }
+    if (this.props.onSquareClick) this.props.onSquareClick(this.props.id, event);
+    // console.log(`After props.onSquareClick: isPromoting: ${this.props.isPromoting}`);
   }
 
-  handleRightClick: MouseEventHandler = (event) => { // (event: any) { // Event, MouseEvent, MouseEvent<MouseElement, MouseEvent>, MouseEventHandler
-  // const handleRightClick: MouseEventHandler {
+  handleRightClick: MouseEventHandler = (event) => {
     if (event && typeof event.preventDefault === 'function') {
       event.preventDefault();
       event.stopPropagation();
@@ -129,15 +91,9 @@ class Square extends React.Component<SquareProp, SquareState> {
     if (this.props.onContextMenu) this.props.onContextMenu(event, this.props.id);
   }
 
-  testEvent() {
-    alert("This is a test event from Square");
-  }
-
   render() {
     return (
       <>
-        {/* <DroppableWrapper id={`droppable-${this.props.id}`} >
-          {(isOver, setNodeRef) => ( */}
             <button 
               className={
                   "square " + 
@@ -154,23 +110,14 @@ class Square extends React.Component<SquareProp, SquareState> {
               // if the Square is used in the base un-Droppable form, this
               // doesn't mess anything up (so far) 
 
-              id={`${this.props.id}`} // access this via parentElement of piece ... 
+              id={`${this.props.id}`} // access this via parentElement of piece for drag/drop
 
-              // onClick={() => props.onClick(props.id)} // prop onClick 
 
               // onClick={() => this.handleClick()} // for when handleClick has no arguments 
               onClick={this.handleClick} // for when handleClick has event argument 
               data-square-id={this.props.id}
               onContextMenu={this.handleRightClick}
-              // testevent={() => this.testEvent()}
-              // testevent={this.testEvent}
               // onContextMenu={() => this.handleRightClick()}
-
-              // handleStartPromotion={this.props.isPromoting ? (e) => this.handleStartPromotion(e) : () => {}}
-
-              // key={this.props.id}
-              // key={`${this.props.id}-${this.props.pieceCode}-0`} // update this key??? 
-              // key={this.props.key} // key is stripped from props in React -- can't do this here 
             >
               {
                   this.props.keycode && 
@@ -203,36 +150,20 @@ class Square extends React.Component<SquareProp, SquareState> {
                   // )
               }
             </button>
-          {/* )}
-        </DroppableWrapper> */}
 
-        {/* {this.state.promotionPiecePicker} */}
         {
-          this.props.isPromoting && this.state.promotionPiecePicker
+          this.props.isPromoting && ( // this.promotionPiecePicker // this.state.promotionPiecePicker
+            <PawnPromotionPiecePicker 
+              anchorProp={this.props.promotionSquare} // {this.state.promotionSquare}
+              player={this.props.id < 8 ? 'L' : 'D'} // {this.state.playerPromoting}
+            />
+          )
         }
       </>
     );
   }
 }
 
-// class LightSquare extends Square {
-//   color = "light";
-// }
-
-// class DarkSquare extends Square {
-//   color = "dark";
-// }
-
 export default Square;
-
-// // Wrap the class component with forwardRef using a functional wrapper
-// export const SquareFC = React.forwardRef<HTMLDivElement, ChildComponentProps>(
-//   (props, ref) => {
-//     return <div ref={ref} {...props} />; // This div replaces the inner class component's root
-//     // or, if you need to use the class component for its logic:
-//     // return <ChildComponentInner {...props} forwardedRef={ref} />; 
-//     // ... which would require changing ChildComponentInner to accept a special prop for ref
-//   }
-// );
 
 export const DroppableSquare = withDroppable(Square);

@@ -724,6 +724,7 @@ export function initializeState(component: React.Component<any, any>, stateToLoa
         FEN: constants.defaultStartingFEN,
         history: [],
         plyNumber: 0,
+        enableDragAndDrop: true,
     }
 
     // wipe out existing state, if any (shouldn't be)

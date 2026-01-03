@@ -13,7 +13,7 @@ import {
 // import type { ActivationConstraint } from '@dnd-kit/core'; // DNE 
 
 function handleDragEnd(event: DragEndEvent) { // React.SyntheticEvent? any? Drag{Start,End}Event from dnd-kit 
-    console.log(`DragDropContextWrapper#handleDragEnd(${event})`);
+    // console.log(`DragDropContextWrapper#handleDragEnd(${event})`);
     const {over} = event;
 
     // if the item is dropped over a Droppable container, set it as the parent;
@@ -22,7 +22,7 @@ function handleDragEnd(event: DragEndEvent) { // React.SyntheticEvent? any? Drag
     // it almost might be preferable to use the sorted packages
 
     if (over) {
-        console.log(over.id);
+        // console.log(over.id);
         if (typeof over.id === 'number') return over.id;
         // this.props.handleSquareClick(over.id);
         const droppableWrapperId = over.id as string;
@@ -38,8 +38,6 @@ function handleDragEnd(event: DragEndEvent) { // React.SyntheticEvent? any? Drag
     } else {
         console.log(`Over was null on DragEndEvent: ${event}`);
     }
-
-    // const splitDroppableWrapperIdWhereDragEnded = over?.id.split('-');
 }
 
 function handleDragStart(event: DragStartEvent) {
@@ -51,13 +49,14 @@ function handleDragStart(event: DragStartEvent) {
     if (squareIdOfDragStart === undefined) {
         console.warn("Could not locate the squareId where this drag started.");
     } else {
-        console.log(`Drag started on square: ${squareIdOfDragStart}`);
+        // console.log(`Drag started on square: ${squareIdOfDragStart}`);
         // if (this.props.handleSquareClick) this.props.handleSquareClick(squareIdOfDragStart);
     }
     
     // if (active) {
     //     console.log(activatorEvent);
-    //     // this.props.handleSquareClick(over.id); // just imagine it as a click??? is it that easy? 
+    //     // this.props.handleSquareClick(over.id); 
+    //     // // just imagine it as a click??? is it that easy? meh - yes and no
     // }
 
     // this and props are not accessible here
@@ -133,9 +132,9 @@ export const withDndContext = <P extends {}>(
 
     // logging event here actually logs the event details in the console 
     // whereas in the handleDragStart function above, it just logs an [object Object] 
+    // why is that?? TODO research that more 
     const onDragStart = (event: DragStartEvent) => {
-        // Handle drag start logic here
-        console.log('Drag started:', event);
+        // console.log('Drag started:', event);
         // event === DragStartEvent
         // event.activatorEvent === MouseEvent
         
@@ -154,9 +153,14 @@ export const withDndContext = <P extends {}>(
     }
 
     const onDragEnd = (event: DragEndEvent) => {
-        // Handle drag end logic here
-        console.log('Drag ended:', event);
+        // console.log('Drag ended:', event);
         const squareIdOfDragEnd = handleDragEnd(event);
+
+        //   // if the item is dropped over a Droppable container, set it as the parent;
+        //   //   otherwise, set it back to XX~~null~~XX what it was before, not null ... 
+        //   //   we have multiple Draggables and multiple Droppables on the board 
+        //   // it almost might be preferable to use the sorted packages
+
         if (
             'handleSquareClick' in props && 
             typeof props.handleSquareClick === 'function' && 
@@ -169,8 +173,6 @@ export const withDndContext = <P extends {}>(
             props.handleSquareClick(squareIdOfDragEnd);
         }
     };
-
-    // console.log('In the withDndContext Wrapper!');
 
     return (
       <DndContext

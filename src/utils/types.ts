@@ -12,6 +12,7 @@ export type GameProps = Record<string, unknown>;
 export interface GameState {
     pieceKeys: string[];
     squareProps: SquareProp[];
+
     lightKingPosition: number;
     darkKingPosition: number;
     lightKingHasShortCastlingRights: boolean;
@@ -19,14 +20,15 @@ export interface GameState {
     darkKingHasShortCastlingRights: boolean;
     darkKingHasLongCastlingRights: boolean;
     enPassantTargetSquare: number | null;
-    squareSelected: number | null;
-    squareAltSelected: number | null;
     whiteToPlay: boolean;
     FEN: string;
     history: HistoryItem[];
     plyNumber: number;
     halfmoveClock: number;
-    //   testState: number;
+
+    squareSelected?: number | null;
+    squareAltSelected?: number | null;
+    enableDragAndDrop?: boolean;
 }
 
 export interface GameStatusProps {
@@ -43,7 +45,7 @@ export interface GameStatusState {
 
 export interface BoardProps {
     squareProps: SquareProp[];
-    handleSquareClick: (squareId: number) => Promise<void>; // (event: Event) => void; // ={this.handleSquareClick}
+    handleSquareClick: (squareId: number, event?: Event) => Promise<void>; // (event: Event) => void; // ={this.handleSquareClick}
     handleSquareRightClick: (event: React.MouseEvent | null, squareId: number) => void; // (event: Event) => void; // ={this.handleSquareRightClick}
     boardSize: number; // ={this.boardSize}
     enableDragAndDrop: boolean;
@@ -83,12 +85,15 @@ export interface SquareProp {
     isSelected: boolean;
     isAltSelected: boolean;
     isPromoting: boolean;
-    onSquareClick?: (squareId: number) => PromiseLike<void>; // Promise<void> // not in Game SquareProp ?? 
+    promotionSquare?: HTMLButtonElement;
+    onSquareClick?: (squareId: number, event?: Event) => PromiseLike<void>; // Promise<void> // not in Game SquareProp ?? 
     onContextMenu?: (event: React.MouseEvent | null, squareId: number) => void; // not in Game SquareProp ?? 
 }
 
 export interface SquareState {
-    promotionPiecePicker: React.ReactElement | null;
+    // promotionPiecePicker: React.ReactElement | null;
+    // promotionSquare?: HTMLButtonElement,
+    // playerPromoting?: string,
 }
 
 export type PieceProps = Record<string, unknown>;
