@@ -15,6 +15,7 @@ import { keycodeToComponent } from '../components/Piece.tsx';
 
 // this method is called before this move is applied to state, still current player's turn 
 // boardState, whiteToPlay, kingPositions, this.wouldOwnKingBeInCheckAfterMove
+// TODO ... add optional boolean indicating whether move has been played yet? 
 export const generateMoveAN = (squareMovedFrom: number, squareMovedTo: number, currentGame?: Game): string => { // , futureBoardState = this.state.pieceKeys) => {
     if (!currentGame) {
         throw Error("Not implemented (yet)");
@@ -38,7 +39,10 @@ export const generateMoveAN = (squareMovedFrom: number, squareMovedTo: number, c
     let kingPosition = currentGame.state.whiteToPlay ? 
         currentGame.state.darkKingPosition : 
         currentGame.state.lightKingPosition;
-    if (kingPosition === squareMovedFrom) kingPosition = squareMovedTo;
+    // const opponent = currentGame.state.whiteToPlay ? 'D' : 'L';
+    // let kingPosition = currentGame.state.kingPositions[opponent];
+    // using opponent's king position, but we just played the move... this never happens 
+    // if (kingPosition === squareMovedFrom) kingPosition = squareMovedTo;
 
     if (isKingInCheck(
         kingPosition, 
@@ -241,6 +245,9 @@ export function isKingInCheck(kingPositionArg?: number, boardStateArg?: string[]
             console.error("No king position argument supplied.");
             throw Error("No king position argument supplied.");
         }
+    } else {
+        console.log(`Current game has no state. Must supply currentGame argument for now...`);
+        throw Error("No state found for currentGame.");
     }
 
     // default implementation assumes that we are checking current boardState position in state
@@ -251,6 +258,8 @@ export function isKingInCheck(kingPositionArg?: number, boardStateArg?: string[]
             currentGame!.state.darkKingPosition! :
             currentGame!.state.lightKingPosition!
     );
+    // const opponent = currentGame!.state.whiteToPlay ? 'D' : 'L';
+    // const kingPosition: number = kingPositionArg || currentGame!.state.kingPositions[opponent];
 
     // maybe here we can easily set like a canBlock, canCapture, canEvade boolean state system ...
     // canBlock seems like the only tricky one, gotta check all piece moves 
@@ -311,7 +320,8 @@ export function wouldOwnKingBeInCheckAfterMove(squareMovedFrom: number, squareMo
     }
 
     const futureState = getNewPieceKeysCopyWithMoveApplied(currentGame.state.pieceKeys, squareMovedFrom, squareMovedTo);
-
+    // const player = currentGame.state.whiteToPlay ? 'L' : 'D';
+    // let ownKingPosition: number = currentGame.state.kingPositions[player];
     let ownKingPosition = currentGame.state.whiteToPlay ? currentGame.state.lightKingPosition : currentGame.state.darkKingPosition;
     if (ownKingPosition === squareMovedFrom) {
         if (isMoveCastling(squareMovedFrom, squareMovedTo, currentGame.state.pieceKeys)) {
@@ -331,7 +341,7 @@ export function wouldOwnKingBeInCheckAfterMove(squareMovedFrom: number, squareMo
         }
     }
 
-    return isKingInCheck(ownKingPosition, futureState); // , currentGame);
+    return isKingInCheck(ownKingPosition, futureState); // , currentGame); // , currentGame);
 }
 
 // TODO we need to allow this to handle pawn promotions 
@@ -414,7 +424,7 @@ export function doesStringMatchPatternFEN(input: string): boolean {
 
 // takes a FEN string and sets the Game state accordingly, also returning new state 
 // generateBoardStateFromFen = async (inputFEN: string): Promise<void> => { // { [key: string]: any } => {
-export function getNewBoardStateKVPsFromFen(inputFEN: string): { [key: string]: any } {
+export function getNewBoardStateKVPsFromFen(inputFEN: string): { [key: string]: any } { // { [key in GameState]: any } {
     // console.log("Generating board state from FEN: " + inputFEN)
     const [piecePlacement, sideToMove, castlingAbility, enPassantTargetSquare, halfmoveClock, fullmoveCounter] = inputFEN.split(' ');
 
@@ -452,6 +462,7 @@ export function getNewBoardStateKVPsFromFen(inputFEN: string): { [key: string]: 
 
     const newStateKVPs = {
         pieceKeys: newPieceKeys,
+        piecePositions: {},
         squareProps: newPieceKeys.map((pieceKey, squareId) => {
             return {
                 keycode: pieceKey, // pieceId 
@@ -465,11 +476,22 @@ export function getNewBoardStateKVPsFromFen(inputFEN: string): { [key: string]: 
         }),
         lightKingPosition: newLightKingPosition!, // TODO could add more validation here to make sure 
         darkKingPosition: newDarkKingPosition!, // there are kings on the board ... 
+        kingPositions: {
+            'L': newLightKingPosition,
+            'D': newDarkKingPosition,
+        },
+        // piecePositions: {}, // TODO fill out all piece positions from FEN input 
         whiteToPlay: sideToMove === 'w',
         darkKingHasShortCastlingRights: castlingAbility.includes('k'),
         darkKingHasLongCastlingRights: castlingAbility.includes('q'),
         lightKingHasShortCastlingRights: castlingAbility.includes('K'),
         lightKingHasLongCastlingRights: castlingAbility.includes('Q'),
+        castlingRights: {
+            'DK': castlingAbility.includes('k'),
+            'DQ': castlingAbility.includes('q'),
+            'LK': castlingAbility.includes('K'),
+            'LQ': castlingAbility.includes('Q'),
+        },
         enPassantTargetSquare: enPassantTargetSquare === '-' ? null : Number(enPassantTargetSquare),
         plyNumber: Number(fullmoveCounter) * 2 + sideToMove === 'w' ? 0 : 1,
         halfmoveClock: Number(halfmoveClock),
@@ -644,13 +666,13 @@ export const getOccupiedSquaresThatCanAttackThisSquare = (
 //     // darkQueenPositions: [3],
 //     // lightKingPosition: 60,
 //     // darkKingPosition: 4,
-function getStartingPiecePositionMaps(): { [player: string]: { [piece: string]: number[] }} {
+function getStartingPiecePositionMaps(): { [player: string]: { [piece: string]: Set<number> }} { // number[] no 
 // Map<string, Map<string, number[]>> {
     // const pieceMap: Map<string, Map<string, number[]>> = new Map();
-    let pieceMap: { [player: string]: { [piece: string]: number[] }} = {};
+    let pieceMap: { [player: string]: { [piece: string]: Set<number> }} = {};
     for (const player of constants.validPlayers) {
         // pieceMap.set(player, new Map());
-        pieceMap[player] = { P: [] };
+        pieceMap[player] = { P: new Set<number>() };
         const indexQR = (player === 'D') ? 0 : 56;
         const indexQRP = (player === 'D') ? 8 : 48;
         // const op = (player === 'D') ? (a: number) => a++ : (a: number) => a--;
@@ -658,11 +680,12 @@ function getStartingPiecePositionMaps(): { [player: string]: { [piece: string]: 
         for (let i = 0; i < constants.defaultStartingBackRank.length; i++) {
             const piece = constants.defaultStartingBackRank[i];
             if (!(piece in pieceMap[player])) {
-                pieceMap[player][piece] = [i + indexQR];
+                // if (piece === 'K') pieceMap[player][piece] = i + indexQR;
+                pieceMap[player][piece] = new Set<number>([i + indexQR]);
             } else {
-                pieceMap[player][piece].push(i + indexQR);
+                pieceMap[player][piece].add(i + indexQR);
             }
-            pieceMap[player]['P'].push(i + indexQRP);
+            pieceMap[player]['P'].add(i + indexQRP);
         }
     }
     return pieceMap;
@@ -684,10 +707,14 @@ function getStartingPiecePositionMaps(): { [player: string]: { [piece: string]: 
 // bitmapLightKing: 0x0000000000000008n,
 // bitmapDarkKing: 0x0800000000000000n,
 function getStartingPiecePositionBitmaps(): { [player: string]: { [piece: string]: bigint }} {
-    let pieceBitmap: { [player: string]: { [piece: string]: bigint }} = {};
-
-    return pieceBitmap;
+    // let pieceBitmap: { [player: string]: { [piece: string]: bigint }} = {};
+    // return pieceBitmap;
+    return constants.STARTING_BITMAPS;
 }
+
+// squaresAttackedByWhite: new Set(40, 41, 42, 43, 44, 45, 46, 47), 
+// squaresAttackedByBlack: new Set(16, 17, 18, 19, 20, 21, 22, 23), 
+// TODO also store squares that can be discover-attacked by a piece after moving another piece 
 
 export function initializeState(component: React.Component<any, any>, stateToLoad?: GameState): void;
 export function initializeState(component: React.Component<any, any>, stateToLoad?: string): void;
@@ -735,6 +762,13 @@ export function initializeState(component: React.Component<any, any>, stateToLoa
         
         lightKingPosition: 60,
         darkKingPosition: 4,
+        kingPositions: {
+            'L': 60,
+            'D': 4,
+        },
+
+        squaresAttackedByWhite: 0x0000000000ff0000n, // only sixth rank 
+        squaresAttackedByBlack: 0x0000ff0000000000n, // only third rank
 
         lightKingHasShortCastlingRights: true,
         lightKingHasLongCastlingRights: true,

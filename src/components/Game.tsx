@@ -32,44 +32,6 @@ export default class Game extends React.Component<GameProps, GameState> {
     constructor(props: GameProps) {
         super(props);
 
-        // this.state = {
-
-
-        //     lightKingHasShortCastlingRights: true,
-        //     lightKingHasLongCastlingRights: true,
-        //     darkKingHasShortCastlingRights: true,
-        //     darkKingHasLongCastlingRights: true,
-
-        //     // castlingRights: {
-        //     //     LK: true,
-        //     //     LQ: true,
-        //     //     DK: true,
-        //     //     DQ: true,
-        //     // },
-
-        //     enPassantTargetSquare: null,
-
-        //     // // TODO not yet used or maintained 
-        //     // // warning: numeric literals with absolute values equal to 2^53 or greater are too large to be represented accurately as integers.
-        //     // // append an `n` to use the BigInt javascript type 
-        //     // bitmapLightPawns: 0x000000000000ff00n, // 6th (7th) rank full of 1s
-        //     // bitmapDarkPawns: 0x00ff000000000000n, // 1st (2nd) rank full of 1s
-        //     // bitmapLightKnights: 0x0000000000000042n,
-        //     // bitmapDarkKnights: 0x2400000000000000n,
-        //     // bitmapLightBishops: 0x0000000000000024n,
-        //     // bitmapDarkBishops: 0x4200000000000000n,
-        //     // bitmapLightRooks: 0x0000000000000081n,
-        //     // bitmapDarkRooks: 0x1800000000000000n,
-        //     // bitmapLightQueens: 0x0000000000000010n,
-        //     // bitmapDarkQueens: 0x1000000000000000n,
-        //     // bitmapLightKing: 0x0000000000000008n,
-        //     // bitmapDarkKing: 0x0800000000000000n,
-
-        //     // squaresAttackedByWhite: new Set(40, 41, 42, 43, 44, 45, 46, 47), 
-        //     // squaresAttackedByBlack: new Set(16, 17, 18, 19, 20, 21, 22, 23), 
-        //     // TODO also store squares that can be discover-attacked by a piece after moving another piece 
-
-
         //     // square props:
         //     //   color: not necessary, doesn't change, just use rank + file data in Board render method 
         //     //   keycode: the pieceKey ... if you think about it, this is not necessary either, data already in the pieceKeys state
@@ -83,29 +45,53 @@ export default class Game extends React.Component<GameProps, GameState> {
         //     //   isHighlighted: is the square highlighted (valid moves from squareSelected, if any) 
         //     //   isSelected: the square selected after the last click 
 
-        //     // boardSize: this.boardSize,
-        //     squareSelected: null,
-        //     squareAltSelected: null,
-        //     whiteToPlay: true,
-        //     FEN: constants.defaultStartingFEN,
-        //     history: [],
-        //     // history: [{
-        //     //   pieceKeys: startingConfig, // full state of keycodes on board at this move // don't store the initial state 
-        //     //   AN: null, // Algebraic Notation
-        //     //   JN: null, // Jared's Notation
-        //     //   INN: null, // International Numeric Notation (Computer Notation, e.g. 5254 == e2->e4)
-        //     // }],
-        //     plyNumber: 0,
-        // }
-
         // set this state info w helpers.initializeState(this);
         this.state = {
             pieceKeys: [],
-            piecePositions: {},
+            // piecePositions: {
+            //     'D': {
+            //         'B': new Set<number>([
+            //             constants.BLACK_STARTING_PIECE_POSITIONS.KB,
+            //             constants.BLACK_STARTING_PIECE_POSITIONS.QB,
+            //         ]),
+            //         'N': new Set([
+            //             constants.BLACK_STARTING_PIECE_POSITIONS.KN,
+            //             constants.BLACK_STARTING_PIECE_POSITIONS.QN,
+            //         ]),
+            //         'R': new Set([
+            //             constants.BLACK_STARTING_PIECE_POSITIONS.KR,
+            //             constants.BLACK_STARTING_PIECE_POSITIONS.QR,
+            //         ]),
+            //         'Q': new Set([constants.BLACK_STARTING_PIECE_POSITIONS.Q]),
+            //         'P': new Set(constants.BLACK_STARTING_PIECE_POSITIONS.P),
+            //     },
+            //     'L': {
+            //         'B': new Set<number>([
+            //             constants.WHITE_STARTING_PIECE_POSITIONS.KB,
+            //             constants.WHITE_STARTING_PIECE_POSITIONS.QB,
+            //         ]),
+            //         'N': new Set([
+            //             constants.WHITE_STARTING_PIECE_POSITIONS.KN,
+            //             constants.WHITE_STARTING_PIECE_POSITIONS.QN,
+            //         ]),
+            //         'R': new Set([
+            //             constants.WHITE_STARTING_PIECE_POSITIONS.KR,
+            //             constants.WHITE_STARTING_PIECE_POSITIONS.QR,
+            //         ]),
+            //         'Q': new Set([constants.WHITE_STARTING_PIECE_POSITIONS.Q]),
+            //         'P': new Set(constants.WHITE_STARTING_PIECE_POSITIONS.P),
+            //     },
+            // },
             pieceBitmaps: {},
             squareProps: [],
             lightKingPosition: 0,
             darkKingPosition: 0,
+            kingPositions: {
+                'L': -1,
+                'D': -1,
+            },
+            squaresAttackedByBlack: 0n,
+            squaresAttackedByWhite: 0n,
             lightKingHasShortCastlingRights: false,
             lightKingHasLongCastlingRights: false,
             darkKingHasShortCastlingRights: false,

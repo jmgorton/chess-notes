@@ -1,6 +1,7 @@
 // Type definitions and interfaces 
 
 import React, { MouseEventHandler, Ref } from 'react';
+import Piece from '../components/Piece';
 
 export type GameProps = Record<string, unknown>;
 
@@ -9,13 +10,39 @@ export type GameProps = Record<string, unknown>;
 //     // opponent: Opponent;
 // }
 
+export type PlayerKey = 'L' | 'D';
+
 export type RoyalKey = 'LK' | 'LQ' | 'DK' | 'DQ';
+export type NonKingPieces = 'Q' | 'R' | 'B' | 'N' | 'P';
+export type KingPieces = 'K';
+
+export type PiecePositions = {
+    L: {
+        [key in NonKingPieces]: Set<number>;
+        // [key in KingPieces]: number;
+    };
+    D: {
+        [key in NonKingPieces]: Set<number>;
+    }
+}
+
+export type KingPositions = {
+    L: number;
+    D: number;
+}
+
+export type CastlingRights = {
+    [key in RoyalKey]: boolean;
+}
 
 export interface GameState {
     pieceKeys: string[];
     // piecePositions: Map<string, Map<string, number[]>>;
-    piecePositions: { [player: string]: { [piece: string]: number[] }};
-    pieceBitmaps: { [player: string]: bigint };
+    piecePositions?: { [player: string]: { [piece: string]: Set<number> }}; // number[] not as good 
+    // piecePositions: PiecePositions;
+    // kingPositions: KingPositions;
+    kingPositions: { [key in PlayerKey]: number };
+    pieceBitmaps?: { [player: string]: bigint };
     squareProps: SquareProp[];
 
     lightKingPosition: number; // TODO remove in lieu of piecePositions 
@@ -27,7 +54,20 @@ export interface GameState {
     darkKingHasLongCastlingRights: boolean; // TODO remove 
 
     // castlingRights: { [key: 'LK' | 'LQ' | 'DK' | 'DQ']: boolean }; // This doesn't work
-    castlingRights: { [key in RoyalKey]: boolean }; // This does work 
+    castlingRights?: { [key in RoyalKey]: boolean }; // This does work 
+    // castlingRights: CastlingRights;
+
+    // squares under attack by side
+    // is it worth separating this further into squares attacked by piece? 
+    // that could come back to bite me, e.g. if i want to track pins
+    // this can also be done nicely with bitmaps ... stick to that for now 
+    // Hmm... no, a huge speed-up would be achieved by mapping each piece
+    // (probably by square id) to all pieces it makes contact with... 
+    // maintaining this can actually get fairly complicated when you include 
+    // weird moves like en-passant, promotions, and castling 
+
+    squaresAttackedByWhite?: bigint;
+    squaresAttackedByBlack?: bigint;
 
     enPassantTargetSquare: number | null;
     whiteToPlay: boolean;
