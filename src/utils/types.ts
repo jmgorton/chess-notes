@@ -117,6 +117,8 @@ export interface BoardControlPanelProps {
     onDownloadClick: MouseEventHandler<HTMLButtonElement>; // (event: Event) => void; 
     onSendGameClick: MouseEventHandler<HTMLButtonElement>; // (event: Event) => void;
     onFlipBoard: MouseEventHandler<HTMLButtonElement>;
+    onUpdateSettings: (key: string, newValue: any) => void;
+    enableDragAndDrop: boolean;
 }
 
 export interface BoardControlPanelState {
@@ -137,7 +139,7 @@ export interface SquareProp {
     isAltSelected: boolean;
     isPromoting: boolean;
     promotionSquare?: HTMLButtonElement;
-    onSquareClick?: (squareId: number, event?: Event) => PromiseLike<void>; // Promise<void> // not in Game SquareProp ?? 
+    onSquareClick?: (squareId: number, event?: Event) => PromiseLike<void> | void; // Promise<void> // not in Game SquareProp ?? 
     onContextMenu?: (event: React.MouseEvent | null, squareId: number) => void; // not in Game SquareProp ?? 
     onMouseEnter?: (event: Event) => void;
     onMouseLeave?: (event: Event) => void;

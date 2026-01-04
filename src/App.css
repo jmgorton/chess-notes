@@ -295,27 +295,47 @@
     align-items: flex-start; */
     text-align: left;
   }
-
-  .pawn-promotion-piece-picker {
-    display: flex;
-    /* align-items: center; */
-    /* justify-content: center; */
-
-    /* display: table-cell;
-    vertical-align: middle; */
-
-
-  }
-
-  .pawn-promotion-piece-picker.square {
-    /* background-color: #f0f0f0; */
-    background-color: #8B6C47;
-    border: 2px solid #333;
-    border-radius: 8px;
-    padding: 4px;
-  }
-
 }
+
+/* this popup does NOT exist within .App, it's at the same level as App element and placed below in the DOM */
+.pawn-promotion-piece-picker {
+  /* overflow: hidden; */
+  position: 'absolute';
+  background-color: '#f0f0f0';
+  border: '2px solid #333';
+  border-radius: '8px';
+  padding: '8px';
+  display: 'grid';
+  grid-template-columns: 'repeat(2, 1fr)';
+  gap: '8px';
+  z-index: 1000;
+  box-shadow: '0 4px 6px rgba(0, 0, 0, 0.1)';
+
+  .square {
+    /* background-color: #8B6C47; */
+    border: 2px solid #333;
+    /* setting too large a value for border-radius exposes the corners of the square pieces below */
+    border-radius: 4px; 
+    padding: 4px;
+    cursor: 'pointer';
+    transition: 'background-color 0.2s';
+  }
+
+  .square:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.35);
+  }
+
+  .square.light {
+    background: var(--board-light);
+  }
+
+  .square.dark {
+    background: var(--board-dark);
+    color: #fff;
+  }
+}
+
 
 .modal-overlay {
   position: fixed;
@@ -327,11 +347,11 @@
   display: flex;
   justify-content: center; /* Center horizontally */
   align-items: center;     /* Center vertically */
-  z-index: 1000;           /* Ensure it stays on top */
+  z-index: 2000;           /* Ensure it stays on top */
 }
 
 .modal-content {
-  background-color: gray;
+  background-color: beige;
   padding: 2rem;
   border-radius: 8px;
   max-width: 500px;

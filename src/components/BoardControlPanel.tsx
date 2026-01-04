@@ -22,7 +22,7 @@ export default class BoardControlPanel extends React.Component<BoardControlPanel
     }
   }
 
-  handleToggleShowSettings = (event: React.MouseEvent<HTMLButtonElement>) => {
+  handleShowSettings = (event: React.MouseEvent<HTMLButtonElement>) => {
     this.setState({
       ...this.state,
       showSettings: !this.state.showSettings,
@@ -45,7 +45,7 @@ export default class BoardControlPanel extends React.Component<BoardControlPanel
         {/* <ClickAwayListener onClickAway={this.handleCloseSettings}> */}
           <>
             <div className="board-control-panel">
-              <button onClick={this.handleToggleShowSettings}><SettingsIcon fontSize='small'/></button>
+              <button onClick={this.handleShowSettings}><SettingsIcon fontSize='small'/></button>
               <button onClick={this.props.onUploadClick}><UploadIcon fontSize='small'/></button>
               <button onClick={this.props.onFlipBoard}><SwapVertIcon fontSize='small'/></button>
               <button onClick={this.props.onDownloadClick}><DownloadIcon fontSize='small'/></button>
@@ -55,7 +55,8 @@ export default class BoardControlPanel extends React.Component<BoardControlPanel
               this.state.showSettings && (
                 <CustomSettingsModal 
                   onCloseSettings={this.handleCloseSettings}
-                  enableDragAndDrop={true}
+                  onUpdateSettings={this.props.onUpdateSettings}
+                  enableDragAndDrop={this.props.enableDragAndDrop}
                   highlightLegalMoves={true}
                 />
               )

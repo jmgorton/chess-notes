@@ -1,22 +1,24 @@
-import React, { useEffect, useState, useRef, MouseEventHandler, RefObject } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { ToggleButton } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 
+import { useCloseOnClickOutside } from '../utils/hooks';
+
 interface SettingsProps {
     onCloseSettings: () => void; // MouseEventHandler<HTMLDivElement>;
-    onUpdateSettings?: (event: Event) => void;
+    onUpdateSettings?: (key: string, newValue?: any) => void;
     // put togglable settings here 
     enableDragAndDrop?: boolean;
     highlightLegalMoves?: boolean;
-
 }
 
 const SettingsContent: React.FC<SettingsProps> = (props: SettingsProps) => {
 
-    const handleToggleSetting = (setting: string) => {
+    const handleToggleSetting = (setting: string, newValue?: any) => {
         console.log(`Toggle setting for: ${setting}`);
+        if (props.onUpdateSettings) props.onUpdateSettings(setting, newValue);
     }
 
     return (
@@ -26,52 +28,28 @@ const SettingsContent: React.FC<SettingsProps> = (props: SettingsProps) => {
                 Object.entries(props).map(([key, value]) => {
                     if (typeof value !== 'boolean') return; // filter out methods like onCloseSettings
                     return (
-                        <p key={key}>
+                        <div key={key}>
                             <strong>{key}:</strong> 
                             {/* style={{marginRight: 'auto'}} */}
                             {/* {String(value)} */}
                             <ToggleButton 
                                 value="check" 
                                 selected={value} 
-                                onChange={() => handleToggleSetting(key)}
-                                sx={{
-                                    marginLeft: 'auto',
-                                }}
+                                onChange={() => handleToggleSetting(key, !value)}
+                                sx={[
+                                    {
+                                        marginLeft: 'auto',
+                                    },
+                                ]}
                             >
                                 <CheckIcon fontSize='small'/>
                             </ToggleButton>
-                        </p>
+                        </div>
                     )
                 })
             }
         </>
     )
-}
-
-export function useCloseOnClickOutside<T extends HTMLElement>(
-    handler: () => void // MouseEventHandler?? 
-): RefObject<T | null> { // MouseEventHandler ?? 
-  const domNodeRef = useRef<T>(null);
-
-  useEffect(() => {
-    const maybeHandler = (event: MouseEvent | TouchEvent): void => {
-      // If the clicked element is NOT inside the domNodeRef, trigger handler
-      if (domNodeRef.current && !domNodeRef.current.contains(event.target as Node)) {
-        handler();
-      }
-    };
-
-    // Listen for both mouse and touch events for 2026 mobile compatibility
-    document.addEventListener("mousedown", maybeHandler);
-    document.addEventListener("touchstart", maybeHandler);
-
-    return () => {
-      document.removeEventListener("mousedown", maybeHandler);
-      document.removeEventListener("touchstart", maybeHandler);
-    };
-  }, [handler]);
-
-  return domNodeRef;
 }
 
 

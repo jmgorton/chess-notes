@@ -555,6 +555,20 @@ export default class Game extends React.Component<GameProps, GameState> {
         })
     }
 
+    handleUpdateSettings = (key: string, newValue?: any) => {
+        if (!(key in this.state)) return;
+        if (newValue) {
+            this.setState({
+                ...this.state,
+                [key]: newValue,
+            });
+        }
+        // how to get value from state based on dynamic key?? we don't have an index signature ...
+        // and i'm not sure we want one either 
+        // helpers.updateState(this, key, )
+        // if (typeof this.state[key] === 'boolean') // toggle 
+    }
+
     // handleGoToMoveClick
 
     render() {
@@ -577,10 +591,12 @@ export default class Game extends React.Component<GameProps, GameState> {
                     />
                     <BoardControlPanel
                         onGetInfoClick={this.handleGetInfoClick}
+                        onUpdateSettings={this.handleUpdateSettings}
                         onUploadClick={this.handleUploadClick}
                         onDownloadClick={this.handleDownloadClick}
                         onSendGameClick={this.handleSendGameClick}
                         onFlipBoard={this.flipBoard}
+                        enableDragAndDrop={this.state.enableDragAndDrop || true}
                     />
                 </div>
                 <GameStatus

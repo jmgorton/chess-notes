@@ -150,14 +150,4 @@ class Square extends React.Component<SquareProp, SquareState> {
 
 export default Square;
 
-export class PromotionPickerSquare extends Square {
-  constructor(props: PromotionSquareProp) {
-    super(props);
-  }
-
-  handleClickPromotion: MouseEventHandler = (event) => {
-    console.log(`Handling promotion form PromotionPickerSquare: ${event}`);
-  }
-}
-
 export const DroppableSquare = withDroppable(Square);
