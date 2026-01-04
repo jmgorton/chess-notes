@@ -1,14 +1,15 @@
-import React from 'react';
+import React, { MouseEventHandler } from 'react';
 
 // import Box from '@mui/material/Box';
 import Popper, { PopperPlacementType } from '@mui/material/Popper';
+import { ClickAwayListener } from '@mui/material';
 // import Typography from '@mui/material/Typography';
 // import Grid from '@mui/material/Grid';
 // import Button from '@mui/material/Button';
 import Fade from '@mui/material/Fade';
 import Paper from '@mui/material/Paper';
 
-import Square from './Square.tsx';
+import Square, { PromotionPickerSquare } from './Square.tsx';
 
 // function PositionedPopper() {
 //   const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null>(null);
@@ -84,6 +85,7 @@ interface PawnPromotionPiecePickerProps {
     // position: { top: number; left: number };
     anchorProp?: HTMLButtonElement;
     player?: string;
+    handlePromotion?: MouseEventHandler;
 }
 
 // const PawnPromotionPiecePicker: React.FC<PawnPromotionPiecePickerProps> = () => {
@@ -92,10 +94,12 @@ const PawnPromotionPiecePicker: React.FC<PawnPromotionPiecePickerProps> = ({
 //     // position,
     anchorProp,
     player,
+    handlePromotion,
 }: {
 //     onSelectPiece?: (piece => void);
     anchorProp?: HTMLButtonElement;
     player?: string;
+    handlePromotion?: MouseEventHandler;
 }) => {
     const pieces = [
         { notation: 'Q', name: 'Queen', symbol: '♕' },
@@ -104,9 +108,17 @@ const PawnPromotionPiecePicker: React.FC<PawnPromotionPiecePickerProps> = ({
         { notation: 'B', name: 'Bishop', symbol: '♗' },
     ];
 
-    const anchorEl: HTMLButtonElement | React.ReactElement<any, any> | undefined = anchorProp; 
-    const open: boolean = true;
-    const placement: PopperPlacementType = 'bottom';
+    // const anchorEl: HTMLButtonElement | React.ReactElement<any, any> | undefined = anchorProp; 
+    const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | undefined>(anchorProp);
+    // const open: boolean = true;
+    // const open: boolean = Boolean(anchorEl);
+    const [open, setOpen] = React.useState<boolean>(Boolean(anchorEl));
+    const placement: PopperPlacementType = player === 'L' ? 'bottom' : 'top';
+
+    const handleClosePopper = () => {
+        // setAnchorEl(undefined);
+        setOpen(!open);
+    }
 
     // const [anchorEl, setAnchorEl] = React.useState<HTMLButtonElement | null | undefined>(anchorProp);
     // const [open, setOpen] = React.useState(true);
@@ -128,48 +140,52 @@ const PawnPromotionPiecePicker: React.FC<PawnPromotionPiecePickerProps> = ({
             anchorEl={anchorEl}
             placement={placement}
             transition
+            // onAbort={}
         >
+
             {/* without the TransitionProps and Fade ... the Popper does not show up */}
-            {/* currently, with these, promoting throws an error */}
+            {/* without the Paper, promoting throws an error */}
 
             {({ TransitionProps }) => (
-            <Fade {...TransitionProps} timeout={350}> 
-                <Paper>
-                    {
-                        <div
-                            className='pawn-promotion-piece-picker'
-                        >
-                            {pieces.map((piece, index) => {
-                                return (
-                                    <div>  
-                                        <Square 
-                                            // style={{
-                                            //     backgroundColor: '#f0f0f0',
-                                            //     border: '2px solid #333',
-                                            //     borderRadius: '8px',
-                                            //     padding: '4px',
-                                            // }}
-                                            color={index % 2 ? 'light' : 'dark'}
-                                            keycode={`${player}${piece.notation}`}
-                                            key={`promotion-square-${index}`}
-                                            id={index + 64} // extra-board squares 
-                                            isHighlighted={false}
-                                            isAltHighlighted={false}
-                                            isSelected={false}
-                                            isAltSelected={false}
-                                            isPromoting={false}
-                                            // onMouseEnter={(e: Event) => (e.currentTarget.style.backgroundColor = '#e0e0e0')}
-                                            // onMouseLeave={(e: Event) => (e.currentTarget.style.backgroundColor = '#fff')}
-                                            // title={piece.name}
-                                        />
-                                    </div>
-                                )
-                            })}
-                        </div>
-                    }
-                </Paper>
-            </Fade> 
+                <ClickAwayListener onClickAway={handleClosePopper}>
+                    <Fade {...TransitionProps} timeout={350}> 
+                        <Paper>
+                            {
+                                <div
+                                    className='pawn-promotion-piece-picker'
+                                >
+                                    {pieces.map((piece, index) => {
+                                        return (
+                                            <div
+                                                key={`promotion-square-${index}`}
+                                            >  
+                                            {/* <PromotionPickerSquare */}
+                                                <Square 
+                                                
+                                                    color={index % 2 ? 'light' : 'dark'}
+                                                    keycode={`${player}${piece.notation}`}
+                                                    // key={`promotion-square-${index}`}
+                                                    id={index + 64} // extra-board squares 
+                                                    isHighlighted={false}
+                                                    isAltHighlighted={false}
+                                                    isSelected={false}
+                                                    isAltSelected={false}
+                                                    isPromoting={false}
+                                                    enableDragAndDrop={false}
+                                                    // onMouseEnter={(e: Event) => (e.currentTarget.style.backgroundColor = '#e0e0e0')}
+                                                    // onMouseLeave={(e: Event) => (e.currentTarget.style.backgroundColor = '#fff')}
+                                                    onPromote={handlePromotion} // TODO doesn't work 
+                                                />
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            }
+                        </Paper>
+                    </Fade> 
+                </ClickAwayListener>
             )}
+
         </Popper>
     );
 

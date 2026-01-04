@@ -9,6 +9,7 @@ import {
   SquareProp,
   SquareState,
   DraggableDroppableChild,
+  PromotionSquareProp,
 } from '../utils/types.ts';
 
 class Square extends React.Component<SquareProp, SquareState> {
@@ -85,6 +86,10 @@ class Square extends React.Component<SquareProp, SquareState> {
     if (this.props.onContextMenu) this.props.onContextMenu(event, this.props.id);
   }
 
+  handleClickPromotion: MouseEventHandler = (event) => {
+    console.log(`Handling promotion from Square: ${event}`);
+  }
+
   render() {
 
     let classNames: string[] = [];
@@ -134,6 +139,7 @@ class Square extends React.Component<SquareProp, SquareState> {
             <PawnPromotionPiecePicker 
               anchorProp={this.props.promotionSquare}
               player={this.props.id < 8 ? 'L' : 'D'}
+              handlePromotion={this.handleClickPromotion}
             />
           )
         }
@@ -143,5 +149,15 @@ class Square extends React.Component<SquareProp, SquareState> {
 }
 
 export default Square;
+
+export class PromotionPickerSquare extends Square {
+  constructor(props: PromotionSquareProp) {
+    super(props);
+  }
+
+  handleClickPromotion: MouseEventHandler = (event) => {
+    console.log(`Handling promotion form PromotionPickerSquare: ${event}`);
+  }
+}
 
 export const DroppableSquare = withDroppable(Square);

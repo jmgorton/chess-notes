@@ -120,9 +120,10 @@ export interface BoardControlPanelProps {
 }
 
 export interface BoardControlPanelState {
-
+    showSettings: boolean;
 }
 
+// extends HTMLButtonElement
 export interface SquareProp {
     keycode: string;
     id: number;
@@ -138,6 +139,14 @@ export interface SquareProp {
     promotionSquare?: HTMLButtonElement;
     onSquareClick?: (squareId: number, event?: Event) => PromiseLike<void>; // Promise<void> // not in Game SquareProp ?? 
     onContextMenu?: (event: React.MouseEvent | null, squareId: number) => void; // not in Game SquareProp ?? 
+    onMouseEnter?: (event: Event) => void;
+    onMouseLeave?: (event: Event) => void;
+    onPromote?: MouseEventHandler;
+    // [propName: string]: unknown;
+}
+
+export interface PromotionSquareProp extends SquareProp {
+    onPromote?: MouseEventHandler;
 }
 
 export interface SquareState {
