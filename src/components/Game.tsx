@@ -321,6 +321,8 @@ export default class Game extends React.Component<GameProps, GameState> {
                     isSelected: false,
                     isAltHighlighted: false,
                     isAltSelected: false,
+                    isPromoting: false,
+                    promotionSquare: undefined,
                 }
             }),
         });
@@ -340,6 +342,8 @@ export default class Game extends React.Component<GameProps, GameState> {
                     isSelected: shouldSelect,
                     isAltHighlighted: false,
                     isAltSelected: false,
+                    isPromoting: false,
+                    promotionSquare: undefined,
                 }
             }),
         });
@@ -383,13 +387,16 @@ export default class Game extends React.Component<GameProps, GameState> {
             pieceMoving: pieceMoving as PieceKey,
             playerMoving: playerMoving as PlayerKey,
         }
-        let squareOfPawnPromotion: number | null = null;
+        let squareIdOfPawnPromotion: number | null = null;
 
         const isPromoting = pieceMoving === 'P' && Math.floor(squareMovedTo / 8) === (this.state.whiteToPlay ? 0 : 7);
         if (isPromoting) {
-            squareOfPawnPromotion = squareMovedTo;
-            let promotionSquare: HTMLButtonElement // to use as anchor for promotion piece picker 
-            if (event && event.currentTarget instanceof HTMLButtonElement) {
+            squareIdOfPawnPromotion = squareMovedTo;
+            let promotionSquare: HTMLButtonElement | undefined; // to use as anchor for promotion piece picker 
+            // set to null if it was already set ... trying to get promotion piece picker to show back up if user aborts and then tries again ... SUCCESS 
+            if (this.state.squareProps[squareIdOfPawnPromotion].promotionSquare) {
+                promotionSquare = undefined;
+            } else if (event && event.currentTarget instanceof HTMLButtonElement) {
                 promotionSquare = event?.currentTarget;
             }
             this.setState({
@@ -397,8 +404,8 @@ export default class Game extends React.Component<GameProps, GameState> {
                 squareProps: this.state.squareProps.map((squareProps, squareId) => {
                     return {
                         ...squareProps,
-                        isPromoting: (squareId === squareOfPawnPromotion),
-                        promotionSquare: (squareId === squareOfPawnPromotion) ? promotionSquare : undefined,
+                        isPromoting: (squareId === squareIdOfPawnPromotion && promotionSquare !== undefined),
+                        promotionSquare: (squareId === squareIdOfPawnPromotion) ? promotionSquare : undefined,
                     }
                 }),
             });
@@ -427,7 +434,8 @@ export default class Game extends React.Component<GameProps, GameState> {
                     isAltHighlighted: false,
                     isSelected: false,
                     isAltSelected: false,
-                    isPromoting: (squareId === squareOfPawnPromotion),
+                    isPromoting: false, // (squareId === squareIdOfPawnPromotion), // squareIdOfPawnPromotion is always null by the time we get here 
+                    promotionSquare: undefined, 
                 }
             }),
             castlingRights, // we already based our input on this.state.castlingRights, no worry of lost info here?? 
