@@ -11,17 +11,26 @@ export type GameProps = Record<string, unknown>;
 // }
 
 export type PlayerKey = 'L' | 'D';
+export type RoyalPieceKey = 'K' | 'Q';
 
-export type RoyalKey = 'LK' | 'LQ' | 'DK' | 'DQ';
+// export type RoyalKeycode = 'LK' | 'LQ' | 'DK' | 'DQ';
+export type RoyalKeycode = `${PlayerKey}${RoyalPieceKey}`;
+
 export type PieceKey = 'K' | 'Q' | 'R' | 'B' | 'N' | 'P';
-export type NonKingPieceKey = 'Q' | 'R' | 'B' | 'N' | 'P';
-export type KingPieces = 'K';
-export type RoyalPiece = 'K' | 'Q';
+// export type NonKingPieceKey = 'Q' | 'R' | 'B' | 'N' | 'P';
+export type NonKingPieceKey = Exclude<PieceKey, KingPieceKey>;
+// export type NonPawnPieceKey = 'K' | 'Q' | 'R' | 'B' | 'N';
+export type NonPawnPieceKey = Exclude<PieceKey, PawnPieceKey>;
+
+export type KingPieceKey = 'K';
+export type PawnPieceKey = 'P';
+
+export type PromotionOptionsPieceKey = Exclude<PieceKey, KingPieceKey | PawnPieceKey>;
 
 export type PiecePositions = {
     L: {
         [key in NonKingPieceKey]: Set<number>;
-        // [key in KingPieces]: number;
+        // [key in KingPieceKey]: number;
     };
     D: {
         [key in NonKingPieceKey]: Set<number>;
@@ -35,7 +44,7 @@ export type KingPositions = {
 }
 
 export type CastlingRights = {
-    [key in RoyalKey]: boolean;
+    [key in RoyalKeycode]: boolean;
 }
 
 export interface GameState {
@@ -57,7 +66,7 @@ export interface GameState {
     // darkKingHasLongCastlingRights: boolean; // TODO remove 
 
     // castlingRights: { [key: 'LK' | 'LQ' | 'DK' | 'DQ']: boolean }; // This doesn't work
-    castlingRights?: { [key in RoyalKey]: boolean }; // This does work 
+    castlingRights?: { [key in RoyalKeycode]: boolean }; // This does work 
     // castlingRights: CastlingRights;
 
     // squares under attack by side
@@ -81,6 +90,7 @@ export interface GameState {
 
     squareSelected?: number | null;
     squareAltSelected?: number | null;
+    squareIdOfPawnPromotion?: number;
     enableDragAndDrop?: boolean;
     isBoardFlipped: boolean;
 }
@@ -144,6 +154,7 @@ export interface SquareProp {
     isSelected: boolean;
     isAltSelected: boolean;
     isPromoting: boolean;
+    // squareIdOfPawnPromotion?: number;
     promotionSquare?: HTMLButtonElement;
     onSquareClick?: (squareId: number, event?: Event) => PromiseLike<void> | void; // Promise<void> // not in Game SquareProp ?? 
     onContextMenu?: (event: React.MouseEvent | null, squareId: number) => void; // not in Game SquareProp ?? 
@@ -197,6 +208,7 @@ export interface Move {
     squareMovedTo: number;
     pieceMoving: PieceKey;
     playerMoving: PlayerKey;
+    promotingTo?: PromotionOptionsPieceKey;
 }
 
 export interface MoveEnPassant extends Move {

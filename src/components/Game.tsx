@@ -19,6 +19,7 @@ import {
     Move,
     PieceKey,
     PlayerKey,
+    PromotionOptionsPieceKey,
     // HistoryItem,
 } from '../utils/types.ts';
 import BoardControlPanel from './BoardControlPanel.tsx';
@@ -31,7 +32,8 @@ export default class Game extends React.Component<GameProps, GameState> {
     // testPawnPromotionFEN: string = 'r3kr2/pp6/2q4p/2p1Pp2/7p/8/PP3PPP/R2QR1K w q - 0 0';
     testPawnPromotionFEN: string = 'r1bqkbnr/pppp2Pp/2n1p3/8/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 0';
     backrankStartingPositions: string[] = constants.defaultStartingBackRank;
-    startingFEN: string = this.testPawnPromotionFEN; // constants.defaultStartingFEN;
+    // startingFEN: string = this.testPawnPromotionFEN; // constants.defaultStartingFEN;
+    startingFEN: string = '';
     boardSize: number = this.backrankStartingPositions.length;
     numSquares: number = this.boardSize ** 2;
 
@@ -142,7 +144,8 @@ export default class Game extends React.Component<GameProps, GameState> {
         if (keycode === undefined || keycode === "") {
             return [];
         }
-        if (this.state.whiteToPlay && keycode.charAt(0) !== 'L') {
+        const [playerCode, pieceCode] = keycode.split('');
+        if (this.state.whiteToPlay && playerCode !== 'L') {
             return []; 
         }
 
@@ -153,8 +156,6 @@ export default class Game extends React.Component<GameProps, GameState> {
         // If none of these are possible, it's checkmate
         // If we are in a *double* check, we *must* move the king. 
 
-        // const playerCode = keycode.charAt(0);
-        const pieceCode: string = keycode.charAt(1);
         let validMoves: number[] = [];
 
         if (constants.validPieces.includes(pieceCode)) {
@@ -181,16 +182,30 @@ export default class Game extends React.Component<GameProps, GameState> {
             validMoves = piece.generatePieceValidMoves(...baseFunctionArgs, ...additionalFunctionArgs)
         } 
 
-        const legalMoves = validMoves.filter((targetMove) => !helpers.wouldOwnKingBeInCheckAfterMove(squareId, targetMove, this));
+        const legalMoves = validMoves.filter((targetMove) => {
+            const move: Move = {
+                squareMovedFrom: squareId,
+                squareMovedTo: targetMove,
+                pieceMoving: pieceCode as PieceKey,
+                playerMoving: playerCode as PlayerKey,
+            }
+            return !helpers.wouldOwnKingBeInCheckAfterMove(
+                move,
+                // squareId, 
+                // targetMove, 
+                this
+            )
+        });
 
         return legalMoves;
     }
 
-    getNewGameHistoryItem = (squareMovedFrom: number, squareMovedTo: number): HistoryItem => { // void 
+    getNewGameHistoryItem = (movePlayed: Move): HistoryItem => { // void 
         const { squareProps, history, squareSelected, squareAltSelected, FEN, ...filteredGameState} = this.state; // destructure state to take snapshot of partial state
+        const { squareMovedFrom, squareMovedTo } = movePlayed;
         const newGameHistoryItem: HistoryItem = {
             gameStateSnapshot: { ...filteredGameState },
-            AN: helpers.generateMoveAN(squareMovedFrom, squareMovedTo, this),
+            AN: helpers.generateMoveAN(movePlayed, this),
             JN: helpers.generateMoveJN(squareMovedFrom, squareMovedTo),
             INN: helpers.generateMoveINN(squareMovedFrom, squareMovedTo),
         };
@@ -234,7 +249,7 @@ export default class Game extends React.Component<GameProps, GameState> {
         if (pieceMoving === 'K') {
             castlingRights[`${playerMoving}K`] = false;
             castlingRights[`${playerMoving}Q`] = false;
-            if (!helpers.isMoveCastling(squareMovedFrom, squareMovedTo, this.state.pieceKeys)) {
+            if (!helpers.isMoveCastling(move)) {
                 kingPositions[playerMoving] = squareMovedTo;
             } else {
                 const directionFromKing = squareMovedFrom < squareMovedTo ? 1 : -1;
@@ -278,40 +293,12 @@ export default class Game extends React.Component<GameProps, GameState> {
         return newStateKVPs;
     }
 
-    undoLastMove = (): void => {
-        if (!this.state.history || this.state.history.length === 0) return;
-
-        const lastHistoryItem = this.state.history.pop(); // TODO don't get rid of it,
-        // // maybe make side-lines or store analysis positions ... highlight current move in history list 
-        if (!lastHistoryItem) return;
-        
-        const newHistory = this.state.history.slice();
-
-        this.setState({
-            ...lastHistoryItem.gameStateSnapshot,
-            history: newHistory,
-            squareSelected: null,
-            squareAltSelected: null,
-            FEN: '', // TODO generate FEN? Or only when user asks for it... 
-            squareProps: lastHistoryItem.gameStateSnapshot.pieceKeys.map((keycode, index) => {
-                return {
-                    keycode: keycode,
-                    id: index,
-                    isHighlighted: false,
-                    isAltHighlighted: false,
-                    isSelected: false,
-                    isAltSelected: false,
-                    isPromoting: false,
-                }
-            }),
-        });
-    }
-
     deselectAndRemoveHighlightFromAllSquares = (): void => {
         this.setState({
             ...this.state,
             squareSelected: null,
             squareAltSelected: null,
+            squareIdOfPawnPromotion: undefined,
             squareProps: this.state.squareProps.map((oldProps) => {
                 return {
                     ...oldProps,
@@ -320,6 +307,7 @@ export default class Game extends React.Component<GameProps, GameState> {
                     isAltHighlighted: false,
                     isAltSelected: false,
                     isPromoting: false,
+                    // squareIdOfPawnPromotion: undefined,
                     promotionSquare: undefined,
                 }
             }),
@@ -331,6 +319,7 @@ export default class Game extends React.Component<GameProps, GameState> {
             ...this.state,
             squareSelected: squareToSelect,
             squareAltSelected: null,
+            squareIdOfPawnPromotion: undefined,
             squareProps: this.state.squareProps.map((oldProps, squareId) => {
                 const shouldHighlight = legalMovesToHighlight.includes(squareId);
                 const shouldSelect = (squareId === squareToSelect);
@@ -341,9 +330,54 @@ export default class Game extends React.Component<GameProps, GameState> {
                     isAltHighlighted: false,
                     isAltSelected: false,
                     isPromoting: false,
+                    // squareIdOfPawnPromotion: undefined,
                     promotionSquare: undefined,
                 }
             }),
+        });
+    }
+
+    applyMoveAndUpdateState = (move: Move) => {
+        const { squareMovedFrom, squareMovedTo, pieceMoving } = move;
+        const newPieceKeys = helpers.getNewPieceKeysCopyWithMoveApplied(this.state.pieceKeys, move);
+        // TODO try removing castlingRights argument below 
+        const { castlingRights, kingPositions, deprecatedState } = this.getNewKingPositionsAndCastlingRights(move, this.state.castlingRights); 
+        
+        let enPassantTargetSquare: number | null = null;
+        if (pieceMoving === 'P' && Math.abs(squareMovedFrom! - squareMovedTo) === 16) {
+            enPassantTargetSquare = Math.floor((squareMovedFrom! + squareMovedTo) / 2);
+        }
+
+        const newHistoryItem = this.getNewGameHistoryItem(move);
+
+        // TODO maintain piecePositions, bitmaps etc. and be sure to factor in pawn promotions to new pieces 
+
+        this.setState({
+            ...this.state,
+            pieceKeys: newPieceKeys,
+            squareProps: this.state.squareProps.map((squareProps, squareId) => {
+                const newKeycode = newPieceKeys[squareId];
+                return {
+                    ...squareProps,
+                    keycode: newKeycode,
+                    isHighlighted: false,
+                    isAltHighlighted: false,
+                    isSelected: false,
+                    isAltSelected: false,
+                    isPromoting: false,
+                    // squareIdOfPawnPromotion: undefined,
+                    promotionSquare: undefined, 
+                }
+            }),
+            castlingRights, // we already based our input on this.state.castlingRights, no worry of lost info here?? 
+            kingPositions: kingPositions || this.state.kingPositions,
+            ...deprecatedState, // spread the partial of castlingRights and kingPositions using old variable names 
+            squareSelected: null,
+            squareAltSelected: null,
+            squareIdOfPawnPromotion: undefined,
+            whiteToPlay: !this.state.whiteToPlay,
+            enPassantTargetSquare, // when you use the same name as the state variable, it automatically unwraps 
+            history: this.state.history.concat([newHistoryItem]),
         });
     }
 
@@ -379,72 +413,76 @@ export default class Game extends React.Component<GameProps, GameState> {
         const squareMovedFrom: number = this.state.squareSelected!; 
         const squareMovedTo: number = squareId;
         const [playerMoving, pieceMoving] = this.state.pieceKeys[squareMovedFrom].split('');
+
+        const isPromoting = pieceMoving === 'P' && Math.floor(squareMovedTo / 8) === (this.state.whiteToPlay ? 0 : 7);
+        if (isPromoting) {
+            this.handleAttemptPawnPromotion(squareMovedTo, event);
+            // let squareIdOfPawnPromotion: number | null = null;
+            // squareIdOfPawnPromotion = squareMovedTo;
+            // let promotionSquare: HTMLButtonElement | undefined; // to use as anchor for promotion piece picker 
+            // // set to null if it was already set ... trying to get promotion piece picker to show back up if user aborts and then tries again ... SUCCESS 
+            // if (this.state.squareProps[squareIdOfPawnPromotion].promotionSquare) {
+            //     promotionSquare = undefined;
+            // } else if (event && event.currentTarget instanceof HTMLButtonElement) {
+            //     promotionSquare = event?.currentTarget;
+            // }
+            // this.setState({
+            //     ...this.state,
+            //     squareProps: this.state.squareProps.map((squareProps, squareId) => {
+            //         return {
+            //             ...squareProps,
+            //             isPromoting: (squareId === squareIdOfPawnPromotion && promotionSquare !== undefined),
+            //             promotionSquare: (squareId === squareIdOfPawnPromotion) ? promotionSquare : undefined,
+            //         }
+            //     }),
+            // });
+            return;
+        }
+
+        // if we make it here, we are applying a legal move to the board and updating state 
         const movePlayed: Move = {
             squareMovedFrom,
             squareMovedTo,
             pieceMoving: pieceMoving as PieceKey,
             playerMoving: playerMoving as PlayerKey,
         }
-        let squareIdOfPawnPromotion: number | null = null;
+        this.applyMoveAndUpdateState(movePlayed);
 
-        const isPromoting = pieceMoving === 'P' && Math.floor(squareMovedTo / 8) === (this.state.whiteToPlay ? 0 : 7);
-        if (isPromoting) {
-            squareIdOfPawnPromotion = squareMovedTo;
-            let promotionSquare: HTMLButtonElement | undefined; // to use as anchor for promotion piece picker 
-            // set to null if it was already set ... trying to get promotion piece picker to show back up if user aborts and then tries again ... SUCCESS 
-            if (this.state.squareProps[squareIdOfPawnPromotion].promotionSquare) {
-                promotionSquare = undefined;
-            } else if (event && event.currentTarget instanceof HTMLButtonElement) {
-                promotionSquare = event?.currentTarget;
-            }
-            this.setState({
-                ...this.state,
-                squareProps: this.state.squareProps.map((squareProps, squareId) => {
-                    return {
-                        ...squareProps,
-                        isPromoting: (squareId === squareIdOfPawnPromotion && promotionSquare !== undefined),
-                        promotionSquare: (squareId === squareIdOfPawnPromotion) ? promotionSquare : undefined,
-                    }
-                }),
-            });
-            return;
-        }
-
-        const newPieceKeys = helpers.getNewPieceKeysCopyWithMoveApplied(this.state.pieceKeys, squareMovedFrom!, squareMovedTo);
-        const { castlingRights, kingPositions, deprecatedState } = this.getNewKingPositionsAndCastlingRights(movePlayed, this.state.castlingRights); // TODO try removing castlingRights argument 
+        // const newPieceKeys = helpers.getNewPieceKeysCopyWithMoveApplied(this.state.pieceKeys, squareMovedFrom, squareMovedTo); // Move move 
+        // const { castlingRights, kingPositions, deprecatedState } = this.getNewKingPositionsAndCastlingRights(movePlayed, this.state.castlingRights); // TODO try removing castlingRights argument 
         
-        let enPassantTargetSquare: number | null = null;
-        if (pieceMoving === 'P' && Math.abs(squareMovedFrom! - squareMovedTo) === 16) {
-            enPassantTargetSquare = Math.floor((squareMovedFrom! + squareMovedTo) / 2);
-        }
+        // let enPassantTargetSquare: number | null = null;
+        // if (pieceMoving === 'P' && Math.abs(squareMovedFrom! - squareMovedTo) === 16) {
+        //     enPassantTargetSquare = Math.floor((squareMovedFrom! + squareMovedTo) / 2);
+        // }
 
-        const newHistoryItem = this.getNewGameHistoryItem(squareMovedFrom, squareMovedTo);
+        // const newHistoryItem = this.getNewGameHistoryItem(squareMovedFrom, squareMovedTo);
 
-        this.setState({
-            ...this.state,
-            pieceKeys: newPieceKeys,
-            squareProps: this.state.squareProps.map((squareProps, squareId) => {
-                const newKeycode = newPieceKeys[squareId];
-                return {
-                    ...squareProps,
-                    keycode: newKeycode,
-                    isHighlighted: false,
-                    isAltHighlighted: false,
-                    isSelected: false,
-                    isAltSelected: false,
-                    isPromoting: false, // (squareId === squareIdOfPawnPromotion), // squareIdOfPawnPromotion is always null by the time we get here 
-                    promotionSquare: undefined, 
-                }
-            }),
-            castlingRights, // we already based our input on this.state.castlingRights, no worry of lost info here?? 
-            kingPositions: kingPositions || this.state.kingPositions,
-            ...deprecatedState, // spread the partial of castlingRights and kingPositions using old variable names 
-            squareSelected: null,
-            squareAltSelected: null,
-            whiteToPlay: !this.state.whiteToPlay,
-            enPassantTargetSquare, // when you use the same name as the state variable, it automatically unwraps 
-            history: this.state.history.concat([newHistoryItem]),
-        });
+        // this.setState({
+        //     ...this.state,
+        //     pieceKeys: newPieceKeys,
+        //     squareProps: this.state.squareProps.map((squareProps, squareId) => {
+        //         const newKeycode = newPieceKeys[squareId];
+        //         return {
+        //             ...squareProps,
+        //             keycode: newKeycode,
+        //             isHighlighted: false,
+        //             isAltHighlighted: false,
+        //             isSelected: false,
+        //             isAltSelected: false,
+        //             isPromoting: false, // (squareId === squareIdOfPawnPromotion), // squareIdOfPawnPromotion is always null by the time we get here 
+        //             promotionSquare: undefined, 
+        //         }
+        //     }),
+        //     castlingRights, // we already based our input on this.state.castlingRights, no worry of lost info here?? 
+        //     kingPositions: kingPositions || this.state.kingPositions,
+        //     ...deprecatedState, // spread the partial of castlingRights and kingPositions using old variable names 
+        //     squareSelected: null,
+        //     squareAltSelected: null,
+        //     whiteToPlay: !this.state.whiteToPlay,
+        //     enPassantTargetSquare, // when you use the same name as the state variable, it automatically unwraps 
+        //     history: this.state.history.concat([newHistoryItem]),
+        // });
     }
 
     handleSquareRightClick = (event: React.MouseEvent | null, squareId: number): void => {
@@ -491,9 +529,84 @@ export default class Game extends React.Component<GameProps, GameState> {
         }
     }
 
-    handlePawnPromotion = (squareId: number, pieceSelected: string, event?: Event) => {
-        console.log(`Handling promotion from Game: squareId: ${squareId}; pieceSelected: ${pieceSelected}; event: ${event}`);
+    handleAttemptPawnPromotion = (squareMovedTo: number, event?: Event) => {
+        // TODO check for auto-queen first, if so just create the Move object and apply it 
+        let squareIdOfPawnPromotion: number | null = null;
+        squareIdOfPawnPromotion = squareMovedTo;
+        let promotionSquare: HTMLButtonElement | undefined; // to use as anchor for promotion piece picker 
+        // set to null if it was already set ... trying to get promotion piece picker to show back up if user aborts and then tries again ... SUCCESS 
+        if (this.state.squareProps[squareIdOfPawnPromotion].promotionSquare) {
+            promotionSquare = undefined;
+        } else if (event && event.currentTarget instanceof HTMLButtonElement) {
+            promotionSquare = event?.currentTarget;
+        }
+        this.setState({
+            ...this.state,
+            squareProps: this.state.squareProps.map((squareProps, squareId) => {
+                return {
+                    ...squareProps,
+                    isPromoting: (squareId === squareIdOfPawnPromotion && promotionSquare !== undefined),
+                    // squareIdOfPawnPromotion,
+                    promotionSquare: (squareId === squareIdOfPawnPromotion) ? promotionSquare : undefined,
+                }
+            }),
+            squareIdOfPawnPromotion,
+        });
+    }
+
+    // this is the second stage of pawn promotion, after the user selected which piece to promote to. 
+    // these squares have a different onSquareClick handler that propagates back up here 
+    // first stage is displaying the piece picker, or auto-queening if the setting is configured
+    handlePawnPromotionPieceSelected = (squareId: number, pieceSelected: string, event?: Event) => {
+        // console.log(`Handling promotion from Game: squareId: ${squareId}; pieceSelected: ${pieceSelected}; event: ${event}`);
         // treat this as a move as is done above in handleSquareClick, updating all necessary state 
+        // squareId is NOT relevant info... // TODO remove squareId and event from passed parameters 
+        const squareMovedFrom: number = this.state.squareSelected!; 
+        const squareMovedTo: number = this.state.squareIdOfPawnPromotion!; // store squareIdOfPawnPromotion in state
+        // const [playerMoving, pieceMoving] = this.state.pieceKeys[squareMovedFrom].split('');
+        const playerMoving = this.state.pieceKeys[squareMovedFrom].charAt(0);
+        const pieceToPromoteTo = pieceSelected;
+        const movePlayed: Move = {
+            squareMovedFrom,
+            squareMovedTo,
+            pieceMoving: pieceToPromoteTo as PieceKey,
+            playerMoving: playerMoving as PlayerKey,
+            promotingTo: pieceSelected as PromotionOptionsPieceKey,
+        }
+
+        this.applyMoveAndUpdateState(movePlayed);
+    }
+
+    undoLastMove = (): void => {
+        if (!this.state.history || this.state.history.length === 0) return;
+
+        const lastHistoryItem = this.state.history.pop(); // TODO don't get rid of it,
+        // // maybe make side-lines or store analysis positions ... highlight current move in history list 
+        if (!lastHistoryItem) return;
+        
+        const newHistory = this.state.history.slice();
+
+        this.setState({
+            ...lastHistoryItem.gameStateSnapshot,
+            history: newHistory,
+            squareSelected: null,
+            squareAltSelected: null,
+            FEN: '', // TODO generate FEN? Or only when user asks for it... 
+            squareProps: lastHistoryItem.gameStateSnapshot.pieceKeys.map((keycode, index) => {
+                return {
+                    keycode: keycode,
+                    id: index,
+                    isHighlighted: false,
+                    isAltHighlighted: false,
+                    isSelected: false,
+                    isAltSelected: false,
+                    isPromoting: false,
+                    // squareIdOfPawnPromotion: undefined,
+                    promotionSquare: undefined,
+                }
+            }),
+            squareIdOfPawnPromotion: undefined,
+        });
     }
 
     handleUndoClick = (event?: React.SyntheticEvent | null): void => {
@@ -583,7 +696,7 @@ export default class Game extends React.Component<GameProps, GameState> {
                         squareProps={this.state.squareProps}
                         handleSquareClick={this.handleSquareClick}
                         handleSquareRightClick={this.handleSquareRightClick}
-                        onPromote={this.handlePawnPromotion}
+                        onPromote={this.handlePawnPromotionPieceSelected}
                         boardSize={'boardSize' in this ? this.boardSize as number : 8}
                         isBoardFlipped={this.state.isBoardFlipped}
                         handleUndoClick={this.handleUndoClick} // TODO these aren't accurate anymore 

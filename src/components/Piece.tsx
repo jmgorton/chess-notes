@@ -29,7 +29,7 @@ const keycodeToIcon = {
 
 // implements DraggableDroppableChild<HTMLImageElement> ?? 
 class Piece extends React.Component {
-  icon: string = '';
+  icon: string = ''; // TODO put something here to avoid console and rendering errors on unexpected behavior, render something silly goofy 
   alt: string = 'Generic Piece';
 
   constructor(props: PieceProps) {

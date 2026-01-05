@@ -6,7 +6,7 @@ import GameState from '../components/Game.tsx';
 
 import * as constants from './constants.ts';
 import * as functions from './functions.ts';
-import { Move, PlayerKey, RoyalKey } from './types.ts';
+import { Move, PlayerKey, RoyalKeycode } from './types.ts';
 
 import { keycodeToComponent } from '../components/Piece.tsx';
 
@@ -16,13 +16,13 @@ import { keycodeToComponent } from '../components/Piece.tsx';
 // this method is called before this move is applied to state, still current player's turn 
 // boardState, whiteToPlay, kingPositions, this.wouldOwnKingBeInCheckAfterMove
 // TODO ... add optional boolean indicating whether move has been played yet? 
-export function generateMoveAN(squareMovedFrom: number, squareMovedTo: number, currentState?: {
+export function generateMoveAN(movePlayed: Move, currentState?: {
     pieceKeys: string[],
     whiteToPlay: boolean,
     kingPositions: { [key: string]: number },
 }): string;
-export function generateMoveAN(squareMovedFrom: number, squareMovedTo: number, currentState?: Game): string; // , futureBoardState = this.state.pieceKeys) => {
-export function generateMoveAN(squareMovedFrom: number, squareMovedTo: number, currentState?: unknown): string {
+export function generateMoveAN(movePlayed: Move, currentState?: Game): string; // , futureBoardState = this.state.pieceKeys) => {
+export function generateMoveAN(movePlayed: Move, currentState?: unknown): string {
     if (!currentState) {
         throw Error("Unable to generate algebraic notation for move without game context.");
     }
@@ -45,15 +45,16 @@ export function generateMoveAN(squareMovedFrom: number, squareMovedTo: number, c
         // required args for wouldOwnKingBeInCheckAfterMove:
     //   pieceKeys, whiteToPlay + kingPositions | kingPosition arg, 
     const currentBoardState = currentGame.state.pieceKeys.slice();
-    const futureBoardState = getNewPieceKeysCopyWithMoveApplied(currentBoardState, squareMovedFrom, squareMovedTo);
+    const futureBoardState = getNewPieceKeysCopyWithMoveApplied(currentBoardState, movePlayed);
 
-    let [playerCode, pieceCode] = currentBoardState[squareMovedFrom].split(''); // [null, null]; // futureBoardState[squareMovedTo].split('');
+    const { squareMovedFrom, squareMovedTo, pieceMoving: pieceCode, playerMoving: playerCode } = movePlayed;
+    // let [playerCode, pieceCode] = currentBoardState[squareMovedFrom].split(''); // [null, null]; // futureBoardState[squareMovedTo].split('');
     // if (playerCode === null && pieceCode === null) { // null !== undefined ... SMH 
     //     // this shouldn't happen, remnant of previous approach 
     //     [playerCode, pieceCode] = futureBoardState[squareMovedTo].split('');
     // }
 
-    if (isMoveCastling(squareMovedFrom, squareMovedTo, currentBoardState)) { 
+    if (isMoveCastling(movePlayed)) { 
         const isShortCastling: boolean = Math.abs(squareMovedFrom - squareMovedTo) === 3;
         return isShortCastling ? 'O-O' : 'O-O-O'; 
     }
@@ -78,8 +79,9 @@ export function generateMoveAN(squareMovedFrom: number, squareMovedTo: number, c
         isCheckOrCheckmateAN = '+';
     }
     
-    // TODO implement 
-    // const isPawnPromotion = '=[Q,R,B,N]'; 
+    if (isMovePromotion(movePlayed)) {
+        promotionAN = `=${movePlayed.promotingTo}`;
+    }
 
     // remember that our 0-63 is kind of backwards, and 0-indexed 
     destRankAN = 8 - Math.floor(squareMovedTo / 8); 
@@ -87,7 +89,7 @@ export function generateMoveAN(squareMovedFrom: number, squareMovedTo: number, c
 
     if (
         currentBoardState[squareMovedTo] !== '' ||
-        isMoveEnPassant(squareMovedFrom, squareMovedTo, currentBoardState)
+        isMoveEnPassant(movePlayed, currentBoardState)
     ) {
         isCaptureAN = 'x';
     }
@@ -97,9 +99,18 @@ export function generateMoveAN(squareMovedFrom: number, squareMovedTo: number, c
     } else {
         pieceAN = pieceCode;
         const movesThatNecessitateFurtherClarification = getOccupiedSquaresThatCanAttackThisSquare(squareMovedTo, [playerCode], futureBoardState)
-            .filter((squareId) => futureBoardState[squareId].charAt(1) === pieceCode) // get only self-attacks from the same type of piece 
+            // .filter((squareId) => futureBoardState[squareId].charAt(1) === pieceCode) // get only self-attacks from the same type of piece 
             // .filter((squareId) => squareId !== squareMovedFrom); // state issue TODO fix ... including this piece 
-            .filter(squareId => !wouldOwnKingBeInCheckAfterMove(squareId, squareMovedTo, currentGame)) // don't allow illegal moves ... use current state, not future 
+            .filter(squareId => {
+                if (futureBoardState[squareId].charAt(1) !== pieceCode) return false; // get only self-attacks from the same type of piece 
+                const moveToCheck: Move = {
+                    squareMovedFrom: squareId,
+                    squareMovedTo,
+                    pieceMoving: pieceCode,
+                    playerMoving: playerCode,
+                }
+                return !wouldOwnKingBeInCheckAfterMove(moveToCheck, currentGame) // squareId, squareMovedTo, currentGame
+            }) // don't allow illegal moves ... use current state, not future 
 
         // console.log(movesThatNecessitateFurtherClarification);
 
@@ -151,16 +162,18 @@ export const generateMoveINN = (squareMovedFrom: number, squareMovedTo: number):
 // pieceMoving is still on squareMovedFrom 
 // we ASSUME that the arguments passed in represent a valid board state and a legal move to make 
 // TODO rename function to wouldMoveBeEnPassant ??? 
-export const isMoveEnPassant = (squareMovedFrom: number, squareMovedTo: number, currentBoardState: string[]): boolean => {
-    if (currentBoardState[squareMovedFrom]?.charAt(1) !== 'P') return false; // not a pawn 
+export const isMoveEnPassant = (movePlayed: Move, currentBoardState: string[]): boolean => { // maybe just pass in enPassantTargetSquare... 
+    const { squareMovedFrom, squareMovedTo, pieceMoving } = movePlayed;
+    if (pieceMoving !== 'P') return false; // not a pawn 
     if (squareMovedFrom % 8 === squareMovedTo % 8) return false; // same file, not a capture 
     if (currentBoardState[squareMovedTo] !== '') return false; // regular capture 
     return true;
 }
 
 // again, assume input arguments represent a legal move on a valid board
-export const isMoveCastling = (squareMovedFrom: number, squareMovedTo: number, currentBoardState: string[]): boolean => {
-    if (currentBoardState[squareMovedFrom].charAt(1) !== 'K') return false;
+export const isMoveCastling = (movePlayed: Move): boolean => {
+    const { squareMovedFrom, squareMovedTo, pieceMoving } = movePlayed;
+    if (pieceMoving !== 'K') return false;
     if (squareMovedFrom === 4) {
         // black king moved from starting square 
         return [0, 7].includes(squareMovedTo);
@@ -168,6 +181,12 @@ export const isMoveCastling = (squareMovedFrom: number, squareMovedTo: number, c
         // light king moved from starting square 
         return [56, 63].includes(squareMovedTo);
     }
+    return false;
+}
+
+export const isMovePromotion = (movePlayed: Move): boolean => {
+    if (movePlayed.promotingTo) return true;
+    // if (movePlayed.pieceMoving === 'P' && Math.floor(movePlayed.squareMovedTo / 8) === (movePlayed.playerMoving === 'L' ? 0 : 7)) return true;
     return false;
 }
 
@@ -326,21 +345,26 @@ export function isKingCheckmated(): boolean {
     return false;
 }
 
-export function wouldOwnKingBeInCheckAfterMove(squareMovedFrom: number, squareMovedTo: number, currentGame?: Game): boolean {
+export function wouldOwnKingBeInCheckAfterMove(movePlayed: Move, currentGame?: Game): boolean {
     if (!currentGame) {
         // TODO handle kingPosition and boardState if currentGame is undefined 
         throw Error("Must supply currentGame arg (for now)...");
     }
 
+    // TODO refactor to use Move object input 
+    // const { squareMovedFrom, squareMovedTo, pieceMoving, playerMoving } = movePlayed;
+
     // required args from currentGame:
     //   pieceKeys, whiteToPlay + kingPositions | kingPosition arg, 
 
-    const futureState = getNewPieceKeysCopyWithMoveApplied(currentGame.state.pieceKeys, squareMovedFrom, squareMovedTo);
+    const { squareMovedFrom, squareMovedTo, pieceMoving, playerMoving } = movePlayed;
+
+    const futureState = getNewPieceKeysCopyWithMoveApplied(currentGame.state.pieceKeys, movePlayed);
     // const player = currentGame.state.whiteToPlay ? 'L' : 'D';
     // let ownKingPosition: number = currentGame.state.kingPositions[player];
     let ownKingPosition = currentGame.state.whiteToPlay ? currentGame.state.lightKingPosition : currentGame.state.darkKingPosition;
     if (ownKingPosition === squareMovedFrom) {
-        if (isMoveCastling(squareMovedFrom, squareMovedTo, currentGame.state.pieceKeys)) {
+        if (isMoveCastling(movePlayed)) {
             if (squareMovedFrom === 4) {
                 if (squareMovedTo === 7) ownKingPosition = 6;
                 else if (squareMovedTo === 0) ownKingPosition = 2;
@@ -361,11 +385,12 @@ export function wouldOwnKingBeInCheckAfterMove(squareMovedFrom: number, squareMo
 }
 
 // TODO we need to allow this to handle pawn promotions 
-export function getNewPieceKeysCopyWithMoveApplied(boardState: string[], squareMovedFrom: number, squareMovedTo: number): string[];
-export function getNewPieceKeysCopyWithMoveApplied(component: React.Component<any, any>, squareMovedFrom: number, squareMovedTo: number): string[];
+export function getNewPieceKeysCopyWithMoveApplied(boardState: string[], movePlayed: Move): string[];
+export function getNewPieceKeysCopyWithMoveApplied(component: React.Component<any, any>, movePlayed: Move): string[];
 // export function getNewPieceKeysCopyWithMoveApplied(componentState: GameState, squareMovedFrom: number, squareMovedTo: number): string[];
 // export const getNewPieceKeysCopyWithMoveApplied = (component: React.Component<any, any>, squareMovedFrom: number, squareMovedTo: number): string[] => {
-export function getNewPieceKeysCopyWithMoveApplied(state: unknown, squareMovedFrom: number, squareMovedTo: number): string[] {
+export function getNewPieceKeysCopyWithMoveApplied(state: unknown, movePlayed: Move): string[] {
+    const { squareMovedFrom, squareMovedTo, pieceMoving, playerMoving } = movePlayed;
     let currentBoardState: string[] | null = null;
     if (functions.isArgumentStringArray(state)) { 
         currentBoardState = state as string[]; 
@@ -392,7 +417,7 @@ export function getNewPieceKeysCopyWithMoveApplied(state: unknown, squareMovedFr
     // console.log(currentBoardState);
     if (!currentBoardState || currentBoardState.length === 0) return [];
 
-    const pieceMoving = currentBoardState[squareMovedFrom];
+    // const pieceMoving = currentBoardState[squareMovedFrom]; // oops, this was keycode, not just pieceMoving ... 
     let squareIdOfPawnCapturedViaEnPassant = null;
     let squareIdOfKingAfterCastling = null;
     let squareIdOfRookAfterCastling = null;
@@ -400,13 +425,13 @@ export function getNewPieceKeysCopyWithMoveApplied(state: unknown, squareMovedFr
     // copy the array before mutating so React sees a new reference
     let newPieceKeys = currentBoardState.slice();
 
-    if (isMoveEnPassant(squareMovedFrom, squareMovedTo, currentBoardState)) {
+    if (isMoveEnPassant(movePlayed, currentBoardState)) {
         // alert("An en passant occurred...");
-        squareIdOfPawnCapturedViaEnPassant = squareMovedTo + -8 * (pieceMoving.charAt(0) === 'L' ? -1 : 1);
+        squareIdOfPawnCapturedViaEnPassant = squareMovedTo + -8 * (playerMoving === 'L' ? -1 : 1);
         newPieceKeys[squareIdOfPawnCapturedViaEnPassant] = "";
         newPieceKeys[squareMovedFrom] = "";
-        newPieceKeys[squareMovedTo] = pieceMoving;
-    } else if (isMoveCastling(squareMovedFrom, squareMovedTo, currentBoardState)) {
+        newPieceKeys[squareMovedTo] = `${playerMoving}${pieceMoving}`;
+    } else if (isMoveCastling(movePlayed)) {
         // indicates that the king is castling 
         let directionFromKing = 1;
         if (squareMovedTo < squareMovedFrom) directionFromKing = -1;
@@ -416,10 +441,13 @@ export function getNewPieceKeysCopyWithMoveApplied(state: unknown, squareMovedFr
         newPieceKeys[squareMovedFrom] = "";
         newPieceKeys[squareMovedTo] = "";
         newPieceKeys[squareIdOfRookAfterCastling] = castlingRook;
-        newPieceKeys[squareIdOfKingAfterCastling] = pieceMoving;
+        newPieceKeys[squareIdOfKingAfterCastling] = `${playerMoving}${pieceMoving}`;
+    } else if (isMovePromotion(movePlayed)) {
+        newPieceKeys[squareMovedFrom] = "";
+        newPieceKeys[squareMovedTo] = `${playerMoving}${movePlayed.promotingTo}`;
     } else {
         newPieceKeys[squareMovedFrom] = "";
-        newPieceKeys[squareMovedTo] = pieceMoving;
+        newPieceKeys[squareMovedTo] = `${playerMoving}${pieceMoving}`;
     }
 
     // console.log(newPieceKeys);
@@ -529,7 +557,7 @@ export function generateFENFromGameState(gameState: unknown): string {
 
     let boardState: string[];
     // let castlingRightsState: { [key: string]: any} = {};
-    let castlingRightsState: { [key in RoyalKey]: boolean } = {
+    let castlingRightsState: { [key in RoyalKeycode]: boolean } = {
         LK: false,
         LQ: false,
         DK: false,

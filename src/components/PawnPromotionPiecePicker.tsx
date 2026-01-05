@@ -40,7 +40,7 @@ const PawnPromotionPiecePicker: React.FC<PawnPromotionPiecePickerProps> = ({
     ];
 
     const handlePromotionPieceSelected = (squareId: number, pieceSelected: string, event?: Event | undefined) => {
-        console.log(`Handling promotion from PawnPromotionPiecePicker: squareId: ${squareId}; pieceSelected: ${pieceSelected}; event: ${event}`);
+        // console.log(`Handling promotion from PawnPromotionPiecePicker: squareId: ${squareId}; pieceSelected: ${pieceSelected}; event: ${event}`);
         if (handlePromotion && event) {
             handlePromotion(squareId, pieceSelected, event);
         }
