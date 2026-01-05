@@ -2,7 +2,7 @@ import React, { MouseEventHandler } from 'react';
 
 import { withDroppable } from './hoc/DroppableWrapper.tsx';
 
-import { getPieceByKeycode } from './Piece'; // keycodeToComponent
+import Piece, { getPieceTypeByKeycode, DraggablePiece, keycodeToComponent, getPieceElementByKeycode } from './Piece'; // keycodeToComponent
 import PawnPromotionPiecePicker from './PawnPromotionPiecePicker';
 
 import { 
@@ -11,6 +11,7 @@ import {
   DraggableDroppableChild,
   // PromotionSquareProp,
 } from '../utils/types.ts';
+import DraggableWrapper, { withDraggable } from './hoc/DraggableWrapper.tsx';
 
 class Square extends React.Component<SquareProp, SquareState> {
 
@@ -33,7 +34,7 @@ class Square extends React.Component<SquareProp, SquareState> {
     // // buttonToRender.setAttribute('data-square-id', props.id);
     // // the below does not work: You cannot directly pass a React element as a native Node
     // // if (this.props.keycode in keycodeToComponent) {
-    // //   const pieceChild = getPieceByKeycode(this.props.keycode);
+    // //   const pieceChild = getPieceTypeByKeycode(this.props.keycode);
     // //   buttonToRender.appendChild(React.createElement(pieceChild, this.props));
     // // }
 
@@ -106,14 +107,18 @@ class Square extends React.Component<SquareProp, SquareState> {
     handlers.onContextMenu = this.handleRightClick;
     // or do () => this.handleClick() to *not* pass event arg 
 
-    let childType = getPieceByKeycode(this.props.keycode);
-    // let draggableChildType
-    // // let childType;
-    // // if (this.props.enableDragAndDrop) 
-    // //   childType = typeof type | typeof DraggableDroppableChild<HTMLButtonElement;
-    // if (childType) {
+    let childType: typeof Piece | undefined = undefined;
+    if (this.props.keycode !== '') childType = getPieceTypeByKeycode(this.props.keycode as keyof typeof keycodeToComponent);
+    // // let draggableChildType
+    // // // let childType;
+    // // // if (this.props.enableDragAndDrop) 
+    // // //   childType = typeof type | typeof DraggableDroppableChild<HTMLButtonElement;
+    // // if (childType) {
 
     // }
+    // let child = undefined;
+    // if (this.props.keycode !== '') child = getPieceElementByKeycode(this.props.keycode, this.props.enableDragAndDrop); 
+    // THIS IS A HOOK?? Ugh... Oh, no it's not, but it calls a hook ... instead of that, let's use DraggableGenericPiece here?? 
     return (
       <>
         <button 
@@ -132,8 +137,25 @@ class Square extends React.Component<SquareProp, SquareState> {
           {...handlers}
         >
           {
-            childType && React.createElement(childType, this.props)
+            childType && React.createElement(childType) // , this.props) // we actually currently don't use any props for piece... 
+            // squares are what handles logic, just rendering a "new" static piece based on squareProps ... although we could 
+            // supply a prop to child to determine whether to render a draggable piece or not, while we figure out this class casting up here 
+            // right now all pieces are draggable by default 
           }
+          {/* {
+            childType ? (
+              this.props.enableDragAndDrop ? (
+                // withDraggable(childType)({}) // this is a hook, it cannot be called here in this class component 
+                // <DraggablePiece /> // not working yet either 
+                // DraggablePiece(childType) // this is also a hook :/ 
+                // <DraggableWrapper id={this.props.id} children={React.createElement(childType)}/>
+                React.createElement(childType)
+              ) : React.createElement(childType)
+            ) : undefined
+          } */}
+          {/* {
+            child
+          } */}
         </button>
 
         {

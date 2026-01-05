@@ -10,6 +10,7 @@ import * as helpers from '../utils/helpers.ts';
 import * as constants from '../utils/constants.ts';
 
 import {
+    BoardProps,
     CastlingRights,
     // SquareProp,
     GameProps,
@@ -23,7 +24,7 @@ import {
     // HistoryItem,
 } from '../utils/types.ts';
 import BoardControlPanel from './BoardControlPanel.tsx';
-import { keycodeToComponent, getPieceByKeycode } from './Piece.tsx';
+import { keycodeToComponent, getPieceTypeByKeycode, getPieceElementByKeycode } from './Piece.tsx';
 
 export default class Game extends React.Component<GameProps, GameState> {
     // backrankStartingPositions: string[] = ['R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R']; // can make chess960 later 
@@ -119,6 +120,7 @@ export default class Game extends React.Component<GameProps, GameState> {
             plyNumber: 0,
             halfmoveClock: 0, // TODO implement 50-ply rule 
             enableDragAndDrop: true,
+            highlightLegalMoves: true,
             isBoardFlipped: false,
         }
 
@@ -161,7 +163,9 @@ export default class Game extends React.Component<GameProps, GameState> {
         if (constants.validPieces.includes(pieceCode)) {
             const keycodeMapKey = keycode as keyof typeof keycodeToComponent;
             const piece = keycodeToComponent[keycodeMapKey];
-            // const piece = getPieceByKeycode(keycode);
+            // const piece = getPieceTypeByKeycode(keycodeMapKey); // for some reason, this makes the spread argument 
+            // // in the piece.generatePieceValidMoveTargets method call error: spread arg must have tuple type 
+            // // or be passed as a rest parameter ?? 
             const baseFunctionArgs: [number, string[]] = [squareId, this.state.pieceKeys.slice()];
             let additionalFunctionArgs: any[] = [];
             if (pieceCode === 'K') {
@@ -179,7 +183,7 @@ export default class Game extends React.Component<GameProps, GameState> {
                     this.state.enPassantTargetSquare || undefined, // enPassantTargetSquare
                 ];
             }
-            validMoves = piece.generatePieceValidMoves(...baseFunctionArgs, ...additionalFunctionArgs)
+            validMoves = piece.generatePieceValidMoveTargets(...baseFunctionArgs, ...additionalFunctionArgs)
         } 
 
         const legalMoves = validMoves.filter((targetMove) => {
@@ -206,8 +210,8 @@ export default class Game extends React.Component<GameProps, GameState> {
         const newGameHistoryItem: HistoryItem = {
             gameStateSnapshot: { ...filteredGameState },
             AN: helpers.generateMoveAN(movePlayed, this),
-            JN: helpers.generateMoveJN(squareMovedFrom, squareMovedTo),
-            INN: helpers.generateMoveINN(squareMovedFrom, squareMovedTo),
+            JN: helpers.generateMoveJN(movePlayed),
+            INN: helpers.generateMoveINN(movePlayed),
         };
         return newGameHistoryItem;
     }
@@ -341,7 +345,7 @@ export default class Game extends React.Component<GameProps, GameState> {
         const { squareMovedFrom, squareMovedTo, pieceMoving } = move;
         const newPieceKeys = helpers.getNewPieceKeysCopyWithMoveApplied(this.state.pieceKeys, move);
         // TODO try removing castlingRights argument below 
-        const { castlingRights, kingPositions, deprecatedState } = this.getNewKingPositionsAndCastlingRights(move, this.state.castlingRights); 
+        const { castlingRights, kingPositions, deprecatedState } = this.getNewKingPositionsAndCastlingRights(move); 
         
         let enPassantTargetSquare: number | null = null;
         if (pieceMoving === 'P' && Math.abs(squareMovedFrom! - squareMovedTo) === 16) {
@@ -417,25 +421,6 @@ export default class Game extends React.Component<GameProps, GameState> {
         const isPromoting = pieceMoving === 'P' && Math.floor(squareMovedTo / 8) === (this.state.whiteToPlay ? 0 : 7);
         if (isPromoting) {
             this.handleAttemptPawnPromotion(squareMovedTo, event);
-            // let squareIdOfPawnPromotion: number | null = null;
-            // squareIdOfPawnPromotion = squareMovedTo;
-            // let promotionSquare: HTMLButtonElement | undefined; // to use as anchor for promotion piece picker 
-            // // set to null if it was already set ... trying to get promotion piece picker to show back up if user aborts and then tries again ... SUCCESS 
-            // if (this.state.squareProps[squareIdOfPawnPromotion].promotionSquare) {
-            //     promotionSquare = undefined;
-            // } else if (event && event.currentTarget instanceof HTMLButtonElement) {
-            //     promotionSquare = event?.currentTarget;
-            // }
-            // this.setState({
-            //     ...this.state,
-            //     squareProps: this.state.squareProps.map((squareProps, squareId) => {
-            //         return {
-            //             ...squareProps,
-            //             isPromoting: (squareId === squareIdOfPawnPromotion && promotionSquare !== undefined),
-            //             promotionSquare: (squareId === squareIdOfPawnPromotion) ? promotionSquare : undefined,
-            //         }
-            //     }),
-            // });
             return;
         }
 
@@ -447,42 +432,7 @@ export default class Game extends React.Component<GameProps, GameState> {
             playerMoving: playerMoving as PlayerKey,
         }
         this.applyMoveAndUpdateState(movePlayed);
-
-        // const newPieceKeys = helpers.getNewPieceKeysCopyWithMoveApplied(this.state.pieceKeys, squareMovedFrom, squareMovedTo); // Move move 
-        // const { castlingRights, kingPositions, deprecatedState } = this.getNewKingPositionsAndCastlingRights(movePlayed, this.state.castlingRights); // TODO try removing castlingRights argument 
-        
-        // let enPassantTargetSquare: number | null = null;
-        // if (pieceMoving === 'P' && Math.abs(squareMovedFrom! - squareMovedTo) === 16) {
-        //     enPassantTargetSquare = Math.floor((squareMovedFrom! + squareMovedTo) / 2);
-        // }
-
-        // const newHistoryItem = this.getNewGameHistoryItem(squareMovedFrom, squareMovedTo);
-
-        // this.setState({
-        //     ...this.state,
-        //     pieceKeys: newPieceKeys,
-        //     squareProps: this.state.squareProps.map((squareProps, squareId) => {
-        //         const newKeycode = newPieceKeys[squareId];
-        //         return {
-        //             ...squareProps,
-        //             keycode: newKeycode,
-        //             isHighlighted: false,
-        //             isAltHighlighted: false,
-        //             isSelected: false,
-        //             isAltSelected: false,
-        //             isPromoting: false, // (squareId === squareIdOfPawnPromotion), // squareIdOfPawnPromotion is always null by the time we get here 
-        //             promotionSquare: undefined, 
-        //         }
-        //     }),
-        //     castlingRights, // we already based our input on this.state.castlingRights, no worry of lost info here?? 
-        //     kingPositions: kingPositions || this.state.kingPositions,
-        //     ...deprecatedState, // spread the partial of castlingRights and kingPositions using old variable names 
-        //     squareSelected: null,
-        //     squareAltSelected: null,
-        //     whiteToPlay: !this.state.whiteToPlay,
-        //     enPassantTargetSquare, // when you use the same name as the state variable, it automatically unwraps 
-        //     history: this.state.history.concat([newHistoryItem]),
-        // });
+        return;
     }
 
     handleSquareRightClick = (event: React.MouseEvent | null, squareId: number): void => {
@@ -627,14 +577,14 @@ export default class Game extends React.Component<GameProps, GameState> {
 
     handleSendGameClick: MouseEventHandler<HTMLButtonElement> = (event) => { // (event: Event) {
         if (event && typeof event.preventDefault === 'function') {
-        event.preventDefault();
-        event.stopPropagation();
+            event.preventDefault();
+            event.stopPropagation();
         }
-        // if (this.props.handleUndoClick) this.props.handleUndoClick(); // this.props.handleUndoClick(event);
-        this.setState({
-            ...this.state,
-            enableDragAndDrop: !this.state.enableDragAndDrop,
-        })
+        // // if (this.props.handleUndoClick) this.props.handleUndoClick(); // this.props.handleUndoClick(event);
+        // this.setState({
+        //     ...this.state,
+        //     enableDragAndDrop: !this.state.enableDragAndDrop,
+        // })
     }
 
     // handleRedoClick(event: Event) {
@@ -671,11 +621,28 @@ export default class Game extends React.Component<GameProps, GameState> {
 
     handleUpdateSettings = (key: string, newValue?: any) => {
         if (!(key in this.state)) return;
+        const oldValue: any = this.state[key as keyof GameState];
+        console.log(`Updating game.state.${key} from ${oldValue} to ${newValue}`);
         if (newValue) {
             this.setState({
                 ...this.state,
                 [key]: newValue,
             });
+        } else {
+            if (typeof oldValue === 'boolean') {
+                this.setState({
+                    ...this.state,
+                    [key]: !oldValue,
+                });
+            } else {
+                console.warn(`Updating game state for a non-boolean value with no newValue provided. 
+                    Setting ${key} state property to undefined... This may cause problems with type mismatches.
+                    This is not advised.`);
+                this.setState({
+                    ...this.state,
+                    [key]: undefined,
+                });
+            }
         }
         // how to get value from state based on dynamic key?? we don't have an index signature ...
         // and i'm not sure we want one either 
@@ -686,12 +653,35 @@ export default class Game extends React.Component<GameProps, GameState> {
     // handleGoToMoveClick
 
     render() {
+        // boardPropHandlers: ((...args: any[]) => any)[] = [];
+        // let boardPropHandlers: { [handlerName: string]: any } = {};
+        let boardPropHandlers: Partial<BoardProps> = {};
+        boardPropHandlers.handleSquareClick = this.handleSquareClick;
+        boardPropHandlers.handleSquareRightClick = this.handleSquareRightClick;
+        boardPropHandlers.onPromote = this.handlePawnPromotionPieceSelected;
+        boardPropHandlers.handleUndoClick = this.handleUndoClick;
+        boardPropHandlers.handleRedoClick = this.handleRedoClick;
+        boardPropHandlers.handleResetClick = this.handleResetClick;
+        boardPropHandlers.handleGetFENClick = (() => helpers.generateFENFromGameState(this)); 
+        // let boardPropVars: { [propName: string]: any } = {};
+        let boardPropVars: Partial<BoardProps> = {};
+        boardPropVars.squareProps = this.state.squareProps;
+        boardPropVars.boardSize = 'boardSize' in this ? this.boardSize as number : 8;
+        boardPropVars.enableDragAndDrop = this.state.enableDragAndDrop || true;
+        const boardProps: BoardProps = { ...boardPropHandlers, ...boardPropVars } as BoardProps; // turn partials back into whole ... TODO always verify all props are present... 
+        // const boardToRender: Element = this.state.enableDragAndDrop ? DraggableDroppableBoard(boardProps) : React.createElement(Board, boardProps); // new Board(boardProps); // Board | typeof DraggableDroppableBoard (Element) ?? 
         return (
             <div className="game">
                 <div className="board-container">
-                    
-                    <DraggableDroppableBoard // DraggableDroppableBoard vs. Board
-                        // if we pass enableDragAndDrop prop as false, this acts as a regular Board
+                    {/* {
+                        boardToRender
+                    } */}
+                    {
+                        this.state.enableDragAndDrop ? (<DraggableDroppableBoard {...boardProps} />) : (<Board {...boardProps}/>)
+                    }
+                    {/* <DraggableDroppableBoard // DraggableDroppableBoard vs. Board
+                        // if we pass enableDragAndDrop prop as false, this acts as a regular Board ... not quite, cause Pieces are all draggable by default
+                        // while we figure out the dang type casting between the base React.Element and the HOCs going to a Node to render 
                         // pieceKeys={this.state.pieceKeys} // WAS passing this down, but it's not necessary. Info is contained in squareProps
                         squareProps={this.state.squareProps}
                         handleSquareClick={this.handleSquareClick}
@@ -703,8 +693,8 @@ export default class Game extends React.Component<GameProps, GameState> {
                         handleRedoClick={this.handleRedoClick} // not accurate
                         handleResetClick={this.handleResetClick} // update these TODO 
                         handleGetFENClick={() => helpers.generateFENFromGameState(this)}
-                        enableDragAndDrop={this.state.enableDragAndDrop || true}
-                    />
+                        enableDragAndDrop={this.state.enableDragAndDrop || false}
+                    /> */}
                     <BoardControlPanel
                         onGetInfoClick={this.handleGetInfoClick}
                         onUpdateSettings={this.handleUpdateSettings}
@@ -712,7 +702,8 @@ export default class Game extends React.Component<GameProps, GameState> {
                         onDownloadClick={this.handleDownloadClick}
                         onSendGameClick={this.handleSendGameClick}
                         onFlipBoard={this.flipBoard}
-                        enableDragAndDrop={this.state.enableDragAndDrop || true}
+                        enableDragAndDrop={this.state.enableDragAndDrop || false}
+                        highlightLegalMoves={this.state.highlightLegalMoves || false}
                     />
                 </div>
                 <GameStatus

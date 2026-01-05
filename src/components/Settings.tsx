@@ -36,11 +36,12 @@ const SettingsContent: React.FC<SettingsProps> = (props: SettingsProps) => {
                                 value="check" 
                                 selected={value} 
                                 onChange={() => handleToggleSetting(key, !value)}
-                                sx={[
-                                    {
-                                        marginLeft: 'auto',
-                                    },
-                                ]}
+                                className="settings-toggle-button"
+                                // sx={[
+                                //     {
+                                //         marginLeft: 'auto',
+                                //     },
+                                // ]}
                             >
                                 <CheckIcon fontSize='small'/>
                             </ToggleButton>
@@ -55,6 +56,7 @@ const SettingsContent: React.FC<SettingsProps> = (props: SettingsProps) => {
 
 // using React Portals to create my own dialog/modal
 // see: https://react.dev/reference/react-dom/createPortal
+// TODO extend this to other types of children/props 
 const CustomSettingsModal: React.FC<SettingsProps> = (props: SettingsProps) => {
     const [modalRoot, setModalRoot] = useState<HTMLElement | null>(null);
 

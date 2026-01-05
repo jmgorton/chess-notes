@@ -144,12 +144,14 @@ export function generateMoveAN(movePlayed: Move, currentState?: unknown): string
 }
 
 // not dependent on current board state
-export const generateMoveJN = (squareMovedFrom: number, squareMovedTo: number): string => {
+export const generateMoveJN = (movePlayed: Move): string => {
+    const { squareMovedFrom, squareMovedTo } = movePlayed;
     return `${String(squareMovedFrom).padStart(2, '0')}${String(squareMovedTo).padStart(2, '0')}`;
 }
 
 // not dependent on current board state
-export const generateMoveINN = (squareMovedFrom: number, squareMovedTo: number): string => {
+export const generateMoveINN = (movePlayed: Move): string => {
+    const { squareMovedFrom, squareMovedTo } = movePlayed;
     // squareMovedFrom, squareMovedTo passed in as squareId values from 0-63
     const fromRank = Math.floor(squareMovedFrom / 8); // TODO ranks are backwards 
     const fromFile = squareMovedFrom % 8;
@@ -679,7 +681,7 @@ export function generateFENFromGameState(gameState: unknown): string {
 // any capture is equivalently effective at removing a check 
 // evading a check must be performed by the king with respect to the other pieces that really exist on the board (no imagination) 
 // but these optional parameters would have to be passed down to the generate...LegalMoves methods as well 
-// which in turn would have to get passed all the way down to the generatePieceValidMoves method 
+// which in turn would have to get passed all the way down to the generatePieceValidMoveTargets method 
 export const getOccupiedSquaresThatCanAttackThisSquare = (
     squareId: number,
     includeAttacksFrom: string[] = ['L','D'],
@@ -699,7 +701,7 @@ export const getOccupiedSquaresThatCanAttackThisSquare = (
     Object.keys(keycodeToComponent).forEach(keycode => {
         const keycodeMapKey = keycode as keyof typeof keycodeToComponent;
         keycodeToComponent[keycodeMapKey]
-            .generatePieceValidMoves(squareId, boardState, undefined, {
+            .generatePieceValidMoveTargets(squareId, boardState, undefined, {
                 includeNonCaptures: false, 
                 includeCapturesOf: includeAttacksFrom,
             })
@@ -852,6 +854,7 @@ export function initializeState(component: React.Component<any, any>, stateToLoa
         history: [],
         plyNumber: 0,
         enableDragAndDrop: true,
+        highlightLegalMoves: true,
         isBoardFlipped: false,
     }
 

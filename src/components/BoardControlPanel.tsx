@@ -57,7 +57,7 @@ export default class BoardControlPanel extends React.Component<BoardControlPanel
                   onCloseSettings={this.handleCloseSettings}
                   onUpdateSettings={this.props.onUpdateSettings}
                   enableDragAndDrop={this.props.enableDragAndDrop}
-                  highlightLegalMoves={true}
+                  highlightLegalMoves={this.props.highlightLegalMoves}
                 />
               )
             }

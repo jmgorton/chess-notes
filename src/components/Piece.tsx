@@ -1,11 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import DraggableWrapper, { withDraggable } from './hoc/DraggableWrapper.tsx';
 
 import Game from './Game.tsx';
 
 import * as helpers from '../utils/helpers.ts';
-import { DraggableDroppableChild, PieceProps, PlayerKey } from '../utils/types.ts'
+import { DraggableDroppableChild, PieceProps, PieceState, PlayerKey } from '../utils/types.ts'
 // import { withDraggable } from './hoc/DraggableWrapper.tsx';
 
 // Use public resources so filenames remain predictable in production.
@@ -28,7 +28,7 @@ const keycodeToIcon = {
 }
 
 // implements DraggableDroppableChild<HTMLImageElement> ?? 
-class Piece extends React.Component {
+class Piece extends React.Component<PieceProps, PieceState> {
   icon: string = ''; // TODO put something here to avoid console and rendering errors on unexpected behavior, render something silly goofy 
   alt: string = 'Generic Piece';
 
@@ -40,7 +40,7 @@ class Piece extends React.Component {
     this.handleClick = this.handleClick.bind(this);
   }
 
-  static generatePieceValidMoves = (
+  static generatePieceValidMoveTargets = (
     squareId: number,
     boardState: string[],
     directions: number[],
@@ -64,17 +64,20 @@ class Piece extends React.Component {
 
     nextSquareValidators.push((oldSquare, newSquare) => oldSquare >= 0 && newSquare >= 0);
     nextSquareValidators.push((oldSquare, newSquare) => oldSquare < 64 && newSquare < 64);
-    nextSquareValidators.push((oldSquare, newSquare) => Math.abs((oldSquare % 8) - (newSquare % 8)) <= 2); // only the knight needs a 2, every other piece should be 1
-    nextSquareValidators.push((oldSquare, newSquare) => Math.abs(Math.floor(oldSquare / 8) - Math.floor(newSquare / 8)) <= 2); // same here for rows
+    // only the knight can possibly change two files in one step of a move, every other piece should be 1
+    nextSquareValidators.push((oldSquare, newSquare) => Math.abs((oldSquare % 8) - (newSquare % 8)) <= 2); 
+    // same here for rows, make sure we don't wrap around the board
+    nextSquareValidators.push((oldSquare, newSquare) => Math.abs(Math.floor(oldSquare / 8) - Math.floor(newSquare / 8)) <= 2); 
 
     captureValidators.push((squareFrom, squareTo) => includeAttacksFrom?.includes(boardState[squareTo]?.charAt(0)) || false);
     // captureValidators.push((squareFrom, squareTo) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState));
-    // if (squareId === 27) console.log(`In Pawn#generatePieceValidMoves: captureValidators: ${captureValidators}`);
+    // if (squareId === 27) console.log(`In Pawn#generatePieceValidMoveTargets: captureValidators: ${captureValidators}`);
 
     directions.forEach((direction) => {
       let checkedSquare = squareId;
       let nextSquareToCheck = checkedSquare + direction;
       let rangeRemaining = distance;
+      // TODO refactor this, less duplication 
       // eslint-disable-next-line no-loop-func
       while (rangeRemaining > 0 && nextSquareValidators.every(validator => validator(checkedSquare, nextSquareToCheck))) {
         if (boardState[nextSquareToCheck] === "") {
@@ -161,7 +164,7 @@ class Pawn extends Piece {
     this.handleClick = this.handleClick.bind(this);
   }
 
-  static generatePieceValidMoves = (
+  static generatePieceValidMoveTargets = (
     squareId: number,
     boardState: string[], // = this.state.pieceKeys,
     directions?: number[], // can modify directions of the knight with input 
@@ -182,15 +185,15 @@ class Pawn extends Piece {
     // captureDirections?: number[], // = this.captureDirections,
     // startingRank: number | null = null,
   ) => {
-    // if (squareId === 27) console.log(`In Pawn#generatePieceValidMoves: captureValidators: ${captureValidators}`);
+    // if (squareId === 27) console.log(`In Pawn#generatePieceValidMoveTargets: captureValidators: ${captureValidators}`);
     // // Legal pawn moves   
     // const currRank = Math.floor(squareId / 8);
     let pawnMoves: number[] = [];
 
     // adding pawn moves (non-captures)
     if (includeNonCaptures) {
-      // pawnMoves = pawnMoves.concat(super.generatePieceValidMoves(
-      pawnMoves = pawnMoves.concat(Piece.generatePieceValidMoves(
+      // pawnMoves = pawnMoves.concat(super.generatePieceValidMoveTargets(
+      pawnMoves = pawnMoves.concat(Piece.generatePieceValidMoveTargets(
         squareId,
         boardState,
         directions || [], // moveDirections 
@@ -213,8 +216,8 @@ class Pawn extends Piece {
     let nextSquareValidators = [((squareFrom: number, squareTo: number) => Math.abs(squareFrom % 8 - squareTo % 8) === 1)];
 
     // adding more pawn moves (captures) // TODO is this necessary if we're always calling this from LightPawn/DarkPawn which already calls 2x 
-    // pawnMoves = pawnMoves.concat(super.generatePieceValidMoves(
-    pawnMoves = pawnMoves.concat(Piece.generatePieceValidMoves(
+    // pawnMoves = pawnMoves.concat(super.generatePieceValidMoveTargets(
+    pawnMoves = pawnMoves.concat(Piece.generatePieceValidMoveTargets(
       squareId,
       boardState,
       directions || [], // captureDirections 
@@ -257,7 +260,7 @@ class LightPawn extends Pawn {
     this.handleClick = this.handleClick.bind(this);
   }
 
-  static generatePieceValidMoves = (
+  static generatePieceValidMoveTargets = (
     squareId: number,
     boardState: string[], // = this.state.pieceKeys,
     directions?: number[], // can modify directions of the knight with input 
@@ -276,8 +279,8 @@ class LightPawn extends Pawn {
     } = {},
     enPassantTargetSquare?: number,
   ) => {
-    // return super.generatePieceValidMoves(
-    // return Pawn.generatePieceValidMoves(
+    // return super.generatePieceValidMoveTargets(
+    // return Pawn.generatePieceValidMoveTargets(
     //   squareId,
     //   boardState,
     //   directions, // null
@@ -296,8 +299,8 @@ class LightPawn extends Pawn {
 
     // adding pawn moves (non-captures)
     if (includeNonCaptures) {
-      // pawnMoves = pawnMoves.concat(super.generatePieceValidMoves(
-      pawnMoves = pawnMoves.concat(Pawn.generatePieceValidMoves(
+      // pawnMoves = pawnMoves.concat(super.generatePieceValidMoveTargets(
+      pawnMoves = pawnMoves.concat(Pawn.generatePieceValidMoveTargets(
         squareId,
         boardState,
         this.moveDirections, // || directions || [], // moveDirections 
@@ -320,13 +323,13 @@ class LightPawn extends Pawn {
     // helpers.isMoveEnPassant only works *after* the move's been played
     // captureValidators.push(((squareFrom: number, squareTo: number) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState)));
     captureValidators.push((squareFrom: number, squareTo: number) => squareTo === enPassantTargetSquare);
-    // if (squareId === 27) console.log(`In Pawn#generatePieceValidMoves: captureValidators: ${captureValidators}`);
+    // if (squareId === 27) console.log(`In Pawn#generatePieceValidMoveTargets: captureValidators: ${captureValidators}`);
     // make sure any captures don't go between a/h files ... nvm, added a guard like this in base Piece class 
     // nextMoveValidators.push((squareFrom: number, squareTo: number) => Math.abs(squareFrom % 8 - squareTo % 8) === 1);
 
     // adding more pawn moves (captures) // TODO remove the duplicate calls in parent Pawn class ...? 
-    // pawnMoves = pawnMoves.concat(super.generatePieceValidMoves(
-    pawnMoves = pawnMoves.concat(Pawn.generatePieceValidMoves(
+    // pawnMoves = pawnMoves.concat(super.generatePieceValidMoveTargets(
+    pawnMoves = pawnMoves.concat(Pawn.generatePieceValidMoveTargets(
       squareId,
       boardState,
       this.captureDirections, // || directions || [], // captureDirections 
@@ -376,7 +379,7 @@ class DarkPawn extends Pawn {
     this.handleClick = this.handleClick.bind(this);
   }
 
-  static generatePieceValidMoves = (
+  static generatePieceValidMoveTargets = (
     squareId: number,
     boardState: string[], // = this.state.pieceKeys,
     directions?: number[], // can modify directions of the knight with input 
@@ -395,8 +398,8 @@ class DarkPawn extends Pawn {
     } = {},
     enPassantTargetSquare?: number,
   ) => {
-    // // return super.generatePieceValidMoves(
-    // return Pawn.generatePieceValidMoves(
+    // // return super.generatePieceValidMoveTargets(
+    // return Pawn.generatePieceValidMoveTargets(
     //   squareId,
     //   boardState,
     //   directions,
@@ -415,8 +418,8 @@ class DarkPawn extends Pawn {
 
     // adding pawn moves (non-captures)
     if (includeNonCaptures) {
-      // pawnMoves = pawnMoves.concat(super.generatePieceValidMoves(
-      pawnMoves = pawnMoves.concat(Pawn.generatePieceValidMoves(
+      // pawnMoves = pawnMoves.concat(super.generatePieceValidMoveTargets(
+      pawnMoves = pawnMoves.concat(Pawn.generatePieceValidMoveTargets(
         squareId,
         boardState,
         this.moveDirections || directions || [], // moveDirections 
@@ -436,8 +439,8 @@ class DarkPawn extends Pawn {
     // nextMoveValidators.push((squareFrom: number, squareTo: number) => Math.abs(squareFrom % 8 - squareTo % 8) === 1);
 
     // adding more pawn moves (captures)
-    // pawnMoves = pawnMoves.concat(super.generatePieceValidMoves(
-    pawnMoves = pawnMoves.concat(Pawn.generatePieceValidMoves(
+    // pawnMoves = pawnMoves.concat(super.generatePieceValidMoveTargets(
+    pawnMoves = pawnMoves.concat(Pawn.generatePieceValidMoveTargets(
       squareId,
       boardState,
       this.captureDirections || directions || [], // captureDirections 
@@ -483,7 +486,7 @@ class Knight extends Piece {
     this.handleClick = this.handleClick.bind(this);
   }
 
-  static generatePieceValidMoves = (
+  static generatePieceValidMoveTargets = (
     squareId: number,
     boardState: string[], // = this.state.pieceKeys,
     directions?: number[], // can modify directions of the knight with input 
@@ -501,9 +504,9 @@ class Knight extends Piece {
       includeCapturesOf?: string[];
     } = {}
   ) => {
-    // return super.generatePieceValidMoves(
-    // return this.generatePieceValidMoves(
-    return Piece.generatePieceValidMoves(
+    // return super.generatePieceValidMoveTargets(
+    // return this.generatePieceValidMoveTargets(
+    return Piece.generatePieceValidMoveTargets(
       squareId,
       boardState,
       this.directions, // directions || this.directions,
@@ -538,7 +541,7 @@ class LightKnight extends Knight {
   //   // }
   // }
 
-  static generatePieceValidMoves = (
+  static generatePieceValidMoveTargets = (
     squareId: number,
     boardState: string[], // = this.state.pieceKeys,
     directions?: number[], // can modify directions of the knight with input 
@@ -556,8 +559,8 @@ class LightKnight extends Knight {
       includeCapturesOf?: string[];
     } = {}
   ) => {
-    // return super.generatePieceValidMoves(
-    return Knight.generatePieceValidMoves(
+    // return super.generatePieceValidMoveTargets(
+    return Knight.generatePieceValidMoveTargets(
       squareId,
       boardState,
       directions,
@@ -584,7 +587,7 @@ class DarkKnight extends Knight {
   //   // }
   // }
 
-  static generatePieceValidMoves = (
+  static generatePieceValidMoveTargets = (
     squareId: number,
     boardState: string[], // = this.state.pieceKeys,
     directions?: number[], // can modify directions of the knight with input 
@@ -602,8 +605,8 @@ class DarkKnight extends Knight {
       includeCapturesOf?: string[];
     } = {}
   ) => {
-    // return super.generatePieceValidMoves(
-    return Knight.generatePieceValidMoves(
+    // return super.generatePieceValidMoveTargets(
+    return Knight.generatePieceValidMoveTargets(
       squareId,
       boardState,
       directions,
@@ -635,7 +638,7 @@ class Bishop extends Piece {
   //   // }
   // }
 
-  static generatePieceValidMoves = (
+  static generatePieceValidMoveTargets = (
     squareId: number,
     boardState: string[], // = this.state.pieceKeys,
     directions?: number[], // can modify directions of the knight with input 
@@ -653,9 +656,9 @@ class Bishop extends Piece {
       includeCapturesOf?: string[];
     } = {}
   ) => {
-    // return super.generatePieceValidMoves(
-    // return this.generatePieceValidMoves(
-    return Piece.generatePieceValidMoves(
+    // return super.generatePieceValidMoveTargets(
+    // return this.generatePieceValidMoveTargets(
+    return Piece.generatePieceValidMoveTargets(
       squareId,
       boardState,
       directions || this.directions,
@@ -685,7 +688,7 @@ class LightBishop extends Bishop {
   //   // }
   // }
 
-  static generatePieceValidMoves = (
+  static generatePieceValidMoveTargets = (
     squareId: number,
     boardState: string[], // = this.state.pieceKeys,
     directions?: number[], // can modify directions of the knight with input 
@@ -703,9 +706,9 @@ class LightBishop extends Bishop {
       includeCapturesOf?: string[];
     } = {}
   ) => {
-    // return super.generatePieceValidMoves(
-    // return this.generatePieceValidMoves(
-    return Bishop.generatePieceValidMoves(
+    // return super.generatePieceValidMoveTargets(
+    // return this.generatePieceValidMoveTargets(
+    return Bishop.generatePieceValidMoveTargets(
       squareId,
       boardState,
       directions,
@@ -732,7 +735,7 @@ class DarkBishop extends Bishop {
   //   // }
   // }
 
-  static generatePieceValidMoves = (
+  static generatePieceValidMoveTargets = (
     squareId: number,
     boardState: string[], // = this.state.pieceKeys,
     directions?: number[], // can modify directions of the knight with input 
@@ -750,9 +753,9 @@ class DarkBishop extends Bishop {
       includeCapturesOf?: string[];
     } = {}
   ) => {
-    // return super.generatePieceValidMoves(
-    // return this.generatePieceValidMoves(
-    return Bishop.generatePieceValidMoves(
+    // return super.generatePieceValidMoveTargets(
+    // return this.generatePieceValidMoveTargets(
+    return Bishop.generatePieceValidMoveTargets(
       squareId,
       boardState,
       directions,
@@ -789,7 +792,7 @@ class Rook extends Piece {
   //   // }
   // }
 
-  static generatePieceValidMoves = (
+  static generatePieceValidMoveTargets = (
     squareId: number,
     boardState: string[], // = this.state.pieceKeys,
     directions?: number[], // can modify directions of the knight with input 
@@ -807,9 +810,9 @@ class Rook extends Piece {
       includeCapturesOf?: string[];
     } = {}
   ) => {
-    // return super.generatePieceValidMoves(
-    // return this.generatePieceValidMoves(
-    return Piece.generatePieceValidMoves(
+    // return super.generatePieceValidMoveTargets(
+    // return this.generatePieceValidMoveTargets(
+    return Piece.generatePieceValidMoveTargets(
       squareId,
       boardState,
       directions || this.directions,
@@ -839,7 +842,7 @@ class LightRook extends Rook {
   //   // }
   // }
 
-  static generatePieceValidMoves = (
+  static generatePieceValidMoveTargets = (
     squareId: number,
     boardState: string[], // = this.state.pieceKeys,
     directions?: number[], // can modify directions of the knight with input 
@@ -857,9 +860,9 @@ class LightRook extends Rook {
       includeCapturesOf?: string[];
     } = {}
   ) => {
-    // return super.generatePieceValidMoves(
-    // return this.generatePieceValidMoves(
-    return Rook.generatePieceValidMoves(
+    // return super.generatePieceValidMoveTargets(
+    // return this.generatePieceValidMoveTargets(
+    return Rook.generatePieceValidMoveTargets(
       squareId,
       boardState,
       directions,
@@ -886,7 +889,7 @@ class DarkRook extends Rook {
   //   // }
   // }
 
-  static generatePieceValidMoves = (
+  static generatePieceValidMoveTargets = (
     squareId: number,
     boardState: string[], // = this.state.pieceKeys,
     directions?: number[], // can modify directions of the knight with input 
@@ -904,9 +907,9 @@ class DarkRook extends Rook {
       includeCapturesOf?: string[];
     } = {}
   ) => {
-    // return super.generatePieceValidMoves(
-    // return this.generatePieceValidMoves(
-    return Rook.generatePieceValidMoves(
+    // return super.generatePieceValidMoveTargets(
+    // return this.generatePieceValidMoveTargets(
+    return Rook.generatePieceValidMoveTargets(
       squareId,
       boardState,
       directions,
@@ -944,7 +947,7 @@ class Queen extends Piece {
   //   // }
   // }
 
-  static generatePieceValidMoves = (
+  static generatePieceValidMoveTargets = (
     squareId: number,
     boardState: string[], // = this.state.pieceKeys,
     directions?: number[], // can modify directions of the knight with input 
@@ -962,7 +965,7 @@ class Queen extends Piece {
       includeCapturesOf?: string[];
     } = {}
   ) => {
-    return Bishop.generatePieceValidMoves(
+    return Bishop.generatePieceValidMoveTargets(
       squareId, 
       boardState, 
       Bishop.directions,
@@ -970,7 +973,7 @@ class Queen extends Piece {
         includeNonCaptures: includeNonCaptures, 
         includeCapturesOf: includeCapturesOf 
       })
-      .concat(Rook.generatePieceValidMoves(
+      .concat(Rook.generatePieceValidMoveTargets(
         squareId, 
         boardState, 
         Rook.directions,
@@ -996,7 +999,7 @@ class LightQueen extends Queen {
   //   // }
   // }
 
-  static generatePieceValidMoves = (
+  static generatePieceValidMoveTargets = (
     squareId: number,
     boardState: string[], // = this.state.pieceKeys,
     directions?: number[], // can modify directions of the knight with input 
@@ -1014,7 +1017,7 @@ class LightQueen extends Queen {
       includeCapturesOf?: string[];
     } = {}
   ) => {
-    return LightBishop.generatePieceValidMoves(
+    return LightBishop.generatePieceValidMoveTargets(
       squareId, 
       boardState, 
       LightBishop.directions,
@@ -1022,7 +1025,7 @@ class LightQueen extends Queen {
         includeNonCaptures, 
         includeCapturesOf,
       }
-    ).concat(LightRook.generatePieceValidMoves(
+    ).concat(LightRook.generatePieceValidMoveTargets(
       squareId, 
       boardState, 
       LightRook.directions,
@@ -1050,7 +1053,7 @@ class DarkQueen extends Queen {
   //   // }
   // }
 
-  static generatePieceValidMoves = (
+  static generatePieceValidMoveTargets = (
     squareId: number,
     boardState: string[], // = this.state.pieceKeys,
     directions?: number[], // can modify directions of the knight with input 
@@ -1068,7 +1071,7 @@ class DarkQueen extends Queen {
       includeCapturesOf?: string[];
     } = {}
   ) => {
-    return DarkBishop.generatePieceValidMoves(
+    return DarkBishop.generatePieceValidMoveTargets(
       squareId, 
       boardState, 
       DarkBishop.directions, 
@@ -1076,7 +1079,7 @@ class DarkQueen extends Queen {
         includeNonCaptures, 
         includeCapturesOf,
       }
-    ).concat(DarkRook.generatePieceValidMoves(
+    ).concat(DarkRook.generatePieceValidMoveTargets(
         squareId, 
         boardState, 
         DarkRook.directions, 
@@ -1109,7 +1112,7 @@ class King extends Piece {
   //   // }
   // }
 
-  static generatePieceValidMoves = (
+  static generatePieceValidMoveTargets = (
     squareId: number,
     boardState: string[], // = this.state.pieceKeys,
     directions?: number[], // can modify directions of the knight with input 
@@ -1138,8 +1141,8 @@ class King extends Piece {
     let kingMoves: number[] = [];
 
     // adding regular king moves 
-    // kingMoves = kingMoves.concat(super.generatePieceValidMoves(
-    kingMoves = kingMoves.concat(Piece.generatePieceValidMoves(
+    // kingMoves = kingMoves.concat(super.generatePieceValidMoveTargets(
+    kingMoves = kingMoves.concat(Piece.generatePieceValidMoveTargets(
       squareId,
       boardState,
       this.directions,
@@ -1172,7 +1175,7 @@ class LightKing extends King {
   //   // }
   // }
 
-  static generatePieceValidMoves = (
+  static generatePieceValidMoveTargets = (
     squareId: number,
     boardState: string[], // = this.state.pieceKeys,
     directions?: number[], // can modify directions of the knight with input 
@@ -1197,8 +1200,8 @@ class LightKing extends King {
     //   ks = true,
     // } = {},
   ) => {
-    // let kingMoves = super.generatePieceValidMoves(
-    let kingMoves = King.generatePieceValidMoves(
+    // let kingMoves = super.generatePieceValidMoveTargets(
+    let kingMoves = King.generatePieceValidMoveTargets(
       squareId,
       boardState,
       this.directions, // directions || this.directions,
@@ -1208,7 +1211,7 @@ class LightKing extends King {
       },
     )
 
-    // console.log(`In LightKing#generatePieceValidMoves\n\tFound regular moves valid: ${kingMoves}\n\tincludeCastling: ${includeCastling}\n\tcurrentGameState: ${currentGameState}`);
+    // console.log(`In LightKing#generatePieceValidMoveTargets\n\tFound regular moves valid: ${kingMoves}\n\tincludeCastling: ${includeCastling}\n\tcurrentGameState: ${currentGameState}`);
 
     if (includeCastling && currentGameState) {
       kingMoves = kingMoves.concat(helpers.getCastlingOptions(this.playercode as PlayerKey, currentGameState));
@@ -1241,7 +1244,7 @@ class DarkKing extends King {
   //   // }
   // }
 
-  static generatePieceValidMoves = (
+  static generatePieceValidMoveTargets = (
     squareId: number,
     boardState: string[], // = this.state.pieceKeys,
     directions?: number[], // can modify directions of the knight with input 
@@ -1266,8 +1269,8 @@ class DarkKing extends King {
     //   ks = true,
     // } = {},
   ) => {
-    // let kingMoves = super.generatePieceValidMoves(
-    let kingMoves = King.generatePieceValidMoves(
+    // let kingMoves = super.generatePieceValidMoveTargets(
+    let kingMoves = King.generatePieceValidMoveTargets(
       squareId,
       boardState,
       this.directions, // directions || this.directions,
@@ -1276,8 +1279,6 @@ class DarkKing extends King {
         includeCapturesOf,
       },
     )
-
-    // console.log(`In DarkKing#generatePieceValidMoves\n\tFound regular moves valid: ${kingMoves}\n\tincludeCastling: ${includeCastling}\n\tcurrentGameState: ${currentGameState}`);
 
     if (includeCastling && currentGameState) {
       kingMoves = kingMoves.concat(helpers.getCastlingOptions(this.playercode as PlayerKey, currentGameState));
@@ -1311,18 +1312,87 @@ export const keycodeToComponent = {
   'DK': DarkKing,
 };
 
-// export function getPieceByKeycode<P extends Piece>(keycode: string, getDraggablePiece: boolean): React.Component<P> {
-export function getPieceByKeycode(keycode: string, getDraggablePiece: boolean = false): typeof Piece | undefined { // | ((props: any) => React.JSX.Element) {
+// export const DraggablePiece<T extends Piece> = withDraggable(T);
+export const DraggablePiece = withDraggable(Piece); // This works here, but can't get it to work in Square... 
+// // try the below AI slop 
+
+// Define the type for the class constructor
+// new (...args: any[]) => T means it's a constructor function that returns an instance of T
+type PieceConstructor<T extends Piece> = new (...args: any[]) => T;
+
+// HOC that takes a class constructor as an argument
+const withClassInstance = <T extends Piece>(
+  WrappedComponent: React.ElementType<{ instance: T } & PieceProps>, // The component to wrap 
+  // // TODO what to put here? // ComponentType<{ instance: T } & any>
+  // Piece is not generic... for now just put React.ElementType, most generic i can find 
+  // React.ElementType<{ instance: T } & any>
+  ClassType: PieceConstructor<T> // The class constructor argument
+) => {
+  return (props: Omit<any, 'instance'>) => {
+    // Inside the HOC, you can create and use an instance of the class
+    const [instance] = useState(() => new ClassType('Dynamic Instance')); // TODO fix this? 
+
+    // // You can also perform operations with the instance
+    // React.useEffect(() => {
+    //   instance.greet();
+    // }, [instance]);
+
+    // Pass the instance as a prop to the wrapped component
+    return <WrappedComponent instance={instance} {...props} />;
+  };
+};
+
+// A component designed to receive an 'instance' prop of a generic type that extends BaseClass
+const DraggableGenericPiece = ({ instance, ...props }: { instance: Piece }) => {
+  return (
+    <DraggableWrapper 
+      // id={`draggable-${useUniqueId('', String(Math.random() * 100))}`} 
+      id={`draggable-${Math.random() * 100}`}
+    > 
+      {
+        (attributes, listeners, setNodeRef, transform, isDragging) => (
+          <img 
+            src={instance.icon} 
+            alt={instance.alt} 
+            className="piece" 
+            // onClick={instance.handleClick} 
+            // zindex={10}
+
+            // DRAGGABLE attributes
+            zindex={transform ? '11' : '10'}
+            style={{opacity: isDragging ? 0.5 : 1}}
+            ref={setNodeRef}
+            {...attributes}
+            {...listeners}
+            transform={transform ? `translate3d(${transform.x}px ${transform.y}px, 0)` : undefined}
+            // ref={instance.props.forwardedRef}
+          />
+        )
+      }
+    </DraggableWrapper>
+  );
+};
+
+export function getPieceTypeByKeycode(keycode: keyof typeof keycodeToComponent): typeof Piece {
+  return keycodeToComponent[keycode as keyof typeof keycodeToComponent];
+}
+
+// end of AI slop, back to my slop... get this method to return draggable piece 
+// export function getPieceComponentByKeycode<P extends Piece>(keycode: string, getDraggablePiece: boolean): React.Component<P> {
+export function getPieceElementByKeycode(keycode: string, getDraggablePiece: boolean = false): React.ReactElement<any, any> { // | ((props: any) => React.JSX.Element) {
   if (!(keycode in keycodeToComponent)) {
-    // throw Error('Invalid keycode provided!');
-    return undefined;
+    throw Error('Invalid keycode provided!');
+    // return undefined;
   }
 
+  const componentTypeToReturn = keycodeToComponent[keycode as keyof typeof keycodeToComponent];
   if (getDraggablePiece) {
     // return withDraggable(keycodeToComponent[keycode as keyof typeof keycodeToComponent]);
     throw Error("Fix implementation before using...");
+    // return withClassInstance(DraggableGenericPiece, componentTypeToReturn)({}); // pass no props 
+    // withClassInstance is a hook, and it also uses a hook (useState) inside 
   } else {
-    return keycodeToComponent[keycode as keyof typeof keycodeToComponent];
+    return React.createElement(componentTypeToReturn);
   }
 }
 

@@ -149,7 +149,7 @@ export const withDndContext = <P extends {}>(
             //   treat as a brand new click
             //   if squares are highlighted and we try to drag the piece,
             //   it is considered a second click and unhighlights the squares 
-            // props.handleSquareClick(squareIdOfDragStart);
+            props.handleSquareClick(squareIdOfDragStart);
         }
     }
 

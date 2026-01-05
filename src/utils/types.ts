@@ -92,6 +92,7 @@ export interface GameState {
     squareAltSelected?: number | null;
     squareIdOfPawnPromotion?: number;
     enableDragAndDrop?: boolean;
+    highlightLegalMoves?: boolean;
     isBoardFlipped: boolean;
 }
 
@@ -135,6 +136,7 @@ export interface BoardControlPanelProps {
     onFlipBoard: MouseEventHandler<HTMLButtonElement>;
     onUpdateSettings: (key: string, newValue: any) => void;
     enableDragAndDrop: boolean;
+    highlightLegalMoves: boolean;
 }
 
 export interface BoardControlPanelState {
@@ -176,7 +178,9 @@ export interface SquareState {
 
 // export type PieceProps = Record<string, unknown>; 
 export interface PieceProps {
-
+    enableDragAndDrop?: boolean;
+    droppableId?: string;
+    forwardedRef?: Ref<HTMLImageElement>;
 }
 
 export type KingSpecificProps = { // or interface? 
@@ -187,7 +191,7 @@ export type PawnSpecificProps = {
 
 }
 
-// export type PieceState = Record<string, unknown>;
+export type PieceState = Record<string, unknown>;
 
 // export type Piece<PieceProps, PieceState> = {
 //     props: PieceProps,

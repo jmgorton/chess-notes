@@ -351,13 +351,36 @@
 }
 
 .modal-content {
-  background-color: beige;
+  /* display: flex inline-block; */
+  display: flex; 
+  flex-direction: column;
+  background-color: lightgray;
   padding: 2rem;
   border-radius: 8px;
   max-width: 500px;
   width: 90%;             /* Responsive width on small screens */
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   position: relative;     /* Context for close buttons if needed */
+
+  div {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    position: relative;
+
+    strong {
+      /* color: red; */
+      margin-right: auto;
+      /* justify-content: flex-end; */
+      position: absolute;
+      bottom: 6px;
+    }
+
+    .settings-toggle-button {
+      margin-left: auto;
+      /* flex-grow: 1; */
+    }
+  }
 }
 
   /* --- Animated logo styles --- */
