@@ -25,6 +25,11 @@ class Board extends React.Component<BoardProps, BoardState> {
     // this.handleResetClick = this.handleResetClick.bind(this);
   }
 
+  handlePromotion = (squareId: number, pieceSelected: string, event?: Event) => {
+    console.log(`Handling promotion from Board: squareId: ${squareId}; pieceSelected: ${pieceSelected}; event: ${event}`);
+    if (this.props.onPromote && event) this.props.onPromote(squareId, pieceSelected, event);
+  }
+
   render() {
     return (
         <div className="game-board">
@@ -53,6 +58,7 @@ class Board extends React.Component<BoardProps, BoardState> {
                               color={(rankIndex + fileIndex) % 2 === 0 ? "light" : "dark"}
                               onSquareClick={this.props.handleSquareClick}
                               onContextMenu={this.props.handleSquareRightClick}
+                              onPromote={[0, 7].includes(rankIndex) ? this.handlePromotion : () => {}}
                               key={rankIndex * this.props.boardSize + fileIndex}
                             /> 
                             :
@@ -62,6 +68,7 @@ class Board extends React.Component<BoardProps, BoardState> {
                               color={(rankIndex + fileIndex) % 2 === 0 ? "light" : "dark"}
                               onSquareClick={this.props.handleSquareClick}
                               onContextMenu={this.props.handleSquareRightClick}
+                              onPromote={[0, 7].includes(rankIndex) ? this.handlePromotion : () => {}}
                               key={rankIndex * this.props.boardSize + fileIndex}
                             />
                           )

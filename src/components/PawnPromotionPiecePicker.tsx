@@ -13,7 +13,7 @@ interface PawnPromotionPiecePickerProps {
     anchorProp?: HTMLButtonElement;
     player?: string;
     // handlePromotion?: MouseEventHandler | ((event: Event) => void);
-    handlePromotion?: (squareId: number, event?: Event) => void;
+    handlePromotion?: (squareId: number, pieceSelected: string, event?: Event) => void;
 }
 
 // const handlePromotionPieceSelected = (squareId: number, event?: Event | undefined) => {
@@ -30,7 +30,7 @@ const PawnPromotionPiecePicker: React.FC<PawnPromotionPiecePickerProps> = ({
     anchorProp?: HTMLButtonElement;
     player?: string;
     // handlePromotion?: MouseEventHandler | ((event: Event) => void);
-    handlePromotion?: (squareId: number, event?: Event) => void;
+    handlePromotion?: (squareId: number, pieceSelected: string, event?: Event) => void;
 }) => {
     const pieces = [
         { notation: 'Q', name: 'Queen', symbol: '♕' },
@@ -39,10 +39,10 @@ const PawnPromotionPiecePicker: React.FC<PawnPromotionPiecePickerProps> = ({
         { notation: 'B', name: 'Bishop', symbol: '♗' },
     ];
 
-    const handlePromotionPieceSelected = (squareId: number, event?: Event | undefined) => {
-        console.log(`Handling promotion from PawnPromotionPiecePicker: squareId: ${squareId}; event: ${event}`);
+    const handlePromotionPieceSelected = (squareId: number, pieceSelected: string, event?: Event | undefined) => {
+        console.log(`Handling promotion from PawnPromotionPiecePicker: squareId: ${squareId}; pieceSelected: ${pieceSelected}; event: ${event}`);
         if (handlePromotion && event) {
-            handlePromotion(squareId, event);
+            handlePromotion(squareId, pieceSelected, event);
         }
     }
 
@@ -101,8 +101,12 @@ const PawnPromotionPiecePicker: React.FC<PawnPromotionPiecePickerProps> = ({
                                                     enableDragAndDrop={false}
                                                     // onMouseEnter={(e: Event) => (e.currentTarget.style.backgroundColor = '#e0e0e0')}
                                                     // onMouseLeave={(e: Event) => (e.currentTarget.style.backgroundColor = '#fff')}
-                                                    // onPromote={handlePromotion} // TODO doesn't work ... and don't wanna do it like that anyway 
-                                                    onSquareClick={(index: number, event?: Event) => handlePromotionPieceSelected(index, event)}
+                                                    // onSquareClick={(index: number, pieceSelected: string, event?: Event) => handlePromotionPieceSelected(index, piece.notation, event)}
+                                                    onSquareClick={
+                                                        (index: number, event?: Event) => // , pieceSelected: string) => 
+                                                            handlePromotionPieceSelected(index, piece.notation, event)
+                                                        // TODO research this more ... because they both only return void, args don't have to match? 
+                                                    }
                                                 />
                                             </div>
                                         )

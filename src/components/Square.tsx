@@ -9,7 +9,7 @@ import {
   SquareProp,
   SquareState,
   DraggableDroppableChild,
-  PromotionSquareProp,
+  // PromotionSquareProp,
 } from '../utils/types.ts';
 
 class Square extends React.Component<SquareProp, SquareState> {
@@ -87,9 +87,9 @@ class Square extends React.Component<SquareProp, SquareState> {
   }
 
   // handleClickPromotion: MouseEventHandler = (event) => {
-  handleClickPromotion = (squareId: number, event?: Event) => {
-    console.log(`Handling promotion from Square: squareId: ${squareId}; event: ${event}`);
-    // if (this.props.onPromote && event) this.props.onPromote(event);
+  handleClickPromotion = (squareId: number, pieceSelected: string, event?: Event) => {
+    console.log(`Handling promotion from Square: squareId: ${squareId}; pieceSelected: ${pieceSelected}; event: ${event}`);
+    if (this.props.onPromote && event) this.props.onPromote(squareId, pieceSelected, event);
   }
 
   render() {

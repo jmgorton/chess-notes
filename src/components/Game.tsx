@@ -187,12 +187,10 @@ export default class Game extends React.Component<GameProps, GameState> {
     }
 
     getNewGameHistoryItem = (squareMovedFrom: number, squareMovedTo: number): HistoryItem => { // void 
-        const { squareProps, history, squareSelected, squareAltSelected, FEN, ...filteredGameState} = this.state;
+        const { squareProps, history, squareSelected, squareAltSelected, FEN, ...filteredGameState} = this.state; // destructure state to take snapshot of partial state
         const newGameHistoryItem: HistoryItem = {
-            gameStateSnapshot: {
-                ...filteredGameState
-            },
-            AN: helpers.generateMoveAN(squareMovedFrom, squareMovedTo, this), // now this isn't being passed correctly, wth?? 
+            gameStateSnapshot: { ...filteredGameState },
+            AN: helpers.generateMoveAN(squareMovedFrom, squareMovedTo, this),
             JN: helpers.generateMoveJN(squareMovedFrom, squareMovedTo),
             INN: helpers.generateMoveINN(squareMovedFrom, squareMovedTo),
         };
@@ -493,6 +491,11 @@ export default class Game extends React.Component<GameProps, GameState> {
         }
     }
 
+    handlePawnPromotion = (squareId: number, pieceSelected: string, event?: Event) => {
+        console.log(`Handling promotion from Game: squareId: ${squareId}; pieceSelected: ${pieceSelected}; event: ${event}`);
+        // treat this as a move as is done above in handleSquareClick, updating all necessary state 
+    }
+
     handleUndoClick = (event?: React.SyntheticEvent | null): void => {
         if (event && typeof event.preventDefault === 'function') event.preventDefault();
 
@@ -580,6 +583,7 @@ export default class Game extends React.Component<GameProps, GameState> {
                         squareProps={this.state.squareProps}
                         handleSquareClick={this.handleSquareClick}
                         handleSquareRightClick={this.handleSquareRightClick}
+                        onPromote={this.handlePawnPromotion}
                         boardSize={'boardSize' in this ? this.boardSize as number : 8}
                         isBoardFlipped={this.state.isBoardFlipped}
                         handleUndoClick={this.handleUndoClick} // TODO these aren't accurate anymore 
