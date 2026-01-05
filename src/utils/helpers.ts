@@ -125,7 +125,7 @@ export function generateMoveAN(squareMovedFrom: number, squareMovedTo: number, c
             }
             if (dupeSourceFiles && dupeSourceRanks) clarifierAN = `${sourceFile}${sourceRank}`;
             else if (dupeSourceFiles) clarifierAN = `${sourceRank}`;
-            else if (dupeSourceRanks) clarifierAN = `${sourceFile}`;
+            else clarifierAN = `${sourceFile}`; //  if (dupeSourceRanks)
         }
     }
 
@@ -476,6 +476,7 @@ export function getNewBoardStateKVPsFromFen(inputFEN: string): { [key: string]: 
         }
     }
 
+    // TODO make this the correct type 
     const newStateKVPs = {
         pieceKeys: newPieceKeys,
         piecePositions: {},
@@ -498,10 +499,10 @@ export function getNewBoardStateKVPsFromFen(inputFEN: string): { [key: string]: 
         },
         // piecePositions: {}, // TODO fill out all piece positions from FEN input 
         whiteToPlay: sideToMove === 'w',
-        darkKingHasShortCastlingRights: castlingAbility.includes('k'),
-        darkKingHasLongCastlingRights: castlingAbility.includes('q'),
-        lightKingHasShortCastlingRights: castlingAbility.includes('K'),
-        lightKingHasLongCastlingRights: castlingAbility.includes('Q'),
+        // darkKingHasShortCastlingRights: castlingAbility.includes('k'),
+        // darkKingHasLongCastlingRights: castlingAbility.includes('q'),
+        // lightKingHasShortCastlingRights: castlingAbility.includes('K'),
+        // lightKingHasLongCastlingRights: castlingAbility.includes('Q'),
         castlingRights: {
             'DK': castlingAbility.includes('k'),
             'DQ': castlingAbility.includes('q'),
@@ -561,13 +562,14 @@ export function generateFENFromGameState(gameState: unknown): string {
             // castlingRightsState.LQ = castlingRightsInput.lightKingHasLongCastlingRights;
             // castlingRightsState.LK = castlingRightsInput.lightKingHasShortCastlingRights;
             castlingRightsState = castlingRightsInput;
-        } else {
-            castlingRightsState.DQ = gameState.state.darkKingHasLongCastlingRights;
-            castlingRightsState.DK = gameState.state.darkKingHasShortCastlingRights;
-            castlingRightsState.LQ = gameState.state.lightKingHasLongCastlingRights;
-            castlingRightsState.LK = gameState.state.lightKingHasShortCastlingRights;
+        // } else {
+        //     castlingRightsState.DQ = gameState.state.darkKingHasLongCastlingRights;
+        //     castlingRightsState.DK = gameState.state.darkKingHasShortCastlingRights;
+        //     castlingRightsState.LQ = gameState.state.lightKingHasLongCastlingRights;
+        //     castlingRightsState.LK = gameState.state.lightKingHasShortCastlingRights;
         }
     } else if (functions.isArgumentDictionary(gameState)) {
+        // TODO FIX THIS, entire castlingRights section is done incorrectly 
         // gameState = (gameState as { [key: string]: any });
         if (requiredKeys.some(key => !(key in gameState))) return '';
         if (moreRequiredKeys.some(key => !(key in gameState))) {
@@ -575,6 +577,7 @@ export function generateFENFromGameState(gameState: unknown): string {
                 if (moreRequiredKeys.some(key => !(key in (gameState.castlingRights as Record<string, boolean>)))) {
                     return '';
                 } else {
+                    // TODO refactor and fix this before using this with a dictionary arg (not full GameState)
                     const castlingRightsInput = (gameState.castlingRights as { [key: string]: any });
                     castlingRightsState.DQ = castlingRightsInput.darkKingHasLongCastlingRights;
                     castlingRightsState.DK = castlingRightsInput.darkKingHasShortCastlingRights;
@@ -797,10 +800,10 @@ export function initializeState(component: React.Component<any, any>, stateToLoa
         squaresAttackedByWhite: 0x0000000000ff0000n, // only sixth rank 
         squaresAttackedByBlack: 0x0000ff0000000000n, // only third rank
 
-        lightKingHasShortCastlingRights: true,
-        lightKingHasLongCastlingRights: true,
-        darkKingHasShortCastlingRights: true,
-        darkKingHasLongCastlingRights: true,
+        // lightKingHasShortCastlingRights: true,
+        // lightKingHasLongCastlingRights: true,
+        // darkKingHasShortCastlingRights: true,
+        // darkKingHasLongCastlingRights: true,
         castlingRights: {
             LK: true,
             LQ: true,
@@ -821,6 +824,7 @@ export function initializeState(component: React.Component<any, any>, stateToLoa
         history: [],
         plyNumber: 0,
         enableDragAndDrop: true,
+        isBoardFlipped: false,
     }
 
     // wipe out existing state, if any (shouldn't be)

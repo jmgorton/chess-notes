@@ -98,10 +98,10 @@ export default class Game extends React.Component<GameProps, GameState> {
             },
             squaresAttackedByBlack: 0n,
             squaresAttackedByWhite: 0n,
-            lightKingHasShortCastlingRights: false,
-            lightKingHasLongCastlingRights: false,
-            darkKingHasShortCastlingRights: false,
-            darkKingHasLongCastlingRights: false,
+            // lightKingHasShortCastlingRights: false,
+            // lightKingHasLongCastlingRights: false,
+            // darkKingHasShortCastlingRights: false,
+            // darkKingHasLongCastlingRights: false,
             castlingRights: {
                 LK: false,
                 LQ: false,
@@ -117,6 +117,7 @@ export default class Game extends React.Component<GameProps, GameState> {
             plyNumber: 0,
             halfmoveClock: 0, // TODO implement 50-ply rule 
             enableDragAndDrop: true,
+            isBoardFlipped: false,
         }
 
         // not necessary ... because they are arrow functions 
@@ -271,10 +272,10 @@ export default class Game extends React.Component<GameProps, GameState> {
                 castlingRights.DQ = false;
             }
             // newStateKVPs.castlingRights = castlingRights; // TODO necessary since we assigned func arg to return obj at the start? Idts... we'll see 
-            newStateKVPs.deprecatedState.lightKingHasShortCastlingRights = castlingRights.LK;
-            newStateKVPs.deprecatedState.lightKingHasLongCastlingRights = castlingRights.LQ;
-            newStateKVPs.deprecatedState.darkKingHasShortCastlingRights = castlingRights.DK;
-            newStateKVPs.deprecatedState.darkKingHasLongCastlingRights = castlingRights.DQ;
+            // newStateKVPs.deprecatedState.lightKingHasShortCastlingRights = castlingRights.LK;
+            // newStateKVPs.deprecatedState.lightKingHasLongCastlingRights = castlingRights.LQ;
+            // newStateKVPs.deprecatedState.darkKingHasShortCastlingRights = castlingRights.DK;
+            // newStateKVPs.deprecatedState.darkKingHasLongCastlingRights = castlingRights.DQ;
         }
         return newStateKVPs;
     }
@@ -360,7 +361,7 @@ export default class Game extends React.Component<GameProps, GameState> {
         if (this.state.squareSelected === null || !this.state.squareProps[squareId].isHighlighted) {
             // select an unselected and unhighlighted square and highlight the legal moves for that piece on this turn 
             const isThisPlayersMove = this.state.whiteToPlay !== (this.state.pieceKeys[squareId]?.charAt(0) === 'D');
-            console.log(this.state.enPassantTargetSquare);
+            // console.log(this.state.enPassantTargetSquare);
             const squaresToHighlight = isThisPlayersMove ? this.getLegalMoves(squareId) : [];
             this.selectSquareAndHighlightAllLegalMoves(squareId, squaresToHighlight);
             return;
@@ -533,13 +534,13 @@ export default class Game extends React.Component<GameProps, GameState> {
 
     flipBoard: MouseEventHandler<HTMLButtonElement> = (event) => { // (event: Event) {
         if (event && typeof event.preventDefault === 'function') {
-        event.preventDefault();
-        event.stopPropagation();
+            event.preventDefault();
+            event.stopPropagation();
         }
-        // console.log("Flipping board...");
+        console.log("Flipping board...");
         this.setState({
             ...this.state,
-            // isFlipped: !this.state.isFlipped, // TODO fix this 
+            isBoardFlipped: !this.state.isBoardFlipped, 
         })
     }
 
@@ -571,6 +572,7 @@ export default class Game extends React.Component<GameProps, GameState> {
                         handleSquareClick={this.handleSquareClick}
                         handleSquareRightClick={this.handleSquareRightClick}
                         boardSize={'boardSize' in this ? this.boardSize as number : 8}
+                        isBoardFlipped={this.state.isBoardFlipped}
                         handleUndoClick={this.handleUndoClick} // TODO these aren't accurate anymore 
                         handleRedoClick={this.handleRedoClick} // not accurate
                         handleResetClick={this.handleResetClick} // update these TODO 

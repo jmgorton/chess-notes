@@ -51,10 +51,10 @@ export interface GameState {
     lightKingPosition: number; // TODO remove in lieu of piecePositions 
     darkKingPosition: number; // TODO remove 
 
-    lightKingHasShortCastlingRights: boolean; // TODO remove in lieue of castlingRights 
-    lightKingHasLongCastlingRights: boolean; 
-    darkKingHasShortCastlingRights: boolean;
-    darkKingHasLongCastlingRights: boolean; // TODO remove 
+    // lightKingHasShortCastlingRights: boolean; // TODO remove in lieue of castlingRights 
+    // lightKingHasLongCastlingRights: boolean; 
+    // darkKingHasShortCastlingRights: boolean;
+    // darkKingHasLongCastlingRights: boolean; // TODO remove 
 
     // castlingRights: { [key: 'LK' | 'LQ' | 'DK' | 'DQ']: boolean }; // This doesn't work
     castlingRights?: { [key in RoyalKey]: boolean }; // This does work 
@@ -82,6 +82,7 @@ export interface GameState {
     squareSelected?: number | null;
     squareAltSelected?: number | null;
     enableDragAndDrop?: boolean;
+    isBoardFlipped: boolean;
 }
 
 export interface GameStatusProps {
@@ -101,6 +102,7 @@ export interface BoardProps {
     handleSquareClick: (squareId: number, event?: Event) => Promise<void>; // (event: Event) => void; // ={this.handleSquareClick}
     handleSquareRightClick: (event: React.MouseEvent | null, squareId: number) => void; // (event: Event) => void; // ={this.handleSquareRightClick}
     boardSize: number; // ={this.boardSize}
+    isBoardFlipped: boolean;
     enableDragAndDrop: boolean;
     // promotionSquare={this.state.promotionSquare}
     handleUndoClick: () => void; // Function; ?? no, that makes it an object, I guess? // ={this.handleUndoClick}
@@ -111,7 +113,7 @@ export interface BoardProps {
 }
 
 export interface BoardState {
-    isFlipped: boolean;
+    // isBoardFlipped: boolean;
 }
 
 export interface BoardControlPanelProps {

@@ -15,7 +15,7 @@ class Board extends React.Component<BoardProps, BoardState> {
     super(props);
 
     this.state = {
-      isFlipped: false,
+      // isBoardFlipped: props.isBoardFlipped,
     }
 
     // binding not necessary when using newer arrow notation 
@@ -31,15 +31,15 @@ class Board extends React.Component<BoardProps, BoardState> {
           <div>
               {
                 Array.from({ length: this.props.boardSize }, (_, rankIndex) => {
-                  const sliceStart: number = !this.state.isFlipped ?
+                  const sliceStart: number = !this.props.isBoardFlipped ?
                     rankIndex * this.props.boardSize :
                     64 - ((rankIndex + 1) * this.props.boardSize);
-                  const sliceEnd: number = !this.state.isFlipped ?
+                  const sliceEnd: number = !this.props.isBoardFlipped ?
                     (rankIndex + 1) * this.props.boardSize :
                     64 - (rankIndex * this.props.boardSize);
 
                   const toRender: SquareProp[] = this.props.squareProps.slice(sliceStart, sliceEnd);
-                  if (this.state.isFlipped) toRender.reverse();
+                  if (this.props.isBoardFlipped) toRender.reverse();
                   return (
                     <div className="board-row" key={rankIndex}>
                       {
