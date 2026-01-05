@@ -64,9 +64,12 @@ class Piece extends React.Component {
 
     nextSquareValidators.push((oldSquare, newSquare) => oldSquare >= 0 && newSquare >= 0);
     nextSquareValidators.push((oldSquare, newSquare) => oldSquare < 64 && newSquare < 64);
+    nextSquareValidators.push((oldSquare, newSquare) => Math.abs((oldSquare % 8) - (newSquare % 8)) <= 2); // only the knight needs a 2, every other piece should be 1
+    nextSquareValidators.push((oldSquare, newSquare) => Math.abs(Math.floor(oldSquare / 8) - Math.floor(newSquare / 8)) <= 2); // same here for rows
 
     captureValidators.push((squareFrom, squareTo) => includeAttacksFrom?.includes(boardState[squareTo]?.charAt(0)) || false);
     // captureValidators.push((squareFrom, squareTo) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState));
+    if (squareId === 27) console.log(`In Piece#generatePieceValidMoves: captureValidators: ${captureValidators}`);
 
 
     directions.forEach((direction) => {
@@ -78,6 +81,11 @@ class Piece extends React.Component {
         if (boardState[nextSquareToCheck] === "") {
           if (includeNonCaptures) {
             legalMoves.push(nextSquareToCheck);
+          }
+          if (captureValidators.some(validator => validator(squareId, nextSquareToCheck))) {
+            // THIS IS ONLY FOR EN PASSANT
+            legalMoves.push(nextSquareToCheck);
+            break;
           }
         } else {
           // eslint-disable-next-line no-loop-func
@@ -175,6 +183,7 @@ class Pawn extends Piece {
     // captureDirections?: number[], // = this.captureDirections,
     // startingRank: number | null = null,
   ) => {
+    if (squareId === 27) console.log(`In Pawn#generatePieceValidMoves: captureValidators: ${captureValidators}`);
     // // Legal pawn moves   
     // const currRank = Math.floor(squareId / 8);
     let pawnMoves: number[] = [];
@@ -197,20 +206,14 @@ class Pawn extends Piece {
     }
 
     // how does this work if we reference boardState from this lambda and call it in a separate function? 
-    // let captureValidators = [
-    //   // this first one does not work ... 
-    //   ((squareFrom: number, squareTo: number) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState)),
-    //   // TODO we need to pass in the enPassantTargetSquare or something 
-    // ];
+    // ts/js creates a closure and retains a reference to the variable's state, not lost as long as a reference to the lambda is retained 
     // helpers.isMoveEnPassant only works *after* the move's been played
     // captureValidators.push(((squareFrom: number, squareTo: number) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState)));
     // // We need to generate the option to play it. That means we need access to history or enPassantTargetSquare Game state
-    // captureValidators.push((squareFrom: number, squareTo: number) => {
 
-    // });
     let nextSquareValidators = [((squareFrom: number, squareTo: number) => Math.abs(squareFrom % 8 - squareTo % 8) === 1)];
 
-    // adding more pawn moves (captures)
+    // adding more pawn moves (captures) // TODO is this necessary if we're always calling this from LightPawn/DarkPawn which already calls 2x 
     // pawnMoves = pawnMoves.concat(super.generatePieceValidMoves(
     pawnMoves = pawnMoves.concat(Piece.generatePieceValidMoves(
       squareId,
@@ -274,6 +277,7 @@ class LightPawn extends Pawn {
     } = {},
     enPassantTargetSquare?: number,
   ) => {
+    if (squareId === 27) console.log(`In LightPawn#generatePieceValidMoves: enPassantTargetSquare: ${enPassantTargetSquare}`);
     // return super.generatePieceValidMoves(
     // return Pawn.generatePieceValidMoves(
     //   squareId,
@@ -298,7 +302,7 @@ class LightPawn extends Pawn {
       pawnMoves = pawnMoves.concat(Pawn.generatePieceValidMoves(
         squareId,
         boardState,
-        this.moveDirections || directions || [], // moveDirections 
+        this.moveDirections, // || directions || [], // moveDirections 
         {
             distance: currRank === this.startingRank ? 2 : 1,
             // nextSquareValidators: this.nextSquareValidators,
@@ -310,6 +314,7 @@ class LightPawn extends Pawn {
     }
 
     // how does this work if we reference boardState from this lambda and call it in a separate function? 
+    // ts/js creates a closure with a reference to the variable, it still has access to it as long as the lambda is accessible and the closure exists 
     // let captureValidators = [
     //   ((squareFrom: number, squareTo: number) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState)),
     // ];
@@ -317,15 +322,16 @@ class LightPawn extends Pawn {
     // helpers.isMoveEnPassant only works *after* the move's been played
     // captureValidators.push(((squareFrom: number, squareTo: number) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState)));
     captureValidators.push((squareFrom: number, squareTo: number) => squareTo === enPassantTargetSquare);
-
+    if (squareId === 27) console.log(`In Pawn#generatePieceValidMoves: captureValidators: ${captureValidators}`);
+    // make sure any captures don't go between a/h files 
     nextMoveValidators.push((squareFrom: number, squareTo: number) => Math.abs(squareFrom % 8 - squareTo % 8) === 1);
 
-    // adding more pawn moves (captures)
+    // adding more pawn moves (captures) // TODO remove the duplicate calls in parent Pawn class ...? 
     // pawnMoves = pawnMoves.concat(super.generatePieceValidMoves(
     pawnMoves = pawnMoves.concat(Pawn.generatePieceValidMoves(
       squareId,
       boardState,
-      this.captureDirections || directions || [], // captureDirections 
+      this.captureDirections, // || directions || [], // captureDirections 
       {
           distance: 1,
           nextMoveValidators: nextMoveValidators,

@@ -10,9 +10,15 @@ import * as helpers from '../utils/helpers.ts';
 import * as constants from '../utils/constants.ts';
 
 import {
+    CastlingRights,
     // SquareProp,
     GameProps,
     GameState,
+    HistoryItem,
+    KingPositions,
+    Move,
+    PieceKey,
+    PlayerKey,
     // HistoryItem,
 } from '../utils/types.ts';
 import BoardControlPanel from './BoardControlPanel.tsx';
@@ -146,7 +152,6 @@ export default class Game extends React.Component<GameProps, GameState> {
         // If none of these are possible, it's checkmate
         // If we are in a *double* check, we *must* move the king. 
 
-
         // const playerCode = keycode.charAt(0);
         const pieceCode: string = keycode.charAt(1);
         let validMoves: number[] = [];
@@ -165,21 +170,12 @@ export default class Game extends React.Component<GameProps, GameState> {
                     true, // includeCastling
                     this, // currentGameState
                 ]
-                // const kingPiece = (piece as unknown as LightKing) // ???? 
-                // const kingPiece = keycode.charAt(0) === 'L' ? LightKing : DarkKing;
-                // validMoves = kingPiece.generatePieceValidMoves(...baseFunctionArgs, ...additionalFunctionArgs);
             } else if (pieceCode === 'P') {
-                // let additionalFunctionArgs: [number?] = [undefined];
-                // if (this.state.enPassantTargetSquare) additionalFunctionArgs[0] = this.state.enPassantTargetSquare;
                 additionalFunctionArgs = [
-                    undefined,
-                    {},
-                    this.state.enPassantTargetSquare || undefined,
-                ]
-                // const pawnPiece = keycode.charAt(0) === 'L' ? LightPawn : DarkPawn;
-                // validMoves = pawnPiece.generatePieceValidMoves(...baseFunctionArgs, undefined, {}, this.state.enPassantTargetSquare || undefined);
-            // } else {
-            //     validMoves = piece.generatePieceValidMoves(...baseFunctionArgs);
+                    undefined, // directions 
+                    {}, // object with distance, validators, includeNonCaptures, includeCapturesOf
+                    this.state.enPassantTargetSquare || undefined, // enPassantTargetSquare
+                ];
             }
             validMoves = piece.generatePieceValidMoves(...baseFunctionArgs, ...additionalFunctionArgs)
         } 
@@ -189,43 +185,108 @@ export default class Game extends React.Component<GameProps, GameState> {
         return legalMoves;
     }
 
-    updateMoveHistory = (squareMovedFrom: number, squareMovedTo: number, boardState: string[]): void => {
+    getNewGameHistoryItem = (squareMovedFrom: number, squareMovedTo: number): HistoryItem => { // void 
         const { squareProps, history, squareSelected, squareAltSelected, FEN, ...filteredGameState} = this.state;
-        this.setState({
-            ...this.state,
-            history: this.state.history.concat([{
-                // pieceKeys: boardState,
-                gameStateSnapshot: {
-                    // ...this.state,
-                    // will spreading this only pass the fields I want? seems like no... we have to desctructure 
-                    ...filteredGameState,
-                },
-                AN: helpers.generateMoveAN(squareMovedFrom, squareMovedTo, this), 
-                // TODO generate Algebraic Notation for this move -- to do so, we need to know if any other 
-                //   pieces of the same type would be able to make the same move 
-                JN: helpers.generateMoveJN(squareMovedFrom, squareMovedTo),
-                INN: helpers.generateMoveINN(squareMovedFrom, squareMovedTo),
-                // International Numeric Notation (Computer Notation, e.g. 5254 == e2->e4)
-            }]),
-        });
+        const newGameHistoryItem: HistoryItem = {
+            gameStateSnapshot: {
+                ...filteredGameState
+            },
+            AN: helpers.generateMoveAN(squareMovedFrom, squareMovedTo, this), // now this isn't being passed correctly, wth?? 
+            JN: helpers.generateMoveJN(squareMovedFrom, squareMovedTo),
+            INN: helpers.generateMoveINN(squareMovedFrom, squareMovedTo),
+        };
+        return newGameHistoryItem;
+    }
+
+    getNewKingPositionsAndCastlingRights = (move: Move, castlingRights?: CastlingRights): {
+        castlingRights?: CastlingRights,
+        kingPositions?: KingPositions,
+        // [key: string]: any,
+        deprecatedState?: Partial<GameState>,
+    } => {
+        const { squareMovedFrom, squareMovedTo, pieceMoving, playerMoving } = move;
+        // if we don't have any input argument, try to pull from state,
+        // if no state is found, assume all were true 
+        if (!castlingRights) {
+            if (this.state.castlingRights) {
+                castlingRights = this.state.castlingRights;
+            } else {
+                castlingRights = {
+                    LQ: true,
+                    LK: true,
+                    DQ: true,
+                    DK: true,
+                }
+            }
+        }
+        // let newStateKVPs: { [key: string]: any } = {};
+        let newStateKVPs: {
+            castlingRights: CastlingRights,
+            kingPositions: KingPositions,
+            // [key: string]: any,
+            deprecatedState: Partial<GameState>,
+        } = {
+            // todo remove castlingRights from function arg, use state? 
+            castlingRights, // will this update with assignments to castlingRights, or do i have to assign at the end? 
+            kingPositions: this.state.kingPositions,
+            deprecatedState: {},
+        };
+        let kingPositions: KingPositions = this.state.kingPositions;
+        if (pieceMoving === 'K') {
+            castlingRights[`${playerMoving}K`] = false;
+            castlingRights[`${playerMoving}Q`] = false;
+            if (!helpers.isMoveCastling(squareMovedFrom, squareMovedTo, this.state.pieceKeys)) {
+                kingPositions[playerMoving] = squareMovedTo;
+            } else {
+                const directionFromKing = squareMovedFrom < squareMovedTo ? 1 : -1;
+                const squareIdOfKingAfterCastling = squareMovedFrom + directionFromKing * 2;
+                kingPositions[playerMoving] = squareIdOfKingAfterCastling;
+            }
+            newStateKVPs.kingPositions = kingPositions;
+            newStateKVPs.deprecatedState.lightKingPosition = kingPositions['L'];
+            newStateKVPs.deprecatedState.darkKingPosition = kingPositions['D'];
+        }
+
+        // TODO use constants, anticipate variants 
+        if (pieceMoving === 'R' || [63, 56, 7, 0].includes(squareMovedTo)) {
+            if (
+                (playerMoving === 'L' && squareMovedFrom === 63) ||
+                (playerMoving === 'D' && squareMovedTo === 63)
+            ) {
+                castlingRights.LK = false;
+            } else if (
+                (playerMoving === 'L' && squareMovedFrom === 56) ||
+                (playerMoving === 'D' && squareMovedTo === 56)
+            ) {
+                castlingRights.LQ = false;
+            } else if (
+                (playerMoving === 'D' && squareMovedFrom === 7) ||
+                (playerMoving === 'L' && squareMovedTo === 7)
+            ) {
+                castlingRights.DK = false;
+            } else if (
+                (playerMoving === 'D' && squareMovedFrom === 0) ||
+                (playerMoving === 'L' && squareMovedTo === 0)
+            ) {
+                castlingRights.DQ = false;
+            }
+            // newStateKVPs.castlingRights = castlingRights; // TODO necessary since we assigned func arg to return obj at the start? Idts... we'll see 
+            newStateKVPs.deprecatedState.lightKingHasShortCastlingRights = castlingRights.LK;
+            newStateKVPs.deprecatedState.lightKingHasLongCastlingRights = castlingRights.LQ;
+            newStateKVPs.deprecatedState.darkKingHasShortCastlingRights = castlingRights.DK;
+            newStateKVPs.deprecatedState.darkKingHasLongCastlingRights = castlingRights.DQ;
+        }
+        return newStateKVPs;
     }
 
     undoLastMove = (): void => {
         if (!this.state.history || this.state.history.length === 0) return;
 
-        // // ALT APPROACH USING GAME STATE SNAPSHOT 
-
-        // const newHistory = this.state.history.slice(0, -1); // TODO don't get rid of it,
-        //     // maybe make side-lines or store analysis positions ... highlight current move in list 
-        const lastHistoryItem = this.state.history.pop();
+        const lastHistoryItem = this.state.history.pop(); // TODO don't get rid of it,
+        // // maybe make side-lines or store analysis positions ... highlight current move in history list 
         if (!lastHistoryItem) return;
         
         const newHistory = this.state.history.slice();
-
-        // if (newHistory.length === 0) {
-        //     helpers.initializeState(this);
-        //     return;
-        // }
 
         this.setState({
             ...lastHistoryItem.gameStateSnapshot,
@@ -296,9 +357,10 @@ export default class Game extends React.Component<GameProps, GameState> {
         // we're either clicking on a square for the first time, 
         // or a square that is not a legal move of whichever piece/square is highlighted,
         // then we just apply the selection and highlighting to prepare for the next click
-        if (!this.state.squareProps[squareId].isHighlighted) {
+        if (this.state.squareSelected === null || !this.state.squareProps[squareId].isHighlighted) {
             // select an unselected and unhighlighted square and highlight the legal moves for that piece on this turn 
             const isThisPlayersMove = this.state.whiteToPlay !== (this.state.pieceKeys[squareId]?.charAt(0) === 'D');
+            console.log(this.state.enPassantTargetSquare);
             const squaresToHighlight = isThisPlayersMove ? this.getLegalMoves(squareId) : [];
             this.selectSquareAndHighlightAllLegalMoves(squareId, squaresToHighlight);
             return;
@@ -306,22 +368,25 @@ export default class Game extends React.Component<GameProps, GameState> {
 
         // otherwise, a square is already selected, and we clicked on one of its legal move squares 
         // Move piece at selected square to clicked highlighted square
-        // TODO ... *UNLESS* it is a pawn promotion, then we just update the isPromoting prop without moving the piece
+        // *UNLESS* it is a pawn promotion, then we just update the isPromoting prop without moving the piece 
         // or making other state updates, just yet (until we know what it promotes to)
-        // WRONG - I should just set isPromoting in the squareProps when it highlights... 
-        // Or maybe not, idk, this should work if I write the Square properly 
-        
 
-        const squareMovedFrom: number | null = this.state.squareSelected || null; // TODO by the time we get here in this method, squareMovedFrom can't be null 
+        // by the time we get here in this method, squareMovedFrom can't be null 
+        const squareMovedFrom: number = this.state.squareSelected!; 
         const squareMovedTo: number = squareId;
+        const [playerMoving, pieceMoving] = this.state.pieceKeys[squareMovedFrom].split('');
+        const movePlayed: Move = {
+            squareMovedFrom,
+            squareMovedTo,
+            pieceMoving: pieceMoving as PieceKey,
+            playerMoving: playerMoving as PlayerKey,
+        }
         let squareOfPawnPromotion: number | null = null;
 
-        const isPromoting = 
-            Math.floor(squareMovedTo / 8) === (this.state.whiteToPlay ? 0 : 7) && 
-            this.state.pieceKeys[squareMovedFrom!].charAt(1) === 'P';
+        const isPromoting = pieceMoving === 'P' && Math.floor(squareMovedTo / 8) === (this.state.whiteToPlay ? 0 : 7);
         if (isPromoting) {
             squareOfPawnPromotion = squareMovedTo;
-            let promotionSquare: HTMLButtonElement
+            let promotionSquare: HTMLButtonElement // to use as anchor for promotion piece picker 
             if (event && event.currentTarget instanceof HTMLButtonElement) {
                 promotionSquare = event?.currentTarget;
             }
@@ -339,93 +404,17 @@ export default class Game extends React.Component<GameProps, GameState> {
         }
 
         const newPieceKeys = helpers.getNewPieceKeysCopyWithMoveApplied(this.state.pieceKeys, squareMovedFrom!, squareMovedTo);
-        const { squareProps, history, squareSelected, squareAltSelected, FEN, ...filteredGameState} = this.state;
-
-        // this.setState({...this.state, isKingInCheck: this.isKingInCheck()});
-
-        if (this.state.pieceKeys[squareMovedFrom!].charAt(1) === 'K') {
-            if (this.state.pieceKeys[squareMovedFrom!].charAt(0) === 'L') {
-                const newStateKVPs: { [key: string]: any } = {
-                    "lightKingHasLongCastlingRights": false,
-                    "lightKingHasShortCastlingRights": false,
-                };
-                await helpers.multiUpdateState(this, newStateKVPs);
-            } else {
-                const newStateKVPs: { [key: string]: any } = {
-                    "darkKingHasLongCastlingRights": false,
-                    "darkKingHasShortCastlingRights": false,
-                }
-                await helpers.multiUpdateState(this, newStateKVPs);
-            }
-            if (!helpers.isMoveCastling(squareMovedFrom!, squareMovedTo, this.state.pieceKeys)) {
-                if (newPieceKeys[squareMovedTo].charAt(0) === 'L') {
-                    await helpers.updateState(this, "lightKingPosition", squareMovedTo);
-                } else {
-                    await helpers.updateState(this, "darkKingPosition", squareMovedTo);
-                }
-            } else {
-                // TODO also remove castling rights here too 
-                const directionFromKing = squareMovedFrom! < squareMovedTo ? 1 : -1;
-                const squareIdOfKingAfterCastling = squareMovedFrom! + directionFromKing * 2;
-                if (newPieceKeys[squareIdOfKingAfterCastling].charAt(0) === 'L') {
-                    await helpers.updateState(this, "lightKingPosition", squareIdOfKingAfterCastling);
-                } else {
-                    await helpers.updateState(this, "darkKingPosition", squareIdOfKingAfterCastling);
-                }
-            }
-        }
-        if (
-            this.state.pieceKeys[squareMovedFrom!].charAt(1) === 'R' || 
-            [63, 56, 7, 0].includes(squareMovedTo)
-        ) {
-            // TODO all of this logic should be moved out and done elsewhere via method-call 
-            if (
-                (this.state.pieceKeys[squareMovedFrom!].charAt(0) === 'L' && squareMovedFrom === 63) ||
-                (this.state.pieceKeys[squareMovedFrom!].charAt(0) === 'D' && squareMovedTo === 63)
-            ) {
-                await helpers.updateState(this, "lightKingHasShortCastlingRights", false);
-            } else if (
-                (this.state.pieceKeys[squareMovedFrom!].charAt(0) === 'L' && squareMovedFrom === 56) ||
-                (this.state.pieceKeys[squareMovedFrom!].charAt(0) === 'D' && squareMovedTo === 56)
-            ) {
-                await helpers.updateState(this, "lightKingHasLongCastlingRights", false);
-            } else if (
-                (this.state.pieceKeys[squareMovedFrom!].charAt(0) === 'D' && squareMovedFrom === 7) ||
-                (this.state.pieceKeys[squareMovedFrom!].charAt(0) === 'L' && squareMovedTo === 7)
-            ) {
-                await helpers.updateState(this, "darkKingHasShortCastlingRights", false);
-            } else if (
-                (this.state.pieceKeys[squareMovedFrom!].charAt(0) === 'D' && squareMovedFrom === 0) ||
-                (this.state.pieceKeys[squareMovedFrom!].charAt(0) === 'L' && squareMovedTo === 0)
-            ) {
-                await helpers.updateState(this, "darkKingHasLongCastlingRights", false);
-            }
-        }
-        if (this.state.pieceKeys[squareMovedFrom!].charAt(1) === 'P') {
-            if (Math.abs(squareMovedFrom! - squareMovedTo) === 16) {
-                // double-square first move
-                const enPassantTargetSquare = Math.floor((squareMovedFrom! + squareMovedTo) / 2);
-                await helpers.updateState(this, "enPassantTargetSquare", enPassantTargetSquare);
-            } else {
-                await helpers.updateState(this, 'enPassantTargetSquare', null);
-            }
-            // const isPromoting = Math.floor(squareMovedTo / 8) === (this.state.whiteToPlay ? 0 : 7);
-            // if (isPromoting) {
-            //     squareOfPawnPromotion = squareMovedTo;
-            // }
-        } else {
-            await helpers.updateState(this, 'enPassantTargetSquare', null);
+        const { castlingRights, kingPositions, deprecatedState } = this.getNewKingPositionsAndCastlingRights(movePlayed, this.state.castlingRights); // TODO try removing castlingRights argument 
+        
+        let enPassantTargetSquare: number | null = null;
+        if (pieceMoving === 'P' && Math.abs(squareMovedFrom! - squareMovedTo) === 16) {
+            enPassantTargetSquare = Math.floor((squareMovedFrom! + squareMovedTo) / 2);
         }
 
-        const nextMoveAN = helpers.generateMoveAN(squareMovedFrom!, squareMovedTo, this);
-        const nextMoveJN = helpers.generateMoveJN(squareMovedFrom!, squareMovedTo);
-        const nextMoveINN = helpers.generateMoveINN(squareMovedFrom!, squareMovedTo);
+        const newHistoryItem = this.getNewGameHistoryItem(squareMovedFrom, squareMovedTo);
 
         this.setState({
             ...this.state,
-            squareSelected: null,
-            squareAltSelected: null,
-            whiteToPlay: !this.state.whiteToPlay,
             pieceKeys: newPieceKeys,
             squareProps: this.state.squareProps.map((squareProps, squareId) => {
                 const newKeycode = newPieceKeys[squareId];
@@ -439,16 +428,15 @@ export default class Game extends React.Component<GameProps, GameState> {
                     isPromoting: (squareId === squareOfPawnPromotion),
                 }
             }),
-            history: this.state.history.concat([{
-                gameStateSnapshot: filteredGameState,
-                AN: nextMoveAN, // generate Algebraic Notation for this move 
-                JN: nextMoveJN, // Jared's Notation: How I misinterpreted INN, and just used squareIds from and to 
-                INN: nextMoveINN, // International Numeric Notation (Computer Notation, e.g. 5254 == e2->e4)
-            }]),
+            castlingRights, // we already based our input on this.state.castlingRights, no worry of lost info here?? 
+            kingPositions: kingPositions || this.state.kingPositions,
+            ...deprecatedState, // spread the partial of castlingRights and kingPositions using old variable names 
+            squareSelected: null,
+            squareAltSelected: null,
+            whiteToPlay: !this.state.whiteToPlay,
+            enPassantTargetSquare, // when you use the same name as the state variable, it automatically unwraps 
+            history: this.state.history.concat([newHistoryItem]),
         });
-
-        // TODO move this to helpers, update history async, 
-        // this.updateMoveHistory(squareMovedFrom!, squareMovedTo, newPieceKeys);
     }
 
     handleSquareRightClick = (event: React.MouseEvent | null, squareId: number): void => {

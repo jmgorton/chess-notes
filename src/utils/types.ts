@@ -13,22 +13,25 @@ export type GameProps = Record<string, unknown>;
 export type PlayerKey = 'L' | 'D';
 
 export type RoyalKey = 'LK' | 'LQ' | 'DK' | 'DQ';
-export type NonKingPieces = 'Q' | 'R' | 'B' | 'N' | 'P';
+export type PieceKey = 'K' | 'Q' | 'R' | 'B' | 'N' | 'P';
+export type NonKingPieceKey = 'Q' | 'R' | 'B' | 'N' | 'P';
 export type KingPieces = 'K';
+export type RoyalPiece = 'K' | 'Q';
 
 export type PiecePositions = {
     L: {
-        [key in NonKingPieces]: Set<number>;
+        [key in NonKingPieceKey]: Set<number>;
         // [key in KingPieces]: number;
     };
     D: {
-        [key in NonKingPieces]: Set<number>;
+        [key in NonKingPieceKey]: Set<number>;
     }
 }
 
 export type KingPositions = {
-    L: number;
-    D: number;
+    // L: number;
+    // D: number;
+    [key in PlayerKey]: number;
 }
 
 export type CastlingRights = {
@@ -189,7 +192,8 @@ export interface DraggableDroppableChild<T> {
 export interface Move {
     squareMovedFrom: number;
     squareMovedTo: number;
-    pieceMoving: string; // Piece
+    pieceMoving: PieceKey;
+    playerMoving: PlayerKey;
 }
 
 export interface MoveEnPassant extends Move {

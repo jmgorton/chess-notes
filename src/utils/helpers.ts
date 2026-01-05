@@ -16,10 +16,34 @@ import { keycodeToComponent } from '../components/Piece.tsx';
 // this method is called before this move is applied to state, still current player's turn 
 // boardState, whiteToPlay, kingPositions, this.wouldOwnKingBeInCheckAfterMove
 // TODO ... add optional boolean indicating whether move has been played yet? 
-export const generateMoveAN = (squareMovedFrom: number, squareMovedTo: number, currentGame?: Game): string => { // , futureBoardState = this.state.pieceKeys) => {
-    if (!currentGame) {
-        throw Error("Not implemented (yet)");
+export function generateMoveAN(squareMovedFrom: number, squareMovedTo: number, currentState?: {
+    pieceKeys: string[],
+    whiteToPlay: boolean,
+    kingPositions: { [key: string]: number },
+}): string;
+export function generateMoveAN(squareMovedFrom: number, squareMovedTo: number, currentState?: Game): string; // , futureBoardState = this.state.pieceKeys) => {
+export function generateMoveAN(squareMovedFrom: number, squareMovedTo: number, currentState?: unknown): string {
+    if (!currentState) {
+        throw Error("Unable to generate algebraic notation for move without game context.");
     }
+
+    if (typeof currentState === 'object') {
+        if (!(currentState instanceof Game)) {
+            throw Error("Not yet implemented.");
+        } else {
+            currentState = currentState as Game;
+        }
+    }
+
+    const currentGame: Game = currentState as Game;
+
+    // const requiredFields: string[] = ['pieceKeys'];
+    // ('whiteToPlay' + ('kingPositions' | 'darkKingPosition' & 'lightKingPosition')) | kingPosition arg 
+    // refactor isKingInCheck to not require full Game state ... also wouldOwnKingBeInCheckAfterMove 
+    //   isKingInCheck should be pretty easy actually, and just needs pieceKeys and kingPosition(s)/whiteToPlay 
+    // and this method also requires any fields those methods require 
+        // required args for wouldOwnKingBeInCheckAfterMove:
+    //   pieceKeys, whiteToPlay + kingPositions | kingPosition arg, 
     const currentBoardState = currentGame.state.pieceKeys.slice();
     const futureBoardState = getNewPieceKeysCopyWithMoveApplied(currentBoardState, squareMovedFrom, squareMovedTo);
 
@@ -47,7 +71,8 @@ export const generateMoveAN = (squareMovedFrom: number, squareMovedTo: number, c
     if (isKingInCheck(
         kingPosition, 
         futureBoardState, 
-        this
+        // this // this was like this... how was that working??
+        currentGame // why is this passing something null? Either currentGame or currentGame.state is null... Hmm... 
     )) {
         // if (this.isCheckmate()) isCheckOrCheckmateAN = '#';
         isCheckOrCheckmateAN = '+';
@@ -245,10 +270,11 @@ export function isKingInCheck(kingPositionArg?: number, boardStateArg?: string[]
             console.error("No king position argument supplied.");
             throw Error("No king position argument supplied.");
         }
-    } else {
-        console.log(`Current game has no state. Must supply currentGame argument for now...`);
-        throw Error("No state found for currentGame.");
-    }
+    } 
+    // else {
+    //     console.log(`Current game has no state. Must supply currentGame argument for now...`);
+    //     throw Error("No state found for currentGame.");
+    // }
 
     // default implementation assumes that we are checking current boardState position in state
     // before any moves have been played, and use state to determine which king to check 
@@ -280,24 +306,11 @@ export function isKingInCheck(kingPositionArg?: number, boardStateArg?: string[]
     const attackers: string[] = ['L','D'].filter(player => player !== defender);
     // const playerToMove: string = (currentGame && currentGame.state.whiteToPlay ? 'L' : 'D') || (attackers[0]);
 
-    let attackingSquares = null;
-    if (currentGame) {
-        attackingSquares = getOccupiedSquaresThatCanAttackThisSquare(
-            kingPosition, 
-            attackers,
-            boardState,
-        );
-    } else {
-        // console.error("Not implemented. Must pass currentGame argument for now.");
-        // throw Error("Not implemented yet.");
-        attackingSquares = getOccupiedSquaresThatCanAttackThisSquare(
-            kingPosition,
-            attackers,
-            boardState,
-        );
-    }
-
-    // console.log(`Squares attacking our ${defender}K on ${kingPosition}: ${attackingSquares}`);
+    const attackingSquares = getOccupiedSquaresThatCanAttackThisSquare(
+        kingPosition, 
+        attackers,
+        boardState,
+    );
 
     return (attackingSquares !== null && attackingSquares.length !== 0);
     // if attackingSquares.length > 1, it's a double check, can't possible block or capture out of it 
@@ -318,6 +331,9 @@ export function wouldOwnKingBeInCheckAfterMove(squareMovedFrom: number, squareMo
         // TODO handle kingPosition and boardState if currentGame is undefined 
         throw Error("Must supply currentGame arg (for now)...");
     }
+
+    // required args from currentGame:
+    //   pieceKeys, whiteToPlay + kingPositions | kingPosition arg, 
 
     const futureState = getNewPieceKeysCopyWithMoveApplied(currentGame.state.pieceKeys, squareMovedFrom, squareMovedTo);
     // const player = currentGame.state.whiteToPlay ? 'L' : 'D';
