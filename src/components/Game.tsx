@@ -345,7 +345,8 @@ export default class Game extends React.Component<GameProps, GameState> {
         });
     }
 
-    handleSquareClick = async (squareId: number, event?: Event): Promise<void> => {
+    // handleSquareClick = async (squareId: number, event?: Event): Promise<void> => {
+    handleSquareClick = (squareId: number, event?: Event): void => {
         // clicking the same square again removes all highlighting and selections 
         if (this.state.squareSelected === squareId) {
             this.deselectAndRemoveHighlightFromAllSquares();

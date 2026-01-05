@@ -86,8 +86,10 @@ class Square extends React.Component<SquareProp, SquareState> {
     if (this.props.onContextMenu) this.props.onContextMenu(event, this.props.id);
   }
 
-  handleClickPromotion: MouseEventHandler = (event) => {
-    console.log(`Handling promotion from Square: ${event}`);
+  // handleClickPromotion: MouseEventHandler = (event) => {
+  handleClickPromotion = (squareId: number, event?: Event) => {
+    console.log(`Handling promotion from Square: squareId: ${squareId}; event: ${event}`);
+    // if (this.props.onPromote && event) this.props.onPromote(event);
   }
 
   render() {
@@ -105,13 +107,13 @@ class Square extends React.Component<SquareProp, SquareState> {
     // or do () => this.handleClick() to *not* pass event arg 
 
     let childType = getPieceByKeycode(this.props.keycode);
-    let draggableChildType
-    // let childType;
-    // if (this.props.enableDragAndDrop) 
-    //   childType = typeof type | typeof DraggableDroppableChild<HTMLButtonElement;
-    if (childType) {
+    // let draggableChildType
+    // // let childType;
+    // // if (this.props.enableDragAndDrop) 
+    // //   childType = typeof type | typeof DraggableDroppableChild<HTMLButtonElement;
+    // if (childType) {
 
-    }
+    // }
     return (
       <>
         <button 

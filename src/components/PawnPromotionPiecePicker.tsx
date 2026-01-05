@@ -12,7 +12,8 @@ interface PawnPromotionPiecePickerProps {
     // position: { top: number; left: number };
     anchorProp?: HTMLButtonElement;
     player?: string;
-    handlePromotion?: MouseEventHandler | ((event: Event) => void);
+    // handlePromotion?: MouseEventHandler | ((event: Event) => void);
+    handlePromotion?: (squareId: number, event?: Event) => void;
 }
 
 // const handlePromotionPieceSelected = (squareId: number, event?: Event | undefined) => {
@@ -28,7 +29,8 @@ const PawnPromotionPiecePicker: React.FC<PawnPromotionPiecePickerProps> = ({
 //     onSelectPiece?: (piece => void);
     anchorProp?: HTMLButtonElement;
     player?: string;
-    handlePromotion?: MouseEventHandler | ((event: Event) => void);
+    // handlePromotion?: MouseEventHandler | ((event: Event) => void);
+    handlePromotion?: (squareId: number, event?: Event) => void;
 }) => {
     const pieces = [
         { notation: 'Q', name: 'Queen', symbol: '♕' },
@@ -40,7 +42,7 @@ const PawnPromotionPiecePicker: React.FC<PawnPromotionPiecePickerProps> = ({
     const handlePromotionPieceSelected = (squareId: number, event?: Event | undefined) => {
         console.log(`Handling promotion from PawnPromotionPiecePicker: squareId: ${squareId}; event: ${event}`);
         if (handlePromotion && event) {
-            // handlePromotion(event);
+            handlePromotion(squareId, event);
         }
     }
 

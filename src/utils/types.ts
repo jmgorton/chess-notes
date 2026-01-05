@@ -99,7 +99,7 @@ export interface GameStatusState {
 
 export interface BoardProps {
     squareProps: SquareProp[];
-    handleSquareClick: (squareId: number, event?: Event) => Promise<void>; // (event: Event) => void; // ={this.handleSquareClick}
+    handleSquareClick: (squareId: number, event?: Event) => void; // (event: Event) => void; // (squareId: number, event?: Event) => Promise<void>;
     handleSquareRightClick: (event: React.MouseEvent | null, squareId: number) => void; // (event: Event) => void; // ={this.handleSquareRightClick}
     boardSize: number; // ={this.boardSize}
     isBoardFlipped: boolean;
