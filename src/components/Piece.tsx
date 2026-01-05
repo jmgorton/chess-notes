@@ -5,7 +5,7 @@ import DraggableWrapper, { withDraggable } from './hoc/DraggableWrapper.tsx';
 import Game from './Game.tsx';
 
 import * as helpers from '../utils/helpers.ts';
-import { DraggableDroppableChild, PieceProps } from '../utils/types.ts'
+import { DraggableDroppableChild, PieceProps, PlayerKey } from '../utils/types.ts'
 // import { withDraggable } from './hoc/DraggableWrapper.tsx';
 
 // Use public resources so filenames remain predictable in production.
@@ -69,8 +69,7 @@ class Piece extends React.Component {
 
     captureValidators.push((squareFrom, squareTo) => includeAttacksFrom?.includes(boardState[squareTo]?.charAt(0)) || false);
     // captureValidators.push((squareFrom, squareTo) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState));
-    if (squareId === 27) console.log(`In Piece#generatePieceValidMoves: captureValidators: ${captureValidators}`);
-
+    // if (squareId === 27) console.log(`In Pawn#generatePieceValidMoves: captureValidators: ${captureValidators}`);
 
     directions.forEach((direction) => {
       let checkedSquare = squareId;
@@ -183,7 +182,7 @@ class Pawn extends Piece {
     // captureDirections?: number[], // = this.captureDirections,
     // startingRank: number | null = null,
   ) => {
-    if (squareId === 27) console.log(`In Pawn#generatePieceValidMoves: captureValidators: ${captureValidators}`);
+    // if (squareId === 27) console.log(`In Pawn#generatePieceValidMoves: captureValidators: ${captureValidators}`);
     // // Legal pawn moves   
     // const currRank = Math.floor(squareId / 8);
     let pawnMoves: number[] = [];
@@ -277,7 +276,6 @@ class LightPawn extends Pawn {
     } = {},
     enPassantTargetSquare?: number,
   ) => {
-    if (squareId === 27) console.log(`In LightPawn#generatePieceValidMoves: enPassantTargetSquare: ${enPassantTargetSquare}`);
     // return super.generatePieceValidMoves(
     // return Pawn.generatePieceValidMoves(
     //   squareId,
@@ -322,9 +320,9 @@ class LightPawn extends Pawn {
     // helpers.isMoveEnPassant only works *after* the move's been played
     // captureValidators.push(((squareFrom: number, squareTo: number) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState)));
     captureValidators.push((squareFrom: number, squareTo: number) => squareTo === enPassantTargetSquare);
-    if (squareId === 27) console.log(`In Pawn#generatePieceValidMoves: captureValidators: ${captureValidators}`);
-    // make sure any captures don't go between a/h files 
-    nextMoveValidators.push((squareFrom: number, squareTo: number) => Math.abs(squareFrom % 8 - squareTo % 8) === 1);
+    // if (squareId === 27) console.log(`In Pawn#generatePieceValidMoves: captureValidators: ${captureValidators}`);
+    // make sure any captures don't go between a/h files ... nvm, added a guard like this in base Piece class 
+    // nextMoveValidators.push((squareFrom: number, squareTo: number) => Math.abs(squareFrom % 8 - squareTo % 8) === 1);
 
     // adding more pawn moves (captures) // TODO remove the duplicate calls in parent Pawn class ...? 
     // pawnMoves = pawnMoves.concat(super.generatePieceValidMoves(
@@ -432,15 +430,10 @@ class DarkPawn extends Pawn {
       ));
     }
 
-    // how does this work if we reference boardState from this lambda and call it in a separate function? 
-    // let captureValidators = [
-    //   ((squareFrom: number, squareTo: number) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState)),
-    // ];
-
     // helpers.isMoveEnPassant only works *after* the move's been played
     // captureValidators.push(((squareFrom: number, squareTo: number) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState)));
     captureValidators.push((squareFrom: number, squareTo: number) => squareTo === enPassantTargetSquare);
-    nextMoveValidators.push((squareFrom: number, squareTo: number) => Math.abs(squareFrom % 8 - squareTo % 8) === 1);
+    // nextMoveValidators.push((squareFrom: number, squareTo: number) => Math.abs(squareFrom % 8 - squareTo % 8) === 1);
 
     // adding more pawn moves (captures)
     // pawnMoves = pawnMoves.concat(super.generatePieceValidMoves(
@@ -1218,7 +1211,7 @@ class LightKing extends King {
     // console.log(`In LightKing#generatePieceValidMoves\n\tFound regular moves valid: ${kingMoves}\n\tincludeCastling: ${includeCastling}\n\tcurrentGameState: ${currentGameState}`);
 
     if (includeCastling && currentGameState) {
-      kingMoves = kingMoves.concat(helpers.getCastlingOptions(this.playercode, currentGameState));
+      kingMoves = kingMoves.concat(helpers.getCastlingOptions(this.playercode as PlayerKey, currentGameState));
     }
 
     return kingMoves;
@@ -1287,7 +1280,7 @@ class DarkKing extends King {
     // console.log(`In DarkKing#generatePieceValidMoves\n\tFound regular moves valid: ${kingMoves}\n\tincludeCastling: ${includeCastling}\n\tcurrentGameState: ${currentGameState}`);
 
     if (includeCastling && currentGameState) {
-      kingMoves = kingMoves.concat(helpers.getCastlingOptions(this.playercode, currentGameState));
+      kingMoves = kingMoves.concat(helpers.getCastlingOptions(this.playercode as PlayerKey, currentGameState));
     }
 
     return kingMoves;

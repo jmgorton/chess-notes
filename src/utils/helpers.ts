@@ -6,7 +6,7 @@ import GameState from '../components/Game.tsx';
 
 import * as constants from './constants.ts';
 import * as functions from './functions.ts';
-import { Move } from './types.ts';
+import { Move, PlayerKey, RoyalKey } from './types.ts';
 
 import { keycodeToComponent } from '../components/Piece.tsx';
 
@@ -172,7 +172,7 @@ export const isMoveCastling = (squareMovedFrom: number, squareMovedTo: number, c
 }
 
 // export function getCastlingOptions(player: string, castlingRights: {}, boardState: string[]): number[] {
-export function getCastlingOptions(player: string, currentGame: Game): number[] {
+export function getCastlingOptions(player: PlayerKey, currentGame: Game): number[] {
     let castlingOptions: number[] = [];
 
     // console.log(`Checking castling options for player:${player} in game:${currentGame}`);
@@ -190,10 +190,10 @@ export function getCastlingOptions(player: string, currentGame: Game): number[] 
         let castlingSafetySquares: number[]; 
         if (squaresBetween === 4) {
             // long castling (qs)
-            const qsCastlingRights: boolean = 
-                player === constants.PLAYER.WHITE ? 
-                    currentGame.state.lightKingHasLongCastlingRights :
-                    currentGame.state.darkKingHasLongCastlingRights;
+            const qsCastlingRights: boolean = currentGame.state.castlingRights![`${player}Q`]; // TODO verify 
+                // player === constants.PLAYER.WHITE ? 
+                //     currentGame.state.lightKingHasLongCastlingRights :
+                //     currentGame.state.darkKingHasLongCastlingRights;
             if (!qsCastlingRights) {
                 // console.log(`Player ${player} does not have long castling rights.`);
                 return;
@@ -205,10 +205,10 @@ export function getCastlingOptions(player: string, currentGame: Game): number[] 
             castlingSafetySquares = player === 'L' ? [60, 59, 58] : [4, 3, 2];
         } else if (squaresBetween === 3) {
             // short castling (ks) 
-            const ksCastlingRights: boolean = 
-                player === constants.PLAYER.WHITE ? 
-                    currentGame.state.lightKingHasShortCastlingRights :
-                    currentGame.state.darkKingHasShortCastlingRights;
+            const ksCastlingRights: boolean = currentGame.state.castlingRights![`${player}K`]; // TODO verify 
+                // player === constants.PLAYER.WHITE ? 
+                //     currentGame.state.lightKingHasShortCastlingRights :
+                //     currentGame.state.darkKingHasShortCastlingRights;
             if (!ksCastlingRights) {
                 // console.log(`Player ${player} does not have short castling rights.`);
                 return;
@@ -527,12 +527,19 @@ export function generateFENFromGameState(gameState: unknown): string {
     // if (event && typeof event.preventDefault === 'function') event.preventDefault();
 
     let boardState: string[];
-    let castlingRightsState: { [key: string]: any} = {};
+    // let castlingRightsState: { [key: string]: any} = {};
+    let castlingRightsState: { [key in RoyalKey]: boolean } = {
+        LK: false,
+        LQ: false,
+        DK: false,
+        DQ: false,
+    };
     let whiteToPlay: boolean;
+    let enPassantTargetSquareId: number | null = null;
     let halfmoveClock: number;
     let fullmoveCounter: number;
 
-    const requiredKeys: string[] = ['pieceKeys','whiteToPlay','halfmoveClock','fullmoveCounter'];
+    const requiredKeys: string[] = ['pieceKeys','whiteToPlay','enPassantTargetSquare','halfmoveClock','fullmoveCounter'];
     const moreRequiredKeys: string[] = [
         'lightKingHasShortCastlingRights',
         'lightKingHasLongCastlingRights',
@@ -543,14 +550,17 @@ export function generateFENFromGameState(gameState: unknown): string {
     if (gameState instanceof GameState) {
         boardState = gameState.state.pieceKeys; // || gameState.pieceKeys;
         whiteToPlay = gameState.state.whiteToPlay;
+        enPassantTargetSquareId = gameState.state.enPassantTargetSquare;
         halfmoveClock = gameState.state.halfmoveClock;
         fullmoveCounter = Math.floor(gameState.state.plyNumber / 2);
-        if ('castlingRightsXX' in gameState.state) {
-            const castlingRightsInput = (gameState.state.castlingRights as { [key: string]: any });
-            castlingRightsState.DQ = castlingRightsInput.darkKingHasLongCastlingRights;
-            castlingRightsState.DK = castlingRightsInput.darkKingHasShortCastlingRights;
-            castlingRightsState.LQ = castlingRightsInput.lightKingHasLongCastlingRights;
-            castlingRightsState.LK = castlingRightsInput.lightKingHasShortCastlingRights;
+        if ('castlingRights' in gameState.state && gameState.state.castlingRights) {
+            // const castlingRightsInput = (gameState.state.castlingRights as { [key: string]: any });
+            const castlingRightsInput = gameState.state.castlingRights;
+            // castlingRightsState.DQ = castlingRightsInput.darkKingHasLongCastlingRights;
+            // castlingRightsState.DK = castlingRightsInput.darkKingHasShortCastlingRights;
+            // castlingRightsState.LQ = castlingRightsInput.lightKingHasLongCastlingRights;
+            // castlingRightsState.LK = castlingRightsInput.lightKingHasShortCastlingRights;
+            castlingRightsState = castlingRightsInput;
         } else {
             castlingRightsState.DQ = gameState.state.darkKingHasLongCastlingRights;
             castlingRightsState.DK = gameState.state.darkKingHasShortCastlingRights;
@@ -577,6 +587,7 @@ export function generateFENFromGameState(gameState: unknown): string {
         whiteToPlay = gameState.whiteToPlay as boolean;
         halfmoveClock = gameState.halfmoveClock as number;
         fullmoveCounter = gameState.fullmoveCounter as number;
+        enPassantTargetSquareId = gameState.enPassantTargetSquare as number;
     } else {
         console.error("Unsupported gameState argument supplied.");
         return '';
@@ -590,7 +601,7 @@ export function generateFENFromGameState(gameState: unknown): string {
     // console.log(boardState);
     const piecePlacementWithSpaces = boardState.map((pieceKey, index) => {
         const [playerCode, pieceCode] = pieceKey.split('');
-        const translator = playerCode === 'L' ? (x: string) => x.toUpperCase() : (playerCode === 'D' ? (x: string) => x.toLowerCase() : (x: string) => ' ');
+        const translator = playerCode === 'L' ? (x: string) => x.toUpperCase() : (playerCode === 'D' ? (x: string) => x.toLowerCase() : (x: string) => ' '); 
         const translated = translator(pieceCode);
         // if (index % 8 === 7) return `${translated}/`;
         // else return translated;
@@ -623,8 +634,8 @@ export function generateFENFromGameState(gameState: unknown): string {
     // console.log(newPiecePlacement);
 
     const castlingRights = `${castlingRightsState.LK ? 'K' : ''}${castlingRightsState.LQ ? 'Q' : ''}${castlingRightsState.DK ? 'k' : ''}${castlingRightsState.DQ ? 'q' : ''}`;
-    const enPassantTargetSquare = "-";
-    // TODO use history or smth to find enPassantTargetSquare ... or use this.state.enPassantTargetSquare 
+
+    const enPassantTargetSquare = enPassantTargetSquareId ? `${'abcdefgh'.charAt(enPassantTargetSquareId % 8)}${8 - Math.floor(enPassantTargetSquareId / 8)}` : "-";
 
     const fullFEN = `${newPiecePlacement} ${whiteToPlay ? 'w' : 'b'} ${castlingRights} ${enPassantTargetSquare} ${halfmoveClock} ${fullmoveCounter}`;
     console.log(`Full FEN: ${fullFEN}`);
