@@ -143,6 +143,7 @@ export interface SquareProp {
     keycode: string;
     id: number;
     color?: string; // not in Game SquareProp ?? 
+    isBoardFlipped?: boolean;
     enableDragAndDrop?: boolean;
     droppableId?: string;
     forwardedRef?: Ref<HTMLButtonElement>;

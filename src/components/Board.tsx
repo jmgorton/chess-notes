@@ -31,6 +31,14 @@ class Board extends React.Component<BoardProps, BoardState> {
   }
 
   render() {
+
+    const sharedSquareProps: Partial<SquareProp> = {
+      onSquareClick: this.props.handleSquareClick,
+      onContextMenu: this.props.handleSquareRightClick,
+      enableDragAndDrop: this.props.enableDragAndDrop,
+      isBoardFlipped: this.props.isBoardFlipped,
+    }
+
     return (
         <div className="game-board">
           <div>
@@ -53,21 +61,23 @@ class Board extends React.Component<BoardProps, BoardState> {
                             (this.props.enableDragAndDrop) ? 
                             <DroppableSquare 
                               {...squareProp}
+                              {...sharedSquareProps}
                               // droppableId={`droppable-${rankIndex * this.props.boardSize + fileIndex}`}
-                              enableDragAndDrop={this.props.enableDragAndDrop}
+                              // enableDragAndDrop={this.props.enableDragAndDrop}
                               color={(rankIndex + fileIndex) % 2 === 0 ? "light" : "dark"}
-                              onSquareClick={this.props.handleSquareClick}
-                              onContextMenu={this.props.handleSquareRightClick}
+                              // onSquareClick={this.props.handleSquareClick}
+                              // onContextMenu={this.props.handleSquareRightClick}
                               onPromote={[0, 7].includes(rankIndex) ? this.handlePromotion : () => {}}
                               key={rankIndex * this.props.boardSize + fileIndex}
                             /> 
                             :
                             <Square
                               {...squareProp}
-                              enableDragAndDrop={this.props.enableDragAndDrop}
+                              {...sharedSquareProps}
+                              // enableDragAndDrop={this.props.enableDragAndDrop}
                               color={(rankIndex + fileIndex) % 2 === 0 ? "light" : "dark"}
-                              onSquareClick={this.props.handleSquareClick}
-                              onContextMenu={this.props.handleSquareRightClick}
+                              // onSquareClick={this.props.handleSquareClick}
+                              // onContextMenu={this.props.handleSquareRightClick}
                               onPromote={[0, 7].includes(rankIndex) ? this.handlePromotion : () => {}}
                               key={rankIndex * this.props.boardSize + fileIndex}
                             />

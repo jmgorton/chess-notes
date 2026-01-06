@@ -101,8 +101,8 @@ class Square extends React.Component<SquareProp, SquareState> {
     if (this.props.isHighlighted) classNames.push('highlighted');
     if (this.props.isAltHighlighted) classNames.push('altHighlighted');
     if (this.props.isSelected || this.props.isAltSelected) classNames.push('selected');
-    if (this.props.id % 8 === 0) classNames.push('labelRank');
-    if (Math.floor(this.props.id / 8) === 7) classNames.push('labelFile');
+    if (this.props.id % 8 === (this.props.isBoardFlipped ? 7 : 0)) classNames.push('labelRank');
+    if (Math.floor(this.props.id / 8) === (this.props.isBoardFlipped ? 0 : 7)) classNames.push('labelFile');
 
     let handlers: { [handlerName: string]: MouseEventHandler<HTMLButtonElement> } = {};
     handlers.onClick = this.handleClick;
