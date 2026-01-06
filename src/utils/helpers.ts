@@ -6,7 +6,7 @@ import GameState from '../components/Game.tsx';
 
 import * as constants from './constants.ts';
 import * as functions from './functions.ts';
-import { Move, PlayerKey, RoyalKeycode } from './types.ts';
+import { KingPositions, Move, PlayerKey, PieceKey, RoyalKeycode } from './types.ts';
 
 import { keycodeToComponent } from '../components/Piece.tsx';
 
@@ -75,8 +75,8 @@ export function generateMoveAN(movePlayed: Move, currentState?: unknown): string
         // this // this was like this... how was that working??
         currentGame // why is this passing something null? Either currentGame or currentGame.state is null... Hmm... 
     )) {
-        // if (this.isCheckmate()) isCheckOrCheckmateAN = '#';
         isCheckOrCheckmateAN = '+';
+        if (isKingCheckmated(futureBoardState)) isCheckOrCheckmateAN = '#';
     }
     
     if (isMovePromotion(movePlayed)) {
@@ -327,6 +327,7 @@ export function isKingInCheck(kingPositionArg?: number, boardStateArg?: string[]
     const attackers: string[] = ['L','D'].filter(player => player !== defender);
     // const playerToMove: string = (currentGame && currentGame.state.whiteToPlay ? 'L' : 'D') || (attackers[0]);
 
+    // this method does *NOT* filter for pieces that are pinned. A pin does not absolve a check. 
     const attackingSquares = getOccupiedSquaresThatCanAttackThisSquare(
         kingPosition, 
         attackers,
@@ -340,31 +341,183 @@ export function isKingInCheck(kingPositionArg?: number, boardStateArg?: string[]
     // and see if we can put a piece on any of those squares in the line to block 
 }
 
-export function isKingCheckmated(): boolean {
+// this move also called from generateMoveAN, similar to isKingInCheck, so NOTE: it is still the opponent's turn, state has not been updated 
+// although both locations that call isKingInCheck (generateMoveAN and wouldKingBeInCheckAfterMove) supply a kingPositionArg and future boardStateArg ... 
+// we might need to do that here too, or update state differently so we call this method *after* udpating state... 
+// also note that the only *critical* argument for this method is boardState/pieceKeys, we can figure out everything else relevant from that 
+// so that's what we'll do just to start, require the basic info and figure everything else out 
+// we're gonna overload this method anyway later on, so it's an interesting exercise 
+export function isKingCheckmated(boardState: string[]): boolean {
     // is in check 
     // can't capture/block (if single check) 
     // can't evade 
-    return false;
+    // remember: two filters with one boolean is ~as fast~ as one filter with two booleans ... 
+    const kingPositions: KingPositions = {
+        L: boardState.indexOf('LK'),
+        D: boardState.indexOf('DK'),
+    }
+    // in this minimal-info approach, we don't even know which side we're checking for checkmate for
+    // supplied state will be able to speed this up *a lot* (kingPosition, whiteToPlay, squaresAttackedByBlack, etc...
+    // maybe even a state map of pieces in "contact" - attacking and attackedBy graph/bi-directional map) 
+    let isKingCheckmated = false;
+    Object.entries(kingPositions).forEach(([player, kingPosition]) => {
+        // this method does *NOT* filter for pieces that are pinned. A pin does not absolve a check. 
+        const piecesTargeting = getOccupiedSquaresThatCanAttackThisSquare(kingPosition, (player === 'L') ? ['D'] : ['L'], boardState);
+        if (piecesTargeting.length === 0) {
+            return;
+        }
+
+        let canBlockOrCapture, canEvade = true;
+        if (piecesTargeting.length === 1) {
+            // check if we can capture or block 
+            const squareIdOfAttackingPiece = piecesTargeting[0];
+            const attackingPiece = boardState[squareIdOfAttackingPiece].charAt(1);
+            if (attackingPiece === 'N') {
+                // just check if we can capture it, don't build a line between it and king 
+                // canBlock = false;
+                const capturePossibilities = getOccupiedSquaresThatCanAttackThisSquare(squareIdOfAttackingPiece, [player], boardState);
+                const realCaptureOptions = capturePossibilities.filter(possibilitySquareId => {
+                    const possibleMove: Move = {
+                        squareMovedFrom: possibilitySquareId,
+                        squareMovedTo: squareIdOfAttackingPiece,
+                        pieceMoving: boardState[possibilitySquareId].charAt(1) as PieceKey,
+                        playerMoving: player as PlayerKey,
+                        // promotingTo: undefined, // not relevant for capturing to get out of a checkmate 
+                    }
+                    return !wouldOwnKingBeInCheckAfterMove(possibleMove, boardState);
+                });
+                if (realCaptureOptions.length === 0) {
+                    // console.log("Unable to capture the checking knight.");
+                    canBlockOrCapture = false;
+                }
+            } else {
+                // construct the path between the attacker and this king... hmm that's kinda an interesting problem, it's like a search
+                // but we do have the starting coordinates, we can at least narrow our search down into a single "quadrant" 
+                // actually we can do better than a quadrant, it's either vertical, diagonal, or a single un-blockable knight move 
+                const orientationOfKingFromAttacker = [0, 0]; 
+                const boardNavigationCoefficient = [1, 8]; // [x, y]
+                // [x, y] search direction: -1, 0, 1 to indicate rook style move, or either a bishop style move direction OR quadrant of attacking knight 
+                // use rankDiff and fileDiff to determine if it's a diagonal bishop move or a knight quadrant 
+                // just realized that last part is not necessary, we can tell what piece is attacking by checking boardState ... face palm smh 
+                // and if it's a knight, it can't be blocked, so only check if we can capture it 
+                const kingRank = Math.floor(kingPosition / 8);
+                const kingFile = kingPosition % 8;
+                const attackerRank = Math.floor(squareIdOfAttackingPiece / 8);
+                const attackerFile = squareIdOfAttackingPiece % 8;
+                if (kingRank > attackerRank) orientationOfKingFromAttacker[1] = 1;
+                else if (kingRank < attackerRank) orientationOfKingFromAttacker[1] = -1;
+                if (kingFile > attackerFile) orientationOfKingFromAttacker[0] = 1;
+                else if (kingFile < attackerFile) orientationOfKingFromAttacker[0] = -1;
+    
+                // below not necessary, we check for the knight case above, then below we don't have to differentiate between different straight-line styles 
+                // if (orientationOfKingFromAttacker.every(direction => direction !== 0)) {
+                //     // it is either a bishop-style attack or a knight attack 
+                //     // const rankDiff = kingRank - attackerRank;
+                //     // const fileDiff = kingFile - attackerFile;
+                //     // if (rankDiff !== fileDiff) {
+                //     //     // knight attack 
+                //     // } else {
+                //     //     // bishop-style attack 
+                //     // }
+                //     const attackingPiece = boardState[squareIdOfAttackingPiece].charAt(1);
+                //     if (attackingPiece === 'N') {
+                //         // knight attack
+                        
+                //     } else {
+                //         // bishop-style attack (queen, bishop, or pawn) 
+                //     }
+                // } else {
+                //     // it is a rook-style attack (queen or rook)
+                // }
+
+                const boardStep = functions
+                    .zip(orientationOfKingFromAttacker, boardNavigationCoefficient)
+                    .map(([direction, coefficient]) => direction * coefficient)
+                    .reduce((accumulator, vector) => accumulator + vector);
+                let foundCaptureOrBlock = false;
+                for (let squareIdToCheck = squareIdOfAttackingPiece; squareIdToCheck !== kingPosition; squareIdToCheck += boardStep) {
+                    if (squareIdOfAttackingPiece < 0 || squareIdToCheck >= 64) {
+                        throw Error("Something went wrong with my math.")
+                    }
+
+                    const captureOrBlockPossibilities = getOccupiedSquaresThatCanAttackThisSquare(squareIdToCheck, [player], boardState);
+                    const realCaptureOrBlockOptions = captureOrBlockPossibilities.filter(possibilitySquareId => {
+                        const possibleMove: Move = {
+                            squareMovedFrom: possibilitySquareId,
+                            squareMovedTo: squareIdToCheck,
+                            pieceMoving: boardState[possibilitySquareId].charAt(1) as PieceKey,
+                            playerMoving: player as PlayerKey,
+                            // promotingTo: undefined, // not relevant for capturing or blocking to get out of a checkmate 
+                        }
+                        return !wouldOwnKingBeInCheckAfterMove(possibleMove, boardState);
+                    });
+                    if (realCaptureOrBlockOptions.length !== 0) {
+                        foundCaptureOrBlock = true;
+                        // console.log(`Found at least one way to capture or block the check: ${realCaptureOrBlockOptions}`);
+                        break;
+                    }
+                }
+                canBlockOrCapture = foundCaptureOrBlock;
+            }
+        } else {
+            // then there must be two attackers, blocking and capturing in the same move is impossible. must try to evade 
+            canBlockOrCapture = false;
+        }
+        // if we can't capture or block, then check if we can evade (whether it's 1 attacker or 2)
+        if (canBlockOrCapture) return;
+
+        // could import from King but I don't feel like it 
+        const kingDirections = [-9, -8, -7, -1, 1, 7, 8, 9];
+        const legalEvasionSquares = kingDirections
+            .map(direction => direction + kingPosition)
+            .filter(newKingPosition => newKingPosition >= 0 && newKingPosition < 64)
+            .filter(newKingPosition => boardState[newKingPosition] === '' || boardState[newKingPosition].charAt(0) !== player)
+            .filter(newKingPosition => {
+                const possibleMove: Move = {
+                    squareMovedFrom: kingPosition,
+                    squareMovedTo: newKingPosition,
+                    pieceMoving: 'K',
+                    playerMoving: player as PlayerKey,
+                }
+                return !wouldOwnKingBeInCheckAfterMove(possibleMove, boardState);
+            });
+        if (legalEvasionSquares.length === 0) {
+            // console.log(`Found at least one way to evade the check: ${legalEvasionSquares}`);
+            canEvade = false;
+        }
+
+        // if we can neither capture, block, nor evade, it is checkmate 
+        // don't overwrite it if we already found a checkmate ... this forEach approach isn't the most efficient 
+        isKingCheckmated = isKingCheckmated || (!canBlockOrCapture && !canEvade);
+    })
+    return isKingCheckmated;
 }
 
-export function wouldOwnKingBeInCheckAfterMove(movePlayed: Move, currentGame?: Game): boolean {
-    if (!currentGame) {
-        // TODO handle kingPosition and boardState if currentGame is undefined 
-        throw Error("Must supply currentGame arg (for now)...");
-    }
-
-    // TODO refactor to use Move object input 
-    // const { squareMovedFrom, squareMovedTo, pieceMoving, playerMoving } = movePlayed;
-
-    // required args from currentGame:
-    //   pieceKeys, whiteToPlay + kingPositions | kingPosition arg, 
+// TODO overload this, with either just the boardState or a custom object gameState argument with helpful input like ownKingPosition, and apparently that's it 
+export function wouldOwnKingBeInCheckAfterMove(movePlayed: Move, currentGame: string[]): boolean;
+export function wouldOwnKingBeInCheckAfterMove(movePlayed: Move, currentGame: Game): boolean;
+export function wouldOwnKingBeInCheckAfterMove(movePlayed: Move, currentGame: unknown): boolean {
 
     const { squareMovedFrom, squareMovedTo, pieceMoving, playerMoving } = movePlayed;
+    let boardState, ownKingPosition;
 
-    const futureState = getNewPieceKeysCopyWithMoveApplied(currentGame.state.pieceKeys, movePlayed);
-    // const player = currentGame.state.whiteToPlay ? 'L' : 'D';
-    // let ownKingPosition: number = currentGame.state.kingPositions[player];
-    let ownKingPosition = currentGame.state.whiteToPlay ? currentGame.state.lightKingPosition : currentGame.state.darkKingPosition;
+    if (!currentGame) {
+        // impossible with type checking 
+        throw Error("Must supply currentGame argument.");
+    } else {
+        // the function parameterization is not necessary, but interests me 
+        if (Array.isArray(currentGame) && functions.isArgumentArrayOfType<string>(currentGame, 'string')) { 
+            boardState = currentGame;
+            ownKingPosition = currentGame.indexOf(`${playerMoving}K`);
+        } else if (currentGame instanceof Game) {
+            boardState = currentGame.state.pieceKeys;
+            ownKingPosition = currentGame.state.kingPositions[playerMoving as PlayerKey]
+        } else {
+            throw Error("Invalid argument type for currentGame: " + typeof currentGame);
+        }
+    }
+
+    const futureState = getNewPieceKeysCopyWithMoveApplied(boardState, movePlayed);
     if (ownKingPosition === squareMovedFrom) {
         if (isMoveCastling(movePlayed)) {
             if (squareMovedFrom === 4) {
@@ -383,7 +536,7 @@ export function wouldOwnKingBeInCheckAfterMove(movePlayed: Move, currentGame?: G
         }
     }
 
-    return isKingInCheck(ownKingPosition, futureState); // , currentGame); // , currentGame);
+    return isKingInCheck(ownKingPosition, futureState); 
 }
 
 // TODO we need to allow this to handle pawn promotions 

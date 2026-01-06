@@ -5,7 +5,7 @@ import DraggableWrapper, { withDraggable } from './hoc/DraggableWrapper.tsx';
 import Game from './Game.tsx';
 
 import * as helpers from '../utils/helpers.ts';
-import { DraggableDroppableChild, PieceProps, PieceState, PlayerKey } from '../utils/types.ts'
+import { PieceProps, PieceState, PlayerKey } from '../utils/types.ts'
 // import { withDraggable } from './hoc/DraggableWrapper.tsx';
 
 // Use public resources so filenames remain predictable in production.
@@ -84,6 +84,7 @@ class Piece extends React.Component<PieceProps, PieceState> {
           if (includeNonCaptures) {
             legalMoves.push(nextSquareToCheck);
           }
+          // eslint-disable-next-line no-loop-func
           if (captureValidators.some(validator => validator(squareId, nextSquareToCheck))) {
             // THIS IS ONLY FOR EN PASSANT
             legalMoves.push(nextSquareToCheck);
@@ -1321,7 +1322,8 @@ export const DraggablePiece = withDraggable(Piece); // This works here, but can'
 type PieceConstructor<T extends Piece> = new (...args: any[]) => T;
 
 // HOC that takes a class constructor as an argument
-const withClassInstance = <T extends Piece>(
+// eslint-disable-next-line 
+const withClassInstance = <T extends Piece>( // no-unused-vars 
   WrappedComponent: React.ElementType<{ instance: T } & PieceProps>, // The component to wrap 
   // // TODO what to put here? // ComponentType<{ instance: T } & any>
   // Piece is not generic... for now just put React.ElementType, most generic i can find 
@@ -1343,7 +1345,8 @@ const withClassInstance = <T extends Piece>(
 };
 
 // A component designed to receive an 'instance' prop of a generic type that extends BaseClass
-const DraggableGenericPiece = ({ instance, ...props }: { instance: Piece }) => {
+// eslint-disable-next-line 
+const DraggableGenericPiece = ({ instance, ...props }: { instance: Piece }) => { // no-unused-vars
   return (
     <DraggableWrapper 
       // id={`draggable-${useUniqueId('', String(Math.random() * 100))}`} 

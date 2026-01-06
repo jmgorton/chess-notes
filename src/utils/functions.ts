@@ -82,3 +82,12 @@ export function interleave<T, U>(arr1: T[], arr2: U[]): (T | U)[] {
 
     return interleavedArray;
 }
+
+export function zip<A, B>(a: A[], b: B[]): [A, B][] {
+  const length = Math.min(a.length, b.length);
+  const zipped: [A, B][] = [];
+  for (let i = 0; i < length; i++) {
+    zipped.push([a[i], b[i]]);
+  }
+  return zipped;
+}

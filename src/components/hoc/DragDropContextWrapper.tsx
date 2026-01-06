@@ -141,12 +141,12 @@ export const withDndContext = <P extends {}>(
     // whereas in the handleDragStart function above, it just logs an [object Object] 
     // why is that?? TODO research that more 
     const onDragStart = (event: DragStartEvent) => {
-        console.log('Drag started:', event);
+        // console.log('Drag started:', event);
         // event === DragStartEvent
         // event.activatorEvent === MouseEvent
         
         const squareIdOfDragStart = handleDragStart(event);
-        console.log('Drag started on square ' + squareIdOfDragStart);
+        // console.log('Drag started on square ' + squareIdOfDragStart);
         if (
             'handleSquareClick' in props && 
             typeof props.handleSquareClick === 'function' && 
@@ -163,7 +163,7 @@ export const withDndContext = <P extends {}>(
             setSquareIdOfPieceBeingDragged(squareIdOfDragStart);
             const pieceKeycode = props.squareProps[squareIdOfDragStart].keycode;
             if (pieceKeycode !== '') {
-                console.log(`Piece keycode: ${pieceKeycode}`);
+                // console.log(`Piece keycode: ${pieceKeycode}`);
                 setPieceBeingDragged(getPieceElementByKeycode(pieceKeycode)); 
                 // unfortunately, for now, this is still going to return a draggable piece... NEED to get that wrapper to work 
             }
@@ -171,27 +171,17 @@ export const withDndContext = <P extends {}>(
     }
 
     const onDragEnd = (event: DragEndEvent) => {
-        console.log('Drag ended:', event);
+        // console.log('Drag ended:', event);
         const squareIdOfDragEnd = handleDragEnd(event);
-        console.log('Drag ended on square ' + squareIdOfDragEnd);
-
-        //   // if the item is dropped over a Droppable container, set it as the parent;
-        //   //   otherwise, set it back to XX~~null~~XX what it was before, not null ... 
-        //   //   we have multiple Draggables and multiple Droppables on the board 
-        //   // it almost might be preferable to use the sorted packages
+        // console.log('Drag ended on square ' + squareIdOfDragEnd);
 
         if (
             'handleSquareClick' in props && 
             typeof props.handleSquareClick === 'function' && 
             squareIdOfDragEnd
         ) {
-            // TODO refactor and also clear any existing highlighting first
-            //   treat as a brand new click
-            //   if squares are highlighted and we try to drag the piece,
-            //   it is considered a second click and unhighlights the squares 
             props.handleSquareClick(squareIdOfDragEnd);
         }
-
 
         setSquareIdOfPieceBeingDragged(undefined);
         setPieceBeingDragged(undefined);

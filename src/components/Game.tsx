@@ -31,9 +31,11 @@ export default class Game extends React.Component<GameProps, GameState> {
     // testCastlingFEN: string = 'r1bqk2r/pp1p1ppp/2n2n2/4p3/1b2P3/1N1B4/PPPN1PPP/R1BQK2R b KQkq - 0 0'; 
     // testLongCastlingFEN: string = 'r3k2r/pp3ppp/2n2n2/q1p1p3/4P1b1/P2BQ3/1PPB1PPP/R3K2R b KQkq - 0 0';
     // testPawnPromotionFEN: string = 'r3kr2/pp6/2q4p/2p1Pp2/7p/8/PP3PPP/R2QR1K w q - 0 0';
-    testPawnPromotionFEN: string = 'r1bqkbnr/pppp2Pp/2n1p3/8/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 0';
+    // testPawnPromotionFEN: string = 'r1bqkbnr/pppp2Pp/2n1p3/8/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 0';
+    // testCheckmateFEN: string = '2kr3r/pp3ppp/nq2pn2/2b5/P2N1P2/2P5/1PQ1N1PP/R1B2R1K b  - 0 0';
+    // TODO debug: Passed an un-parsable string stateToLoad argument: 2kr3r/pp3ppp/nq2pn2/2b5/P2N1P2/2P5/1PQ1N1PP/R1B2R1K b  - 0 0
     backrankStartingPositions: string[] = constants.defaultStartingBackRank;
-    // startingFEN: string = this.testPawnPromotionFEN; // constants.defaultStartingFEN;
+    // startingFEN: string = this.testCheckmateFEN; // constants.defaultStartingFEN;
     startingFEN: string = '';
     boardSize: number = this.backrankStartingPositions.length;
     numSquares: number = this.boardSize ** 2;
