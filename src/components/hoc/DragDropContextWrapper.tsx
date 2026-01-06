@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   DndContext,
   useSensor,
@@ -9,8 +9,12 @@ import {
   DragEndEvent,
   pointerWithin,
   DragStartEvent,
+  DragOverlay,
 } from '@dnd-kit/core';
+import { snapCenterToCursor } from '@dnd-kit/modifiers';
 // import type { ActivationConstraint } from '@dnd-kit/core'; // DNE 
+
+import { getPieceElementByKeycode } from '../Piece';
 
 function handleDragEnd(event: DragEndEvent) { // React.SyntheticEvent? any? Drag{Start,End}Event from dnd-kit 
     // console.log(`DragDropContextWrapper#handleDragEnd(${event})`);
@@ -122,6 +126,9 @@ export const withDndContext = <P extends {}>(
       distance: 10, // Require the pointer to move 10px before dragging starts
     };
 
+    const [squareIdOfPieceBeingDragged, setSquareIdOfPieceBeingDragged] = useState<number | undefined>(undefined);
+    const [pieceBeingDragged, setPieceBeingDragged] = useState<React.ReactElement<any, any> | undefined>(undefined); // TODO type annotate this 
+
     const sensors = useSensors(
       useSensor(MouseSensor, { activationConstraint }),
       useSensor(TouchSensor, { activationConstraint }),
@@ -151,6 +158,16 @@ export const withDndContext = <P extends {}>(
             //   it is considered a second click and unhighlights the squares 
             props.handleSquareClick(squareIdOfDragStart);
         }
+
+        if (squareIdOfDragStart && 'squareProps' in props && Array.isArray(props.squareProps)) {
+            setSquareIdOfPieceBeingDragged(squareIdOfDragStart);
+            const pieceKeycode = props.squareProps[squareIdOfDragStart].keycode;
+            if (pieceKeycode !== '') {
+                console.log(`Piece keycode: ${pieceKeycode}`);
+                setPieceBeingDragged(getPieceElementByKeycode(pieceKeycode)); 
+                // unfortunately, for now, this is still going to return a draggable piece... NEED to get that wrapper to work 
+            }
+        }
     }
 
     const onDragEnd = (event: DragEndEvent) => {
@@ -174,6 +191,10 @@ export const withDndContext = <P extends {}>(
             //   it is considered a second click and unhighlights the squares 
             props.handleSquareClick(squareIdOfDragEnd);
         }
+
+
+        setSquareIdOfPieceBeingDragged(undefined);
+        setPieceBeingDragged(undefined);
     };
 
     return (
@@ -189,6 +210,11 @@ export const withDndContext = <P extends {}>(
         // onDragPending={}
       >
         <WrappedComponent {...props} />
+        <DragOverlay modifiers={[snapCenterToCursor]}>
+            {
+                squareIdOfPieceBeingDragged && pieceBeingDragged
+            }
+        </DragOverlay>
       </DndContext>
     );
   };
