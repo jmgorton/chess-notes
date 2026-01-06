@@ -15,6 +15,7 @@ import About from '../pages/About.tsx';
 import Error from '../pages/Error.tsx';
 import Home from '../pages/Home.tsx';
 import Play from '../pages/Play.tsx';
+import Users from '../pages/Profile.tsx';
 
 // this file taken and adapted from https://mui.com/material-ui/react-drawer/
 import { styled, useTheme, Theme, CSSObject } from '@mui/material/styles';
@@ -45,6 +46,10 @@ import CodeIcon from '@mui/icons-material/Code';
 import AnimatedLogo from './AnimatedLogo.jsx';
 // import InboxIcon from '@mui/icons-material/MoveToInbox';
 // import MailIcon from '@mui/icons-material/Mail';
+
+import { keyframes } from '@mui/material/styles';
+// import { Keyframes } from '@mui/styled-engine-sc';
+// import { Keyframes } from '@emotion/react';
 
 const drawerWidth = 240;
 
@@ -95,7 +100,7 @@ const drawerElementMap = {
         // component: <Game />,
         // component: <MiniDrawer children={<Game />} />
     },
-    'Users': {
+    'Profile': {
         icon: PeopleIcon,
         // label: 'Users',
         url: '/users',
@@ -249,11 +254,34 @@ export default function MiniDrawer(props: any) {
         setOpen(false);
     };
 
+    const squeezeAnimation = keyframes(
+        `
+            0% { transform: scale(1); }
+            25% { transform: scale(1.2); }
+            50% { transform: scale(1.3, 0.9) }
+            75% { transform: scale(1.2); }
+            100% { transform: scale(1); }  
+        `
+    );
+
+    const rainbowAnimation = keyframes(
+        `
+            0% { color: #ff0000ff }
+            14% { color: #ff9900ff }
+            28% { color: #ffff00ff }
+            42% { color: #00ff00ff }
+            56% { color: #00ff2266 }
+            71% { color: #0000ffff }
+            85% { color: #ff00ff55 }
+            100% { color: #ff0022aa }
+        `
+    );
+
     return (
         <Box sx={{ display: 'flex', height: '100%' }}>
             <CssBaseline />
             <AppBar position="fixed" open={open}>
-                <Toolbar>
+                <Toolbar className='toolbar top'>
                     <IconButton
                         color="inherit"
                         aria-label="open drawer"
@@ -268,7 +296,19 @@ export default function MiniDrawer(props: any) {
                     >
                         <MenuIcon />
                     </IconButton>
-                    <Typography variant="h6" noWrap component="div">
+                    <Typography 
+                        variant="h6" 
+                        noWrap 
+                        component="div" 
+                        // className="header"
+                        sx={{
+                            '&:hover': {
+                                animation: `${rainbowAnimation} 3s linear infinite`,
+                            },
+                            cursor: 'pointer',
+                        }}
+                        onClick={() => window.open('https://chess.jarmigo.com', '_self')}
+                    >
                         Jarmigo Chess
                     </Typography>
                     <IconButton
@@ -293,7 +333,7 @@ export default function MiniDrawer(props: any) {
                     </IconButton>
                 </Toolbar>
             </AppBar>
-            <Drawer variant="permanent" open={open}>
+            <Drawer variant="permanent" open={open} className='toolbar sidedrawer'>
                 <DrawerHeader>
                     <IconButton onClick={handleDrawerClose}>
                         {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
@@ -512,7 +552,3 @@ export function Nav() {
 //     </>
 //   );
 // }
-
-function Users() {
-    return <h2 style={{ color: 'white' }}>Users</h2>;
-}
