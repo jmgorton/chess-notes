@@ -57,8 +57,8 @@ export interface GameState {
     pieceBitmaps?: { [player: string]: bigint };
     squareProps: SquareProp[];
 
-    lightKingPosition: number; // TODO remove in lieu of piecePositions 
-    darkKingPosition: number; // TODO remove 
+    // lightKingPosition: number; // TODO remove in lieu of piecePositions 
+    // darkKingPosition: number; // TODO remove 
 
     // lightKingHasShortCastlingRights: boolean; // TODO remove in lieue of castlingRights 
     // lightKingHasLongCastlingRights: boolean; 

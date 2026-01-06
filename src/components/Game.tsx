@@ -93,10 +93,12 @@ export default class Game extends React.Component<GameProps, GameState> {
             //         'P': new Set(constants.WHITE_STARTING_PIECE_POSITIONS.P),
             //     },
             // },
+            // TODO pieceIsAttackingMap,
+            // TODO pieceIsAttackedByMap, 
             pieceBitmaps: {},
             squareProps: [],
-            lightKingPosition: 0,
-            darkKingPosition: 0,
+            // lightKingPosition: 0,
+            // darkKingPosition: 0,
             kingPositions: {
                 'L': -1,
                 'D': -1,
@@ -222,7 +224,7 @@ export default class Game extends React.Component<GameProps, GameState> {
         castlingRights?: CastlingRights,
         kingPositions?: KingPositions,
         // [key: string]: any,
-        deprecatedState?: Partial<GameState>,
+        // deprecatedState?: Partial<GameState>,
     } => {
         const { squareMovedFrom, squareMovedTo, pieceMoving, playerMoving } = move;
         // if we don't have any input argument, try to pull from state,
@@ -244,12 +246,12 @@ export default class Game extends React.Component<GameProps, GameState> {
             castlingRights: CastlingRights,
             kingPositions: KingPositions,
             // [key: string]: any,
-            deprecatedState: Partial<GameState>,
+            // deprecatedState: Partial<GameState>,
         } = {
             // todo remove castlingRights from function arg, use state? 
             castlingRights, // will this update with assignments to castlingRights, or do i have to assign at the end? 
             kingPositions: this.state.kingPositions,
-            deprecatedState: {},
+            // deprecatedState: {},
         };
         let kingPositions: KingPositions = this.state.kingPositions;
         if (pieceMoving === 'K') {
@@ -263,8 +265,8 @@ export default class Game extends React.Component<GameProps, GameState> {
                 kingPositions[playerMoving] = squareIdOfKingAfterCastling;
             }
             newStateKVPs.kingPositions = kingPositions;
-            newStateKVPs.deprecatedState.lightKingPosition = kingPositions['L'];
-            newStateKVPs.deprecatedState.darkKingPosition = kingPositions['D'];
+            // newStateKVPs.deprecatedState.lightKingPosition = kingPositions['L'];
+            // newStateKVPs.deprecatedState.darkKingPosition = kingPositions['D'];
         }
 
         // TODO use constants, anticipate variants 
@@ -347,7 +349,7 @@ export default class Game extends React.Component<GameProps, GameState> {
         const { squareMovedFrom, squareMovedTo, pieceMoving } = move;
         const newPieceKeys = helpers.getNewPieceKeysCopyWithMoveApplied(this.state.pieceKeys, move);
         // TODO try removing castlingRights argument below 
-        const { castlingRights, kingPositions, deprecatedState } = this.getNewKingPositionsAndCastlingRights(move); 
+        const { castlingRights, kingPositions } = this.getNewKingPositionsAndCastlingRights(move); // deprecatedState
         
         let enPassantTargetSquare: number | null = null;
         if (pieceMoving === 'P' && Math.abs(squareMovedFrom! - squareMovedTo) === 16) {
@@ -377,7 +379,7 @@ export default class Game extends React.Component<GameProps, GameState> {
             }),
             castlingRights, // we already based our input on this.state.castlingRights, no worry of lost info here?? 
             kingPositions: kingPositions || this.state.kingPositions,
-            ...deprecatedState, // spread the partial of castlingRights and kingPositions using old variable names 
+            // ...deprecatedState, // spread the partial of castlingRights and kingPositions using old variable names 
             squareSelected: null,
             squareAltSelected: null,
             squareIdOfPawnPromotion: undefined,

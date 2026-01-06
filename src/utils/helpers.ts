@@ -61,9 +61,10 @@ export function generateMoveAN(movePlayed: Move, currentState?: unknown): string
 
     let pieceAN, clarifierAN, isCaptureAN, destFileAN, destRankAN, promotionAN, isCheckOrCheckmateAN = '';
 
-    let kingPosition = currentGame.state.whiteToPlay ? 
-        currentGame.state.darkKingPosition : 
-        currentGame.state.lightKingPosition;
+    // let kingPosition = currentGame.state.whiteToPlay ? 
+    //     currentGame.state.darkKingPosition : 
+    //     currentGame.state.lightKingPosition;
+    let kingPosition = currentGame.state.kingPositions[`${movePlayed.playerMoving}`];
     // const opponent = currentGame.state.whiteToPlay ? 'D' : 'L';
     // let kingPosition = currentGame.state.kingPositions[opponent];
     // using opponent's king position, but we just played the move... this never happens 
@@ -302,8 +303,10 @@ export function isKingInCheck(kingPositionArg?: number, boardStateArg?: string[]
     const boardState: string[] = boardStateArg || currentGame!.state.pieceKeys;
     const kingPosition: number = kingPositionArg || (
         currentGame!.state.whiteToPlay ?
-            currentGame!.state.darkKingPosition! :
-            currentGame!.state.lightKingPosition!
+            // currentGame!.state.darkKingPosition :
+            currentGame!.state.kingPositions.D :
+            // currentGame!.state.lightKingPosition
+            currentGame!.state.kingPositions.L
     );
     // const opponent = currentGame!.state.whiteToPlay ? 'D' : 'L';
     // const kingPosition: number = kingPositionArg || currentGame!.state.kingPositions[opponent];
@@ -674,8 +677,8 @@ export function getNewBoardStateKVPsFromFen(inputFEN: string): { [key: string]: 
                 isPromoting: false,
             }
         }),
-        lightKingPosition: newLightKingPosition!, // TODO could add more validation here to make sure 
-        darkKingPosition: newDarkKingPosition!, // there are kings on the board ... 
+        // lightKingPosition: newLightKingPosition!, // TODO could add more validation here to make sure 
+        // darkKingPosition: newDarkKingPosition!, // there are kings on the board ... 
         kingPositions: {
             'L': newLightKingPosition,
             'D': newDarkKingPosition,
@@ -973,8 +976,8 @@ export function initializeState(component: React.Component<any, any>, stateToLoa
             }
         }),
         
-        lightKingPosition: 60,
-        darkKingPosition: 4,
+        // lightKingPosition: 60,
+        // darkKingPosition: 4,
         kingPositions: {
             'L': 60,
             'D': 4,
