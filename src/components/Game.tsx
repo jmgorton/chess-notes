@@ -97,18 +97,12 @@ export default class Game extends React.Component<GameProps, GameState> {
             // TODO pieceIsAttackedByMap, 
             pieceBitmaps: {},
             squareProps: [],
-            // lightKingPosition: 0,
-            // darkKingPosition: 0,
             kingPositions: {
                 'L': -1,
                 'D': -1,
             },
             squaresAttackedByBlack: 0n,
             squaresAttackedByWhite: 0n,
-            // lightKingHasShortCastlingRights: false,
-            // lightKingHasLongCastlingRights: false,
-            // darkKingHasShortCastlingRights: false,
-            // darkKingHasLongCastlingRights: false,
             castlingRights: {
                 LK: false,
                 LQ: false,
@@ -117,6 +111,7 @@ export default class Game extends React.Component<GameProps, GameState> {
             },
             enPassantTargetSquare: null,
             squareSelected: null,
+            squareSelectedLegalMoves: undefined,
             squareAltSelected: null,
             whiteToPlay: false,
             FEN: '',
@@ -209,7 +204,7 @@ export default class Game extends React.Component<GameProps, GameState> {
     }
 
     getNewGameHistoryItem = (movePlayed: Move): HistoryItem => { // void 
-        const { squareProps, history, squareSelected, squareAltSelected, FEN, ...filteredGameState} = this.state; // destructure state to take snapshot of partial state
+        const { squareProps, history, squareSelected, squareSelectedLegalMoves, squareAltSelected, FEN, ...filteredGameState} = this.state; // destructure state to take snapshot of partial state
         const { squareMovedFrom, squareMovedTo } = movePlayed;
         const newGameHistoryItem: HistoryItem = {
             gameStateSnapshot: { ...filteredGameState },
@@ -224,7 +219,6 @@ export default class Game extends React.Component<GameProps, GameState> {
         castlingRights?: CastlingRights,
         kingPositions?: KingPositions,
         // [key: string]: any,
-        // deprecatedState?: Partial<GameState>,
     } => {
         const { squareMovedFrom, squareMovedTo, pieceMoving, playerMoving } = move;
         // if we don't have any input argument, try to pull from state,
@@ -246,12 +240,10 @@ export default class Game extends React.Component<GameProps, GameState> {
             castlingRights: CastlingRights,
             kingPositions: KingPositions,
             // [key: string]: any,
-            // deprecatedState: Partial<GameState>,
         } = {
             // todo remove castlingRights from function arg, use state? 
             castlingRights, // will this update with assignments to castlingRights, or do i have to assign at the end? 
             kingPositions: this.state.kingPositions,
-            // deprecatedState: {},
         };
         let kingPositions: KingPositions = this.state.kingPositions;
         if (pieceMoving === 'K') {
@@ -265,8 +257,6 @@ export default class Game extends React.Component<GameProps, GameState> {
                 kingPositions[playerMoving] = squareIdOfKingAfterCastling;
             }
             newStateKVPs.kingPositions = kingPositions;
-            // newStateKVPs.deprecatedState.lightKingPosition = kingPositions['L'];
-            // newStateKVPs.deprecatedState.darkKingPosition = kingPositions['D'];
         }
 
         // TODO use constants, anticipate variants 
@@ -292,11 +282,9 @@ export default class Game extends React.Component<GameProps, GameState> {
             ) {
                 castlingRights.DQ = false;
             }
-            // newStateKVPs.castlingRights = castlingRights; // TODO necessary since we assigned func arg to return obj at the start? Idts... we'll see 
-            // newStateKVPs.deprecatedState.lightKingHasShortCastlingRights = castlingRights.LK;
-            // newStateKVPs.deprecatedState.lightKingHasLongCastlingRights = castlingRights.LQ;
-            // newStateKVPs.deprecatedState.darkKingHasShortCastlingRights = castlingRights.DK;
-            // newStateKVPs.deprecatedState.darkKingHasLongCastlingRights = castlingRights.DQ;
+            // newStateKVPs.castlingRights = castlingRights; 
+            // // TODO necessary since we assigned func arg to return obj at the start? Idts... we'll see 
+            // // seems like no 
         }
         return newStateKVPs;
     }
@@ -305,6 +293,7 @@ export default class Game extends React.Component<GameProps, GameState> {
         this.setState({
             ...this.state,
             squareSelected: null,
+            squareSelectedLegalMoves: undefined,
             squareAltSelected: null,
             squareIdOfPawnPromotion: undefined,
             squareProps: this.state.squareProps.map((oldProps) => {
@@ -326,10 +315,11 @@ export default class Game extends React.Component<GameProps, GameState> {
         this.setState({
             ...this.state,
             squareSelected: squareToSelect,
+            squareSelectedLegalMoves: new Set<number>(legalMovesToHighlight),
             squareAltSelected: null,
             squareIdOfPawnPromotion: undefined,
             squareProps: this.state.squareProps.map((oldProps, squareId) => {
-                const shouldHighlight = legalMovesToHighlight.includes(squareId);
+                const shouldHighlight = this.state.highlightLegalMoves && legalMovesToHighlight.includes(squareId);
                 const shouldSelect = (squareId === squareToSelect);
                 return {
                     ...oldProps,
@@ -349,7 +339,7 @@ export default class Game extends React.Component<GameProps, GameState> {
         const { squareMovedFrom, squareMovedTo, pieceMoving } = move;
         const newPieceKeys = helpers.getNewPieceKeysCopyWithMoveApplied(this.state.pieceKeys, move);
         // TODO try removing castlingRights argument below 
-        const { castlingRights, kingPositions } = this.getNewKingPositionsAndCastlingRights(move); // deprecatedState
+        const { castlingRights, kingPositions } = this.getNewKingPositionsAndCastlingRights(move); 
         
         let enPassantTargetSquare: number | null = null;
         if (pieceMoving === 'P' && Math.abs(squareMovedFrom! - squareMovedTo) === 16) {
@@ -379,11 +369,12 @@ export default class Game extends React.Component<GameProps, GameState> {
             }),
             castlingRights, // we already based our input on this.state.castlingRights, no worry of lost info here?? 
             kingPositions: kingPositions || this.state.kingPositions,
-            // ...deprecatedState, // spread the partial of castlingRights and kingPositions using old variable names 
             squareSelected: null,
+            squareSelectedLegalMoves: undefined,
             squareAltSelected: null,
             squareIdOfPawnPromotion: undefined,
             whiteToPlay: !this.state.whiteToPlay,
+            plyNumber: this.state.plyNumber + 1,
             enPassantTargetSquare, // when you use the same name as the state variable, it automatically unwraps 
             history: this.state.history.concat([newHistoryItem]),
         });
@@ -403,7 +394,8 @@ export default class Game extends React.Component<GameProps, GameState> {
         // we're either clicking on a square for the first time, 
         // or a square that is not a legal move of whichever piece/square is highlighted,
         // then we just apply the selection and highlighting to prepare for the next click
-        if (this.state.squareSelected === null || !this.state.squareProps[squareId].isHighlighted) {
+        // if (this.state.squareSelected === null || !this.state.squareProps[squareId].isHighlighted) {
+        if (this.state.squareSelected === null || !this.state.squareSelectedLegalMoves?.has(squareId)) {
             // select an unselected and unhighlighted square and highlight the legal moves for that piece on this turn 
             const isThisPlayersMove = this.state.whiteToPlay !== (this.state.pieceKeys[squareId]?.charAt(0) === 'D');
             // console.log(this.state.enPassantTargetSquare);
@@ -456,6 +448,7 @@ export default class Game extends React.Component<GameProps, GameState> {
             this.setState({
                 ...this.state,
                 squareSelected: null,
+                squareSelectedLegalMoves: undefined,
                 squareAltSelected: squareId,
                 squareProps: this.state.squareProps.map((oldProps, squarePropId) => {
                     const shouldAltHighlight = squaresToAltHighlight.includes(squarePropId);
@@ -544,6 +537,7 @@ export default class Game extends React.Component<GameProps, GameState> {
             ...lastHistoryItem.gameStateSnapshot,
             history: newHistory,
             squareSelected: null,
+            squareSelectedLegalMoves: undefined,
             squareAltSelected: null,
             FEN: '', // TODO generate FEN? Or only when user asks for it... 
             squareProps: lastHistoryItem.gameStateSnapshot.pieceKeys.map((keycode, index) => {
@@ -671,7 +665,8 @@ export default class Game extends React.Component<GameProps, GameState> {
         let boardPropVars: Partial<BoardProps> = {};
         boardPropVars.squareProps = this.state.squareProps;
         boardPropVars.boardSize = 'boardSize' in this ? this.boardSize as number : 8;
-        boardPropVars.enableDragAndDrop = this.state.enableDragAndDrop || true;
+        boardPropVars.isBoardFlipped = this.state.isBoardFlipped;
+        boardPropVars.enableDragAndDrop = this.state.enableDragAndDrop;
         const boardProps: BoardProps = { ...boardPropHandlers, ...boardPropVars } as BoardProps; // turn partials back into whole ... TODO always verify all props are present... 
         // const boardToRender: Element = this.state.enableDragAndDrop ? DraggableDroppableBoard(boardProps) : React.createElement(Board, boardProps); // new Board(boardProps); // Board | typeof DraggableDroppableBoard (Element) ?? 
         return (
@@ -706,8 +701,8 @@ export default class Game extends React.Component<GameProps, GameState> {
                         onDownloadClick={this.handleDownloadClick}
                         onSendGameClick={this.handleSendGameClick}
                         onFlipBoard={this.flipBoard}
-                        enableDragAndDrop={this.state.enableDragAndDrop || false}
-                        highlightLegalMoves={this.state.highlightLegalMoves || false}
+                        enableDragAndDrop={this.state.enableDragAndDrop}
+                        highlightLegalMoves={this.state.highlightLegalMoves}
                     />
                 </div>
                 <GameStatus

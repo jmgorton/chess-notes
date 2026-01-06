@@ -90,6 +90,7 @@
 
   .square.light {
     background: var(--board-light);
+    color: black;
   }
 
   .square.dark {
@@ -131,12 +132,13 @@
   /* small square id label placed in the lower-right corner
      positioned behind the piece so translucent piece backgrounds reveal it */
   .square::before {
-    content: attr(data-square-id);
+    /* this attr is taken from the Square button */
+    /* content: attr(data-square-id);  */
     position: absolute;
     /* bottom: 2px;
     right: 4px; */
-    bottom: 0;
-    right: 0;
+    /* bottom: 0;
+    right: 0; */
     font-size: 8px;
     line-height: 1;
     padding: 2px 4px;
@@ -146,6 +148,39 @@
     pointer-events: none;
   }
 
+  .square.labelRank::before {
+    content: attr(data-square-rank);
+    top: 0;
+    left: 0;
+  }
+
+  /* small square id label placed in the lower-right corner
+     positioned behind the piece so translucent piece backgrounds reveal it */
+  .square::after {
+    /* this attr is taken from the Square button */
+    /* content: attr(data-square-id);  */
+    position: absolute;
+    /* bottom: 2px;
+    right: 4px; */
+    /* bottom: 0;
+    right: 0; */
+    font-size: 8px;
+    line-height: 1;
+    padding: 2px 4px;
+    border-radius: 4px;
+    opacity: 0.9;
+    z-index: 1; /* behind piece (which is z-index:2) */
+    pointer-events: none;
+  }
+
+  .square.labelFile::after {
+    content: attr(data-square-file);
+    bottom: 0;
+    right: 0;
+  }
+
+  /* what does this ::before even do? i can't tell 
+    oh, it changes the color of the label ... ?? i think */
   .square.light::before {
     /* color: rgba(0,0,0,0.5);  */
     color: black;

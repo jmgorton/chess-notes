@@ -38,7 +38,7 @@ export function generateMoveAN(movePlayed: Move, currentState?: unknown): string
     const currentGame: Game = currentState as Game;
 
     // const requiredFields: string[] = ['pieceKeys'];
-    // ('whiteToPlay' + ('kingPositions' | 'darkKingPosition' & 'lightKingPosition')) | kingPosition arg 
+    // ('whiteToPlay' + 'kingPositions') | kingPosition arg 
     // refactor isKingInCheck to not require full Game state ... also wouldOwnKingBeInCheckAfterMove 
     //   isKingInCheck should be pretty easy actually, and just needs pieceKeys and kingPosition(s)/whiteToPlay 
     // and this method also requires any fields those methods require 
@@ -61,14 +61,10 @@ export function generateMoveAN(movePlayed: Move, currentState?: unknown): string
 
     let pieceAN, clarifierAN, isCaptureAN, destFileAN, destRankAN, promotionAN, isCheckOrCheckmateAN = '';
 
-    // let kingPosition = currentGame.state.whiteToPlay ? 
-    //     currentGame.state.darkKingPosition : 
-    //     currentGame.state.lightKingPosition;
-    let kingPosition = currentGame.state.kingPositions[`${movePlayed.playerMoving}`];
-    // const opponent = currentGame.state.whiteToPlay ? 'D' : 'L';
-    // let kingPosition = currentGame.state.kingPositions[opponent];
+    // let kingPosition = currentGame.state.kingPositions[`${movePlayed.playerMoving}`];
+    const opponent = currentGame.state.whiteToPlay ? 'D' : 'L';
+    let kingPosition = currentGame.state.kingPositions[opponent];
     // using opponent's king position, but we just played the move... this never happens 
-    // if (kingPosition === squareMovedFrom) kingPosition = squareMovedTo;
 
     if (isKingInCheck(
         kingPosition, 
@@ -197,8 +193,6 @@ export const isMovePromotion = (movePlayed: Move): boolean => {
 export function getCastlingOptions(player: PlayerKey, currentGame: Game): number[] {
     let castlingOptions: number[] = [];
 
-    // console.log(`Checking castling options for player:${player} in game:${currentGame}`);
-
     // if (!['L','D'].includes(player)) return [];
     if (!constants.validPlayers.includes(player)) return [];
 
@@ -213,11 +207,7 @@ export function getCastlingOptions(player: PlayerKey, currentGame: Game): number
         if (squaresBetween === 4) {
             // long castling (qs)
             const qsCastlingRights: boolean = currentGame.state.castlingRights![`${player}Q`]; // TODO verify 
-                // player === constants.PLAYER.WHITE ? 
-                //     currentGame.state.lightKingHasLongCastlingRights :
-                //     currentGame.state.darkKingHasLongCastlingRights;
             if (!qsCastlingRights) {
-                // console.log(`Player ${player} does not have long castling rights.`);
                 return;
             }
 
@@ -227,12 +217,8 @@ export function getCastlingOptions(player: PlayerKey, currentGame: Game): number
             castlingSafetySquares = player === 'L' ? [60, 59, 58] : [4, 3, 2];
         } else if (squaresBetween === 3) {
             // short castling (ks) 
-            const ksCastlingRights: boolean = currentGame.state.castlingRights![`${player}K`]; // TODO verify 
-                // player === constants.PLAYER.WHITE ? 
-                //     currentGame.state.lightKingHasShortCastlingRights :
-                //     currentGame.state.darkKingHasShortCastlingRights;
+            const ksCastlingRights: boolean = currentGame.state.castlingRights![`${player}K`];
             if (!ksCastlingRights) {
-                // console.log(`Player ${player} does not have short castling rights.`);
                 return;
             }
 
@@ -250,7 +236,6 @@ export function getCastlingOptions(player: PlayerKey, currentGame: Game): number
             .slice(castlingSliceStart, castlingSliceEnd)
             .some(pieceKey => pieceKey !== '');
         if (ourPiecesAreBlockingCastling) {
-            // console.log(`Our pieces are blocking castling: ${currentGame.state.pieceKeys.slice(castlingSliceStart, castlingSliceEnd)}`);
             return;
         }
 
@@ -261,22 +246,18 @@ export function getCastlingOptions(player: PlayerKey, currentGame: Game): number
                 currentGame.state.pieceKeys,
             ).length > 0);
         if (theirPiecesAreBlockingCastling) {
-            // console.log(`Their pieces are blocking castling.`);
-            // castlingSafetySquares
-            //     .forEach(castlingSafetySquare => console.log(`At square ${castlingSafetySquare}: ${getOccupiedSquaresThatCanAttackThisSquare(
-            //         castlingSafetySquare,
-            //         constants.validPlayers.filter(validPlayer => validPlayer !== player),
-            //         currentGame.state.pieceKeys,
-            //     )}`))
             return;
         }
 
         castlingOptions.push(rookStartingSquare);
     })
     
-    // console.log(`Castling options: ${castlingOptions}`);
-
     return castlingOptions;
+}
+
+export function isStalemate(state: unknown): boolean {
+    // TODO implement 
+    return false;
 }
 
 // either both kingPosition and boardState must be supplied, or currentGame must be supplied 
@@ -303,9 +284,7 @@ export function isKingInCheck(kingPositionArg?: number, boardStateArg?: string[]
     const boardState: string[] = boardStateArg || currentGame!.state.pieceKeys;
     const kingPosition: number = kingPositionArg || (
         currentGame!.state.whiteToPlay ?
-            // currentGame!.state.darkKingPosition :
             currentGame!.state.kingPositions.D :
-            // currentGame!.state.lightKingPosition
             currentGame!.state.kingPositions.L
     );
     // const opponent = currentGame!.state.whiteToPlay ? 'D' : 'L';
@@ -677,18 +656,12 @@ export function getNewBoardStateKVPsFromFen(inputFEN: string): { [key: string]: 
                 isPromoting: false,
             }
         }),
-        // lightKingPosition: newLightKingPosition!, // TODO could add more validation here to make sure 
-        // darkKingPosition: newDarkKingPosition!, // there are kings on the board ... 
         kingPositions: {
             'L': newLightKingPosition,
             'D': newDarkKingPosition,
         },
         // piecePositions: {}, // TODO fill out all piece positions from FEN input 
         whiteToPlay: sideToMove === 'w',
-        // darkKingHasShortCastlingRights: castlingAbility.includes('k'),
-        // darkKingHasLongCastlingRights: castlingAbility.includes('q'),
-        // lightKingHasShortCastlingRights: castlingAbility.includes('K'),
-        // lightKingHasLongCastlingRights: castlingAbility.includes('Q'),
         castlingRights: {
             'DK': castlingAbility.includes('k'),
             'DQ': castlingAbility.includes('q'),
@@ -701,6 +674,7 @@ export function getNewBoardStateKVPsFromFen(inputFEN: string): { [key: string]: 
         FEN: inputFEN,
         history: [], // no history from loading game from FEN 
         squareSelected: null,
+        squareSelectedLegalMoves: undefined,
         squareAltSelected: null,
     }
 
@@ -727,6 +701,7 @@ export function generateFENFromGameState(gameState: unknown): string {
     let fullmoveCounter: number;
 
     const requiredKeys: string[] = ['pieceKeys','whiteToPlay','enPassantTargetSquare','halfmoveClock','fullmoveCounter'];
+    // TODO remove and refactor when gameState is supplied as a dictionary 
     const moreRequiredKeys: string[] = [
         'lightKingHasShortCastlingRights',
         'lightKingHasLongCastlingRights',
@@ -743,16 +718,7 @@ export function generateFENFromGameState(gameState: unknown): string {
         if ('castlingRights' in gameState.state && gameState.state.castlingRights) {
             // const castlingRightsInput = (gameState.state.castlingRights as { [key: string]: any });
             const castlingRightsInput = gameState.state.castlingRights;
-            // castlingRightsState.DQ = castlingRightsInput.darkKingHasLongCastlingRights;
-            // castlingRightsState.DK = castlingRightsInput.darkKingHasShortCastlingRights;
-            // castlingRightsState.LQ = castlingRightsInput.lightKingHasLongCastlingRights;
-            // castlingRightsState.LK = castlingRightsInput.lightKingHasShortCastlingRights;
             castlingRightsState = castlingRightsInput;
-        // } else {
-        //     castlingRightsState.DQ = gameState.state.darkKingHasLongCastlingRights;
-        //     castlingRightsState.DK = gameState.state.darkKingHasShortCastlingRights;
-        //     castlingRightsState.LQ = gameState.state.lightKingHasLongCastlingRights;
-        //     castlingRightsState.LK = gameState.state.lightKingHasShortCastlingRights;
         }
     } else if (functions.isArgumentDictionary(gameState)) {
         // TODO FIX THIS, entire castlingRights section is done incorrectly 
@@ -976,8 +942,6 @@ export function initializeState(component: React.Component<any, any>, stateToLoa
             }
         }),
         
-        // lightKingPosition: 60,
-        // darkKingPosition: 4,
         kingPositions: {
             'L': 60,
             'D': 4,
@@ -986,10 +950,6 @@ export function initializeState(component: React.Component<any, any>, stateToLoa
         squaresAttackedByWhite: 0x0000000000ff0000n, // only sixth rank 
         squaresAttackedByBlack: 0x0000ff0000000000n, // only third rank
 
-        // lightKingHasShortCastlingRights: true,
-        // lightKingHasLongCastlingRights: true,
-        // darkKingHasShortCastlingRights: true,
-        // darkKingHasLongCastlingRights: true,
         castlingRights: {
             LK: true,
             LQ: true,
@@ -1004,6 +964,7 @@ export function initializeState(component: React.Component<any, any>, stateToLoa
         // TODO also store squares that can be discover-attacked by a piece after moving another piece 
 
         squareSelected: null,
+        squareSelectedLegalMoves: undefined,
         squareAltSelected: null,
         whiteToPlay: true,
         FEN: constants.defaultStartingFEN,

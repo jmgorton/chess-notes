@@ -101,6 +101,8 @@ class Square extends React.Component<SquareProp, SquareState> {
     if (this.props.isHighlighted) classNames.push('highlighted');
     if (this.props.isAltHighlighted) classNames.push('altHighlighted');
     if (this.props.isSelected || this.props.isAltSelected) classNames.push('selected');
+    if (this.props.id % 8 === 0) classNames.push('labelRank');
+    if (Math.floor(this.props.id / 8) === 7) classNames.push('labelFile');
 
     let handlers: { [handlerName: string]: MouseEventHandler<HTMLButtonElement> } = {};
     handlers.onClick = this.handleClick;
@@ -126,6 +128,8 @@ class Square extends React.Component<SquareProp, SquareState> {
           id={`${this.props.id}`} 
           // access this via parentElement of piece for drag/drop ??? 
           data-square-id={this.props.id}
+          data-square-rank={8 - Math.floor(this.props.id / 8)}
+          data-square-file={'abcdefgh'.charAt(this.props.id % 8)}
 
           // DROPPABLE attribute
           // ref={setNodeRef}

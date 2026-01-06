@@ -8,10 +8,10 @@ import { useCloseOnClickOutside } from '../utils/hooks';
 
 interface SettingsProps {
     onCloseSettings: () => void; // MouseEventHandler<HTMLDivElement>;
-    onUpdateSettings?: (key: string, newValue?: any) => void;
+    onUpdateSettings: (key: string, newValue?: any) => void;
     // put togglable settings here 
-    enableDragAndDrop?: boolean;
-    highlightLegalMoves?: boolean;
+    enableDragAndDrop: boolean;
+    highlightLegalMoves: boolean;
 }
 
 const SettingsContent: React.FC<SettingsProps> = (props: SettingsProps) => {

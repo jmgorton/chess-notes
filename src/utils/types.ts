@@ -57,14 +57,6 @@ export interface GameState {
     pieceBitmaps?: { [player: string]: bigint };
     squareProps: SquareProp[];
 
-    // lightKingPosition: number; // TODO remove in lieu of piecePositions 
-    // darkKingPosition: number; // TODO remove 
-
-    // lightKingHasShortCastlingRights: boolean; // TODO remove in lieue of castlingRights 
-    // lightKingHasLongCastlingRights: boolean; 
-    // darkKingHasShortCastlingRights: boolean;
-    // darkKingHasLongCastlingRights: boolean; // TODO remove 
-
     // castlingRights: { [key: 'LK' | 'LQ' | 'DK' | 'DQ']: boolean }; // This doesn't work
     castlingRights?: { [key in RoyalKeycode]: boolean }; // This does work 
     // castlingRights: CastlingRights;
@@ -89,10 +81,13 @@ export interface GameState {
     halfmoveClock: number;
 
     squareSelected?: number | null;
+    squareSelectedLegalMoves?: Set<number>;
     squareAltSelected?: number | null;
     squareIdOfPawnPromotion?: number;
-    enableDragAndDrop?: boolean;
-    highlightLegalMoves?: boolean;
+    enableDragAndDrop: boolean;
+    highlightLegalMoves: boolean;
+    loseOnIllegalMoveAttempted?: boolean;
+    gameOptions?: { [key: string]: boolean }; // TODO put options like enableDragAndDrop, highlightLegalMoves, etc. in here 
     isBoardFlipped: boolean;
 }
 
@@ -178,7 +173,7 @@ export interface SquareState {
 
 // export type PieceProps = Record<string, unknown>; 
 export interface PieceProps {
-    enableDragAndDrop?: boolean;
+    enableDragAndDrop?: boolean; // TODO clue to investigate (tomorrow?) ... make this property required and debug 
     droppableId?: string;
     forwardedRef?: Ref<HTMLImageElement>;
 }
@@ -238,7 +233,7 @@ export interface HistoryItem {
 
 // Omit pieceKeys or squareProps ?? minimal info contained in pieceKeys, squareProps can be reconstructed 
 // Make a single prop item for board config or something, like squareSelected, etc. ?? 
-export type GameStateSnapshotItem = Omit<GameState, 'squareProps' | 'history' | 'squareSelected' | 'squareAltSelected' | 'FEN'>;
+export type GameStateSnapshotItem = Omit<GameState, 'squareProps' | 'history' | 'squareSelected' | 'squareSelectedLegalMoves' | 'squareAltSelected' | 'FEN'>;
 
 export interface Variant {
 
