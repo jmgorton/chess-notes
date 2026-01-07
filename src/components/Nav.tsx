@@ -16,7 +16,7 @@ import About from '../pages/About.tsx';
 import Error from '../pages/Error.tsx';
 import Home from '../pages/Home.tsx';
 import Play from '../pages/Play.tsx';
-import Users, { ContactDisplay, EditContact, profilesLoader, createProfileAction, profileLoader, editProfileAction, deleteProfileAction } from '../pages/Profile.tsx';
+import Users, { UserIndex, ContactDisplay, EditContact, profilesLoader, createProfileAction, profileLoader, editProfileAction, deleteProfileAction } from '../pages/Profile.tsx';
 
 // this file taken and adapted from https://mui.com/material-ui/react-drawer/
 import { styled, useTheme, Theme, CSSObject } from '@mui/material/styles';
@@ -198,9 +198,9 @@ export default function MiniDrawer(props: any) {
         <Box component="main" sx={{ flexGrow: 1, p: 3, color: 'white' }}>
             <DrawerHeader />
             {
-                props.children || 
                 outlet || 
-                <AnimatedLogo size={560} />
+                props.children || 
+                <AnimatedLogo size={560} /> // instead of this, just use an index route in Nav react router 
             }
         </Box>
     );
@@ -396,6 +396,13 @@ export function Nav() {
                     loader: profilesLoader,
                     action: createProfileAction,
                     children: [
+                        {
+                            // index is the page to load when no child/outlet is supplied
+                            // It's common to put dashboards, stats, feeds, etc. at index routes. 
+                            // They can participate in data loading as well.
+                            index: true,
+                            element: <AnimatedLogo size={540}/>, // <UserIndex />
+                        },
                         {
                             path: ":friendId",
                             element: <ContactDisplay />,

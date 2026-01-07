@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
-import { Form, useOutlet, useNavigation, NavLink, Link, useLoaderData, redirect } from "react-router-dom";
+import { Form, useOutlet, useNavigation, useNavigate, NavLink, Link, useLoaderData, redirect } from "react-router-dom";
 
 import localforage from "localforage";
 // import { matchSorter } from "match-sorter";
@@ -22,20 +22,27 @@ interface Contact {
 
 // TODO if i want to import those libraries above to make this test stuff work at some point... 
 //   i'll at least do localforage right now i guess ... i don't really care about the sorting 
-async function getContacts(query?: string): Promise<Contact[] | null | undefined> { // Contact[] | undefined // unknown
+async function getContacts(query?: string | null): Promise<Contact[] | null | undefined> { // Contact[] | undefined // unknown
     await fakeNetwork(`getContacts:${query}`);
     let contacts: Contact[] | null | undefined = await localforage.getItem("contacts");
     if (!contacts) contacts = [];
-    // if (Array.isArray(contacts) && contacts.forEach(contact => typeof contact === 'object')) {
-    //     return contacts;
-    // }
     //   if (query) {
     //     contacts = matchSorter(contacts, query, { keys: ["first", "last"] });
     //   }
     //   return contacts.sort(sortBy("last", "createdAt"));
-    // console.warn(`Returning unknown object of type ${typeof contacts}: ${JSON.stringify(contacts)}`);
-    // console.log(`isArray: ${Array.isArray(contacts)}`)
-    // contacts.forEach(contact => console.log(`Contact ${JSON.stringify(contact)} of type ${typeof contact}`));
+    if (query) {
+        // don't re-sort the list for now, just filter it however it's returned, 
+        // which i guess is by time of creation by default (maybe undefined behavior) 
+        // gonna use a pretty basic regex style of filtering
+        const regexWildcard = '.*?';
+        let dynamicRegexString = '';
+        for (let i = 0; i < query.length; i++) {
+            dynamicRegexString += regexWildcard + query.charAt(i);
+        }
+        dynamicRegexString += regexWildcard;
+        const searchFilter: RegExp = new RegExp(`^${dynamicRegexString}$`, "gi");
+        return contacts.filter(contact => (contact.first || '' + contact.last).match(searchFilter));
+    }
     return contacts.map(contact => {
         const newContact: Contact = {};
         return Object.assign(newContact, contact);
@@ -115,10 +122,13 @@ async function fakeNetwork(key?: string) {
 
 // // ***** -------- ******
 
-export async function profilesLoader() {
-    const contacts = await getContacts();
+export async function profilesLoader({ request }: {request: any}) {
+    const url = new URL(request.url);
+    const q = url.searchParams.get('q');
+    const contacts = await getContacts(q);
     // console.log(`Loaded contacts: ${contacts}`)
-    return contacts; // return { contacts } was incorrect ... maybe because I was working with the Root useLoaderData output to get it tsx acceptable 
+    // return contacts; // return { contacts } was incorrect ... maybe because I was working with the Root useLoaderData output to get it tsx acceptable 
+    return { contacts, q };
 }
 
 // use the react-router action to route Form requests to, instead of the server
@@ -148,15 +158,43 @@ export default function Users() {
     )
 }
 
+export function UserIndex() {
+  return (
+    <>
+        <h2 style={{ color: 'white' }}>Users</h2>
+        <p id={styles.zeroState}>
+        This is a demo for React Router.
+        <br />
+        Check out{" "}
+        <a href="https://reactrouter.com">
+            the docs at reactrouter.com
+        </a>
+        .
+        </p>
+    </>
+  );
+}
+
+
 function Root() {
     const outlet = useOutlet();
-    const loaderData = useLoaderData();
-    let contacts: Contact[] = [];
-    if (loaderData && typeof loaderData === 'object') {
-        contacts = loaderData as Contact[];
-    }
+    const { contacts, q } = useLoaderData() as { contacts: Contact[], q: string };
+    // const loaderData = useLoaderData();
+    // let contacts: Contact[] = [];
+    // // let q: string | undefined = undefined;
+    // if (loaderData && typeof loaderData === 'object') {
+    //     // contacts = loaderData as Contact[];
+    //     { contacts: contacts, q: q } = loaderData as { contacts: Contact[], q: string };
+    // }
 
     const navigation = useNavigation();
+
+    useEffect(() => {
+        const searchFormInput = document.getElementById('q');
+        if (searchFormInput && searchFormInput instanceof HTMLInputElement) {
+            searchFormInput.value = q;
+        }
+    }, [q]);
 
     return (
         <div className={styles.root}>
@@ -166,13 +204,20 @@ function Root() {
                     {/* className? idts */}
                     {/* about react routing with html form navigation on the client-side:
                         https://reactrouter.com/6.30.2/start/tutorial#data-writes--html-forms */}
-                    <form id="search-form" role="search">
+                        {/* <form/> is the normal HTML form, not the react router Form, searching with this
+                            puts the query params in the URL as URLSearchParams, i.e. ?q=something, and creates a GET request */}
+                        {/* instead, use the react router <Form/> to submit and filter the list with our existing loader...
+                            but this is what requires the other two npm dependencies i didn't install, meh, do this later maybe
+                            or try to implement your own search functionality... try a basic regex. ... and it works! */}
+                    {/* <form id="search-form" className={styles.searchForm} role="search"> */}
+                    <Form id="search-form" className={styles.searchForm} role="search">
                         <input
                             id="q"
                             aria-label="Search contacts"
                             placeholder="Search"
                             type="search"
                             name="q"
+                            defaultValue={q}
                         />
                         <div
                             id="search-spinner"
@@ -184,7 +229,8 @@ function Root() {
                             className={styles.srOnly + "sr-only"}
                             aria-live="polite"
                         ></div>
-                    </form>
+                    {/* </form> */}
+                    </Form>
                     {/* instead of using the default <form/>, use the react-router <Form/> */}
                     {/* <form method="post">
                             <button type="submit">New</button>
@@ -249,7 +295,6 @@ function Root() {
             </div>
             {/* navigation.state can be "idle", "submitting" or "loading" */}
             <div id="detail" className={`${styles.profileDetail} ${navigation.state === "loading" ? styles.loading : ''}`}>
-                <h2 style={{ color: 'white' }}>Users</h2>
                 {
                     outlet
                 }
@@ -381,6 +426,7 @@ export async function deleteProfileAction({params}: {params: any}) {
 
 export function EditContact() {
   const contact = useLoaderData() as Contact; // { contact } ... as Contact => property contact does not exist on type Contact // binding elements, destructuring 
+  const navigate = useNavigate();
 
   return (
     <Form method="post" id="contact-form" className={styles.contactForm}>
@@ -430,7 +476,8 @@ export function EditContact() {
       </label>
       <p>
         <button type="submit">Save</button>
-        <button type="button">Cancel</button>
+        {/* event.preventDefault is not necessary on this: a button type="button" is the HTML way of preventing a button from submitting a form */}
+        <button type="button" onClick={() => { navigate(-1) }}>Cancel</button>
       </p>
     </Form>
   );
