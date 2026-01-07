@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 
-import { Form, useOutlet, useNavigation, useNavigate, NavLink, Link, useLoaderData, redirect } from "react-router-dom";
+import { Form, useOutlet, useNavigation, useNavigate, useSubmit, useFetcher, NavLink, Link, useLoaderData, redirect } from "react-router-dom";
 
 import localforage from "localforage";
 // import { matchSorter } from "match-sorter";
@@ -41,7 +41,7 @@ async function getContacts(query?: string | null): Promise<Contact[] | null | un
         }
         dynamicRegexString += regexWildcard;
         const searchFilter: RegExp = new RegExp(`^${dynamicRegexString}$`, "gi");
-        return contacts.filter(contact => (contact.first || '' + contact.last).match(searchFilter));
+        return contacts.filter(contact => ((contact.first || '') + contact.last).match(searchFilter));
     }
     return contacts.map(contact => {
         const newContact: Contact = {};
@@ -188,6 +188,11 @@ function Root() {
     // }
 
     const navigation = useNavigation();
+    const submit = useSubmit();
+
+    // The navigation.location will show up when the app is navigating to a new URL and loading the data for it. 
+    // It then goes away when there is no pending navigation anymore.
+    const isSearching = navigation.location && new URLSearchParams(navigation.location.search).has('q');
 
     useEffect(() => {
         const searchFormInput = document.getElementById('q');
@@ -213,17 +218,25 @@ function Root() {
                     <Form id="search-form" className={styles.searchForm} role="search">
                         <input
                             id="q"
+                            className={isSearching ? styles.loading : ''}
                             aria-label="Search contacts"
                             placeholder="Search"
                             type="search"
                             name="q"
                             defaultValue={q}
+                            onChange={(event) => {
+                                // use replace in submit to replace current search entry in the browser history stack 
+                                // so we don't end up with a new browser history for *every single keystroke* 
+                                // like those websites where you have to hit the back button a million times to escape 
+                                const isFirstSearch = (q === null);
+                                submit(event.currentTarget.form, { replace: !isFirstSearch });
+                            }}
                         />
                         <div
                             id="search-spinner"
                             className={styles.searchSpinner}
                             aria-hidden
-                            hidden={true}
+                            hidden={!isSearching}
                         />
                         <div
                             className={styles.srOnly + "sr-only"}
@@ -305,6 +318,12 @@ function Root() {
 
 export async function profileLoader({ params }: { params: any}) {
     const contact = await getContact(params.friendId);
+    if (!contact) {
+        throw new Response("", {
+            status: 404,
+            statusText: "Not Found",
+        });
+    }
     return contact; // return { contact }; // destructuring renders incorrectly 
 }
 
@@ -386,10 +405,28 @@ export function ContactDisplay() {
     );
 }
 
-function Favorite({ contact }: { contact: Contact }) { // : { contact: Play }) {
-    const favorite = contact.favorite;
+export async function toggleFavoritedProfileAction({ request, params}: { request: any, params: any}) {
+    const formData = await request.formData();
+    return updateContact(params.friendId, {
+        favorite: formData.get("favorite") === "true",
+    });
+}
+
+// so far, all of our data mutations have used forms that navigate (useSubmit, useNavigate, actions and loaders, etc.)
+// to change data without a navigation, there is the useFetcher hook. communicates w loaders and actions w/o a navigation 
+function Favorite({ contact }: { contact: Contact }) {
+    const fetcher = useFetcher();
+    // instead of always using the real data, we see if the fetcher has any formData being submitted
+    // using the form data before the data loader returns the server/local db value to hide any latency
+    // when the action is finished, fetcher.formData no longer exists and we go back to the real data 
+    // revert to the real data after a bit if there was a network failure, this approach is called an "Optimistic UI" 
+    const favorite = fetcher.formData ? fetcher.formData.get("favorite") === "true" : contact.favorite;
     return (
-        <Form method="post">
+        // This form will send formData with a favorite key that's either "true" | "false". 
+        // Since it's got method="post" it will call the action. 
+        // Since there is no <fetcher.Form action="..."> prop, it will post to the route where the form is rendered.
+        <fetcher.Form method="post">
+        {/* // <Form method="post"> */}
             <button
                 name="favorite"
                 value={favorite ? "false" : "true"}
@@ -401,7 +438,8 @@ function Favorite({ contact }: { contact: Contact }) { // : { contact: Play }) {
             >
                 {favorite ? "★" : "☆"}
             </button>
-        </Form>
+        {/* </Form> */}
+        </fetcher.Form>
     );
 }
 

@@ -16,7 +16,7 @@ import About from '../pages/About.tsx';
 import Error from '../pages/Error.tsx';
 import Home from '../pages/Home.tsx';
 import Play from '../pages/Play.tsx';
-import Users, { UserIndex, ContactDisplay, EditContact, profilesLoader, createProfileAction, profileLoader, editProfileAction, deleteProfileAction } from '../pages/Profile.tsx';
+import Users, { UserIndex, ContactDisplay, EditContact, profilesLoader, createProfileAction, profileLoader, toggleFavoritedProfileAction, editProfileAction, deleteProfileAction } from '../pages/Profile.tsx';
 
 // this file taken and adapted from https://mui.com/material-ui/react-drawer/
 import { styled, useTheme, Theme, CSSObject } from '@mui/material/styles';
@@ -374,6 +374,7 @@ export default function MiniDrawer(props: any) {
 }
 
 export function Nav() {
+    // https://reactrouter.com/6.30.2/start/tutorial
     const router = createBrowserRouter([
         {
             path: "/",
@@ -395,37 +396,46 @@ export function Nav() {
                     element: <Users />,
                     loader: profilesLoader,
                     action: createProfileAction,
+                    // instead of supplying all of our children with their own errorElement, which is cumbersome and duplicative, 
+                    // we can use a pathless route. this route then only has one child, a pathless route to the error page, and 
+                    // that error page on the pathless route has all of our children as its children 
                     children: [
                         {
-                            // index is the page to load when no child/outlet is supplied
-                            // It's common to put dashboards, stats, feeds, etc. at index routes. 
-                            // They can participate in data loading as well.
-                            index: true,
-                            element: <AnimatedLogo size={540}/>, // <UserIndex />
-                        },
-                        {
-                            path: ":friendId",
-                            element: <ContactDisplay />,
-                            loader: profileLoader,
                             errorElement: <Error />,
+                            children: [
+                                {
+                                    // index is the page to load when no child/outlet is supplied
+                                    // It's common to put dashboards, stats, feeds, etc. at index routes. 
+                                    // They can participate in data loading as well.
+                                    index: true,
+                                    element: <AnimatedLogo size={540}/>, // <UserIndex />
+                                },
+                                {
+                                    path: ":friendId",
+                                    element: <ContactDisplay />,
+                                    loader: profileLoader,
+                                    action: toggleFavoritedProfileAction,
+                                    // errorElement: <Error />,
+                                },
+                                {
+                                    path: ":friendId/edit",
+                                    element: <EditContact />,
+                                    loader: profileLoader, // use the same loader as for viewing a contact/profile 
+                                    // (You might note we reused the contactLoader for this route. This is only because we're being lazy in the tutorial. 
+                                    // There is no reason to attempt to share loaders among routes, they usually have their own.)
+                                    action: editProfileAction,
+                                    // errorElement: <Error />,
+                                },
+                                {
+                                    // annoying warning: Matched leaf route at location "/users/rs8xuqj/destroy" does not have an element or Component. 
+                                    // This means it will render an <Outlet /> with a null value by default resulting in an "empty" page.
+                                    path: ":friendId/destroy",
+                                    element: <></>,
+                                    action: deleteProfileAction,
+                                    // errorElement: <Error />,
+                                }
+                            ],
                         },
-                        {
-                            path: ":friendId/edit",
-                            element: <EditContact />,
-                            loader: profileLoader, // use the same loader as for viewing a contact/profile 
-                            // (You might note we reused the contactLoader for this route. This is only because we're being lazy in the tutorial. 
-                            // There is no reason to attempt to share loaders among routes, they usually have their own.)
-                            action: editProfileAction,
-                            errorElement: <Error />,
-                        },
-                        {
-                            // annoying warning: Matched leaf route at location "/users/rs8xuqj/destroy" does not have an element or Component. 
-                            // This means it will render an <Outlet /> with a null value by default resulting in an "empty" page.
-                            path: ":friendId/destroy",
-                            element: <></>,
-                            action: deleteProfileAction,
-                            errorElement: <Error />,
-                        }
                     ]
                 },
                 {
