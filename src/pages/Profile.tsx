@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { Form, useOutlet, Link, useLoaderData, redirect } from "react-router-dom";
+import { Form, useOutlet, useNavigation, NavLink, Link, useLoaderData, redirect } from "react-router-dom";
 
 import localforage from "localforage";
 // import { matchSorter } from "match-sorter";
@@ -22,8 +22,8 @@ interface Contact {
 
 // TODO if i want to import those libraries above to make this test stuff work at some point... 
 //   i'll at least do localforage right now i guess ... i don't really care about the sorting 
-export async function getContacts(query?: string): Promise<Contact[] | null | undefined> { // Contact[] | undefined // unknown
-    // await fakeNetwork(`getContacts:${query}`);
+async function getContacts(query?: string): Promise<Contact[] | null | undefined> { // Contact[] | undefined // unknown
+    await fakeNetwork(`getContacts:${query}`);
     let contacts: Contact[] | null | undefined = await localforage.getItem("contacts");
     if (!contacts) contacts = [];
     // if (Array.isArray(contacts) && contacts.forEach(contact => typeof contact === 'object')) {
@@ -42,8 +42,8 @@ export async function getContacts(query?: string): Promise<Contact[] | null | un
     });
 }
 
-export async function createContact() {
-    //   await fakeNetwork();
+async function createContact() {
+    await fakeNetwork();
     let id = Math.random().toString(36).substring(2, 9);
     let contact: Contact = { id, createdAt: Date.now() };
     let contacts: Contact[] | null | undefined = await getContacts();
@@ -53,16 +53,16 @@ export async function createContact() {
     return contact;
 }
 
-export async function getContact(id: string): Promise<Contact | undefined> {
-    //   await fakeNetwork(`contact:${id}`);
+async function getContact(id: string): Promise<Contact | undefined> {
+    await fakeNetwork(`contact:${id}`);
     let contacts: Contact[] | null | undefined = await localforage.getItem("contacts");
     if (!contacts) return undefined;
     let contact: Contact | undefined = contacts.find(contact => contact.id === id);
     return contact;
 }
 
-export async function updateContact(id: string, updates: object): Promise<Contact | undefined> { // updates: Partial<Contact> ?? 
-    //   await fakeNetwork();
+async function updateContact(id: string, updates: object): Promise<Contact | undefined> { // updates: Partial<Contact> ?? 
+    await fakeNetwork();
     let contacts: Contact[] | null | undefined = await localforage.getItem("contacts");
     if (!contacts) {
         console.warn(`Attempted to make updates ${updates} to ${id}, but no existing contacts were found.`)
@@ -78,7 +78,7 @@ export async function updateContact(id: string, updates: object): Promise<Contac
     return contact;
 }
 
-export async function deleteContact(id: string) {
+async function deleteContact(id: string) {
     let contacts: Contact[] | null | undefined = await localforage.getItem("contacts");
     if (!contacts) return false;
     let index = contacts.findIndex(contact => contact.id === id);
@@ -129,10 +129,11 @@ export async function profilesLoader() {
 //     and send it to the server as the request body for POST, and as URLSearchParams for GET. 
 //     React Router does the same thing, except instead of sending the request to the server, 
 //     it uses client side routing and sends it to a route action.
-export async function profilesAction() {
+export async function createProfileAction() {
     const contact = await createContact();
-    console.log(`Created contact: ${JSON.stringify(contact)}`)
-    return { contact }
+    // console.log(`Created contact: ${JSON.stringify(contact)}`)
+    // return { contact }
+    return redirect(`/users/${contact.id}/edit`);
 }
 
 export default function Users() {
@@ -154,6 +155,8 @@ function Root() {
     if (loaderData && typeof loaderData === 'object') {
         contacts = loaderData as Contact[];
     }
+
+    const navigation = useNavigation();
 
     return (
         <div className={styles.root}>
@@ -213,7 +216,16 @@ function Root() {
                                 // console.log(`Contact: ${contact}`);
                                 return (
                                     <li key={contact.id}>
-                                        <Link to={`${contact.id}`}>
+                                        {/* <Link to={`${contact.id}`}> */}
+                                        {/* Use NavLink to highlight in the nav 
+                                            when the user is at the URL in the NavLink, isActive will be true 
+                                            when it's about to be active, loading data, isPending will be true  */}
+                                        <NavLink
+                                            to={`${contact.id}`}
+                                            className={({isActive, isPending}) => {
+                                                return isActive ? styles.active : isPending ? styles.pending : ""
+                                            }}
+                                        >
                                             {contact.first || contact.last ? (
                                                 <>
                                                     {contact.first} {contact.last}
@@ -222,7 +234,8 @@ function Root() {
                                                 <i>No Name</i>
                                             )}{" "}
                                             {contact.favorite && <span>★</span>}
-                                        </Link>
+                                        {/* </Link> */}
+                                        </NavLink>
                                     </li>
                                 )
                             })}
@@ -234,7 +247,8 @@ function Root() {
                     )}
                 </nav>
             </div>
-            <div id="detail" className={styles.profileDetail}>
+            {/* navigation.state can be "idle", "submitting" or "loading" */}
+            <div id="detail" className={`${styles.profileDetail} ${navigation.state === "loading" ? styles.loading : ''}`}>
                 <h2 style={{ color: 'white' }}>Users</h2>
                 {
                     outlet
@@ -269,8 +283,8 @@ export function ContactDisplay() {
                     key={contact.avatar}
                     src={
                         contact.avatar ||
-                        // `https://robohash.org/${contact.id}.png?size=200x200`
-                        ''
+                        `https://robohash.org/${contact.id}.png?size=200x200`
+                        // ''
                     }
                     alt='contact avatar'
                 />
@@ -347,14 +361,23 @@ function Favorite({ contact }: { contact: Contact }) { // : { contact: Play }) {
 }
 
 export async function editProfileAction({ request, params}: {request: any, params: any}) {
-    console.log(`Request: ${JSON.stringify(request)}`);
-    console.log(`Params: ${JSON.stringify(params)}`);
+    // console.log(`Request: ${JSON.stringify(request)}`); // why is request empty?? but it still works 
+    // console.log(`Params: ${JSON.stringify(params)}`);
     const formData = await request.formData();
-    console.log(`Form data: ${JSON.stringify(formData)}`);
+    // console.log(`Form data: ${JSON.stringify(formData)}`);
     const updates = Object.fromEntries(formData);
     await updateContact(params.friendId, updates);
     return redirect(`/users/${params.friendId}`);
 }
+
+export async function deleteProfileAction({params}: {params: any}) {
+    const wasDeleted = await deleteContact(params.friendId);
+    // return wasDeleted;
+    if (wasDeleted) return redirect('/users'); // redirect('/'); worked... redirect('users'); or redirect('/users') doesn't for some reason 
+    // nvm, redirect('/') isn't working anymore either, it's some other problem, maybe has to do with the first couple localforage entries being bound elements?? 
+    // hmmm... the problem was that i had no element param in the router, added an empty Fragment to Nav at /destroy endpoint and it works now 
+}
+
 
 export function EditContact() {
   const contact = useLoaderData() as Contact; // { contact } ... as Contact => property contact does not exist on type Contact // binding elements, destructuring 

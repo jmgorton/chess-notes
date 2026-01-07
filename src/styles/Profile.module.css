@@ -241,10 +241,13 @@
 
     nav a.active span {
         color: inherit;
+        /* background: blue; */
+        /* background-color: blue; */
     }
 
     nav .active i {
         color: inherit;
+        /* background-color: blue; */
     }
 
     ul {
@@ -278,12 +281,17 @@
 
     nav a.active {
         background: hsl(224, 98%, 58%);
+        /* background-color: blue; */
         color: white;
     }
 
     nav a.pending {
         color: hsl(224, 98%, 58%);
     }
+
+    /* nav li.active {
+        background: blue;
+    } */
 }
 
 .srOnly {

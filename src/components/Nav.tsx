@@ -16,7 +16,7 @@ import About from '../pages/About.tsx';
 import Error from '../pages/Error.tsx';
 import Home from '../pages/Home.tsx';
 import Play from '../pages/Play.tsx';
-import Users, { ContactDisplay, EditContact, profilesLoader, profilesAction, profileLoader, editProfileAction } from '../pages/Profile.tsx';
+import Users, { ContactDisplay, EditContact, profilesLoader, createProfileAction, profileLoader, editProfileAction, deleteProfileAction } from '../pages/Profile.tsx';
 
 // this file taken and adapted from https://mui.com/material-ui/react-drawer/
 import { styled, useTheme, Theme, CSSObject } from '@mui/material/styles';
@@ -380,7 +380,7 @@ export function Nav() {
             // element: <MiniDrawer children={<AnimatedLogo size={600}/>} />, // <Root />, 
             // errorElement: <MiniDrawer children={<Error />} />,
             element: <MiniDrawer />,
-            errorElement: <Error />,
+            errorElement: <Error />, // errors bubble up from children to the nearest parent's error element as long as there's one at root 
             children: [
                 {
                     path: "home",
@@ -394,12 +394,13 @@ export function Nav() {
                     path: "users",
                     element: <Users />,
                     loader: profilesLoader,
-                    action: profilesAction,
+                    action: createProfileAction,
                     children: [
                         {
                             path: ":friendId",
                             element: <ContactDisplay />,
                             loader: profileLoader,
+                            errorElement: <Error />,
                         },
                         {
                             path: ":friendId/edit",
@@ -408,6 +409,15 @@ export function Nav() {
                             // (You might note we reused the contactLoader for this route. This is only because we're being lazy in the tutorial. 
                             // There is no reason to attempt to share loaders among routes, they usually have their own.)
                             action: editProfileAction,
+                            errorElement: <Error />,
+                        },
+                        {
+                            // annoying warning: Matched leaf route at location "/users/rs8xuqj/destroy" does not have an element or Component. 
+                            // This means it will render an <Outlet /> with a null value by default resulting in an "empty" page.
+                            path: ":friendId/destroy",
+                            element: <></>,
+                            action: deleteProfileAction,
+                            errorElement: <Error />,
                         }
                     ]
                 },
