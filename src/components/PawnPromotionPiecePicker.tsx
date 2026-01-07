@@ -1,5 +1,7 @@
 import React, { MouseEventHandler, useRef, useEffect } from 'react';
 
+import '../styles/PawnPromotionPiecePicker.css';
+
 import Popper, { PopperPlacementType } from '@mui/material/Popper';
 import { ClickAwayListener } from '@mui/material';
 import Fade from '@mui/material/Fade';

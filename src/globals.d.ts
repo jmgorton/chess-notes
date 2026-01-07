@@ -3,4 +3,7 @@ declare module "*.md" {
   export default value;
 }
 
-// declare module 'html-to-markdown';
+declare module '*.module.css' {
+  const classes: { readonly [key: string]: string };
+  export default classes;
+}

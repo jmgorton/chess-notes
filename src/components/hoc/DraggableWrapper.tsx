@@ -42,8 +42,8 @@ export const withDraggable = <T, P extends DraggableDroppableChild<T>>(WrappedCo
         // setNodeRef={setNodeRef}
         forwardedRef={setNodeRef}
         transform={transform ? `translate3d(${transform.x}px ${transform.y}px, 0)` : undefined}
-        style={{opacity: isDragging ? 0.5 : 1}}
-        zindex={transform ? '11' : '10'}
+        style={{opacity: isDragging ? 0.5 : 1}} // opacity was changing (granted, for all pieces...); now it's not at all 
+        // zindex={transform ? '11' : '10'}
       />
     );
   };

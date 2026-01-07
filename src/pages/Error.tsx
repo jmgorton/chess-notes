@@ -24,10 +24,10 @@ export default function Error() {
             >
                 Whoops...
             </h2>
-            <p>
+            <p style={{ color: 'white' }}>
                 Something unexpected happened. Try again later...
             </p>
-            <p>
+            <p style={{ color: 'white' }}>
                 <i>{errorMessage}</i>
             </p>
         </div>

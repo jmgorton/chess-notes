@@ -5,6 +5,7 @@ import {
     // BrowserRouter, Routes, Route,
     RouterProvider,
     Outlet,
+    useOutlet,
     createBrowserRouter,
     useNavigate,
 } from 'react-router-dom';
@@ -15,7 +16,7 @@ import About from '../pages/About.tsx';
 import Error from '../pages/Error.tsx';
 import Home from '../pages/Home.tsx';
 import Play from '../pages/Play.tsx';
-import Users from '../pages/Profile.tsx';
+import Users, { ContactDisplay, EditContact, profilesLoader, profilesAction, profileLoader, editProfileAction } from '../pages/Profile.tsx';
 
 // this file taken and adapted from https://mui.com/material-ui/react-drawer/
 import { styled, useTheme, Theme, CSSObject } from '@mui/material/styles';
@@ -44,10 +45,9 @@ import QuestionMarkIcon from '@mui/icons-material/QuestionMark';
 import SelfImprovementIcon from '@mui/icons-material/SelfImprovement';
 import CodeIcon from '@mui/icons-material/Code';
 import AnimatedLogo from './AnimatedLogo.jsx';
-// import InboxIcon from '@mui/icons-material/MoveToInbox';
-// import MailIcon from '@mui/icons-material/Mail';
 
 import { keyframes } from '@mui/material/styles';
+import { Edit } from '@mui/icons-material';
 // import { Keyframes } from '@mui/styled-engine-sc';
 // import { Keyframes } from '@emotion/react';
 
@@ -83,34 +83,23 @@ const drawerElementMap = {
     // },
     'Home': {
         icon: HomeIcon,
-        // label: 'Home',
         url: '/home',
-        // component: <Home />,
     },
     'Play': {
         icon: SportsEsportsIcon,
-        // label: 'Play',
         url: '/play',
-        // component: <></>, // <Game />,
     },
     'Study': {
         icon: DescriptionIcon,
-        // label: 'Study',
         url: '/study',
-        // component: <Game />,
-        // component: <MiniDrawer children={<Game />} />
     },
     'Profile': {
         icon: PeopleIcon,
-        // label: 'Users',
         url: '/users',
-        // component: <Users />,
     },
     'About': {
         icon: InfoIcon,
-        // label: 'About',
         url: '/about',
-        // component: <About />,
     },
 }
 
@@ -204,44 +193,14 @@ export default function MiniDrawer(props: any) {
         }
     }
     // Render children from props so RouterProvider route changes update content.
+    const outlet = useOutlet();
     const children = (
         <Box component="main" sx={{ flexGrow: 1, p: 3, color: 'white' }}>
             <DrawerHeader />
             {
                 props.children || 
-                <Outlet /> // || 
-                
-                // <AnimatedLogo size={480} />
-
-                // <>
-                //     <Typography sx={{ marginBottom: 2 }}>
-                //         Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod
-                //         tempor incididunt ut labore et dolore magna aliqua. Rhoncus dolor purus non
-                //         enim praesent elementum facilisis leo vel. Risus at ultrices mi tempus
-                //         imperdiet. Semper risus in hendrerit gravida rutrum quisque non tellus.
-                //         Convallis convallis tellus id interdum velit laoreet id donec ultrices.
-                //         Odio morbi quis commodo odio aenean sed adipiscing. Amet nisl suscipit
-                //         adipiscing bibendum est ultricies integer quis. Cursus euismod quis viverra
-                //         nibh cras. Metus vulputate eu scelerisque felis imperdiet proin fermentum
-                //         leo. Mauris commodo quis imperdiet massa tincidunt. Cras tincidunt lobortis
-                //         feugiat vivamus at augue. At augue eget arcu dictum varius duis at
-                //         consectetur lorem. Velit sed ullamcorper morbi tincidunt. Lorem donec massa
-                //         sapien faucibus et molestie ac.
-                //     </Typography>
-                //     <Typography sx={{ marginBottom: 2 }}>
-                //         Consequat mauris nunc congue nisi vitae suscipit. Fringilla est ullamcorper
-                //         eget nulla facilisi etiam dignissim diam. Pulvinar elementum integer enim
-                //         neque volutpat ac tincidunt. Ornare suspendisse sed nisi lacus sed viverra
-                //         tellus. Purus sit amet volutpat consequat mauris. Elementum eu facilisis
-                //         sed odio morbi. Euismod lacinia at quis risus sed vulputate odio. Morbi
-                //         tincidunt ornare massa eget egestas purus viverra accumsan in. In hendrerit
-                //         gravida rutrum quisque non tellus orci ac. Pellentesque nec nam aliquam sem
-                //         et tortor. Habitant morbi tristique senectus et. Adipiscing elit duis
-                //         tristique sollicitudin nibh sit. Ornare aenean euismod elementum nisi quis
-                //         eleifend. Commodo viverra maecenas accumsan lacus vel facilisis. Nulla
-                //         posuere sollicitudin aliquam ultrices sagittis orci a.
-                //     </Typography>
-                // </>
+                outlet || 
+                <AnimatedLogo size={560} />
             }
         </Box>
     );
@@ -254,16 +213,23 @@ export default function MiniDrawer(props: any) {
         setOpen(false);
     };
 
-    const squeezeAnimation = keyframes(
-        `
-            0% { transform: scale(1); }
-            25% { transform: scale(1.2); }
-            50% { transform: scale(1.3, 0.9) }
-            75% { transform: scale(1.2); }
-            100% { transform: scale(1); }  
-        `
-    );
+    // const squeezeAnimation = keyframes(
+    //     `
+    //         0% { transform: scale(1); }
+    //         25% { transform: scale(1.2); }
+    //         50% { transform: scale(1.3, 0.9) }
+    //         75% { transform: scale(1.2); }
+    //         100% { transform: scale(1); }  
+    //     `
+    // );
 
+    // ff0000: red
+    // ffff00: yellow
+    // 00ff00: green
+    // 00ffff: teal/aqua
+    // 0000ff: blue
+    // ff00ff: purple
+    // TODO do something more like what's in AnimatedLogo 
     const rainbowAnimation = keyframes(
         `
             0% { color: #ff0000ff }
@@ -281,7 +247,9 @@ export default function MiniDrawer(props: any) {
         <Box sx={{ display: 'flex', height: '100%' }}>
             <CssBaseline />
             <AppBar position="fixed" open={open}>
-                <Toolbar className='toolbar top'>
+                <Toolbar 
+                    // className='toolbar top'
+                >
                     <IconButton
                         color="inherit"
                         aria-label="open drawer"
@@ -303,11 +271,12 @@ export default function MiniDrawer(props: any) {
                         // className="header"
                         sx={{
                             '&:hover': {
-                                animation: `${rainbowAnimation} 3s linear infinite`,
+                                animation: `${rainbowAnimation} 12s linear infinite`,
                             },
                             cursor: 'pointer',
                         }}
-                        onClick={() => window.open('https://chess.jarmigo.com', '_self')}
+                        // onClick={() => window.open('https://chess.jarmigo.com', '_self')}
+                        onClick={() => navigate('/')}
                     >
                         Jarmigo Chess
                     </Typography>
@@ -333,7 +302,11 @@ export default function MiniDrawer(props: any) {
                     </IconButton>
                 </Toolbar>
             </AppBar>
-            <Drawer variant="permanent" open={open} className='toolbar sidedrawer'>
+            <Drawer 
+                variant="permanent" 
+                open={open} 
+                // className='toolbar sidedrawer'
+            >
                 <DrawerHeader>
                     <IconButton onClick={handleDrawerClose}>
                         {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon />}
@@ -404,52 +377,87 @@ export function Nav() {
     const router = createBrowserRouter([
         {
             path: "/",
-            element: <MiniDrawer children={<AnimatedLogo size={600}/>} />, // <Root />, 
-            errorElement: <MiniDrawer children={<Error />} />,
-            // children: [
-            //     {
-            //         path: "play",
-            //         element: <><div style={{color: 'white'}}><h1>Play</h1></div><ul><li><a>Solo</a></li><li><a>Computer</a></li><li><a>Online</a></li></ul></>,
-            //         children: [
-            //             {
-            //                 path: "play/solo",
-            //                 element: <Game />,
-            //             }
-            //         ]
-            //     }
-            // ],
-        },
-        {
-            path: "/home",
-            element: <MiniDrawer children={<Home />} />, // <Home />,
-            errorElement: <MiniDrawer children={<Error />} />,
-        },
-        {
-            path: "/about",
-            element: <MiniDrawer children={<About />} />, // <About />,
-            errorElement: <MiniDrawer children={<Error />} />,
-        },
-        {
-            path: "/users",
-            element: <MiniDrawer children={<Users />} />, // <Users />,
-            errorElement: <MiniDrawer children={<Error />} />,
-        },
-        {
-            path: "/play", // /[variants/{variantType}]/{bot/,user/}
-            element: <MiniDrawer children={<Play />} />,
-            errorElement: <MiniDrawer children={<Error />} />,
+            // element: <MiniDrawer children={<AnimatedLogo size={600}/>} />, // <Root />, 
+            // errorElement: <MiniDrawer children={<Error />} />,
+            element: <MiniDrawer />,
+            errorElement: <Error />,
             children: [
                 {
-                    path: "/play/:game",
-                    element: <><h2 style={{color: 'white'}}>Playing Game</h2></>
-                }
+                    path: "home",
+                    element: <Home />,
+                },
+                {
+                    path: "about",
+                    element: <About />,
+                },
+                {
+                    path: "users",
+                    element: <Users />,
+                    loader: profilesLoader,
+                    action: profilesAction,
+                    children: [
+                        {
+                            path: ":friendId",
+                            element: <ContactDisplay />,
+                            loader: profileLoader,
+                        },
+                        {
+                            path: ":friendId/edit",
+                            element: <EditContact />,
+                            loader: profileLoader, // use the same loader as for viewing a contact/profile 
+                            // (You might note we reused the contactLoader for this route. This is only because we're being lazy in the tutorial. 
+                            // There is no reason to attempt to share loaders among routes, they usually have their own.)
+                            action: editProfileAction,
+                        }
+                    ]
+                },
+                {
+                    path: "play", // /[variants/{variantType}]/{bot/,user/}
+                    element: <Play />,
+                    children: [
+                        {
+                            path: "/play/:game",
+                            element: <><h2 style={{color: 'white'}}>Playing Game</h2></>,
+                        }
+                    ]
+                },
+                {
+                    path: "study",
+                    element: <Game />, // notes/ 
+                },
             ]
         },
-        {
-            path: "/study",
-            element: <MiniDrawer children={<Game />} />, // <Game />, // notes/ 
-            errorElement: <MiniDrawer children={<Error />} />,
-        },
+        // {
+        //     path: "/home",
+        //     element: <MiniDrawer children={<Home />} />, // <Home />,
+        //     errorElement: <MiniDrawer children={<Error />} />,
+        // },
+        // {
+        //     path: "/about",
+        //     element: <MiniDrawer children={<About />} />, // <About />,
+        //     errorElement: <MiniDrawer children={<Error />} />,
+        // },
+        // {
+        //     path: "/users",
+        //     element: <MiniDrawer children={<Users />} />, // <Users />,
+        //     errorElement: <MiniDrawer children={<Error />} />,
+        // },
+        // {
+        //     path: "/play", // /[variants/{variantType}]/{bot/,user/}
+        //     element: <MiniDrawer children={<Play />} />,
+        //     errorElement: <MiniDrawer children={<Error />} />,
+        //     children: [
+        //         {
+        //             path: "/play/:game",
+        //             element: <><h2 style={{color: 'white'}}>Playing Game</h2></>
+        //         }
+        //     ]
+        // },
+        // {
+        //     path: "/study",
+        //     element: <MiniDrawer children={<Game />} />, // <Game />, // notes/ 
+        //     errorElement: <MiniDrawer children={<Error />} />,
+        // },
         {
             path: "/error",
             element: <MiniDrawer children={<Error />} />, // <Root />, 
@@ -499,56 +507,3 @@ export function Nav() {
         <RouterProvider router={router} />
     );
 }
-
-// function Root() {
-//   return (
-//     <>
-//       <div id="sidebar" style={{background: 'white'}}>
-//         {/* <h1>React Router Contacts</h1>
-//         <div>
-//           <form id="search-form" role="search">
-//             <input
-//               id="q"
-//               aria-label="Search contacts"
-//               placeholder="Search"
-//               type="search"
-//               name="q"
-//             />
-//             <div
-//               id="search-spinner"
-//               aria-hidden
-//               hidden={true}
-//             />
-//             <div
-//               className="sr-only"
-//               aria-live="polite"
-//             ></div>
-//           </form>
-//           <form method="post">
-//             <button type="submit">New</button>
-//           </form>
-//         </div> */}
-//         <nav>
-//           <ul>
-//             <li>
-//               <a href={`/home`}>Home</a>
-//             </li>
-//             <li>
-//               <a href={`/about`}>About</a>
-//             </li>
-//             <li>
-//               <a href={`/users`}>Users</a>
-//             </li>
-//             <li>
-//               <a href={`/play`} disabled={true}>Play</a>
-//             </li>
-//             <li>
-//               <a href={`/study`}>Study</a>
-//             </li>
-//           </ul>
-//         </nav>
-//       </div>
-//       <div id="detail"></div>
-//     </>
-//   );
-// }

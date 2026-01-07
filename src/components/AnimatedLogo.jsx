@@ -1,5 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 
+import '../styles/AnimatedLogo.css';
+
 const AnimatedLogo = ({ size = 160 }) => {
   const viewSize = 200;
   const center = viewSize / 2;

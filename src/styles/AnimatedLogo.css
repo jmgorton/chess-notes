@@ -1,0 +1,131 @@
+/* outside of .App */
+/* --- Animated logo styles --- */
+.app-logo-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 28px 0 8px 0;
+}
+
+.animated-logo-wrapper {
+  display: inline-block;
+  will-change: transform;
+}
+
+.animated-logo {
+  display: block;
+}
+
+.logo-glow {
+  mix-blend-mode: screen;
+  opacity: 0.9;
+  transition: opacity 300ms ease;
+}
+
+.logo-image {
+  transform-box: fill-box;
+  transform-origin: center;
+  /* this animation makes the logo kind of gently bounce */
+  /* animation: float 6s ease-in-out infinite;  */
+  animation: spin 30s linear infinite; 
+  /* animation: spin 20s linear infinite, spiral 30s ease-in-out infinite; */
+  /* animation: spiral 30s ease-in-out infinite; */
+  border-radius: 12px;
+}
+
+.orbits {
+  transform-box: fill-box;
+  transform-origin: center;
+  /* this animation makes the orbits kind of shaky */
+  /* animation: rotateOrbits 12s linear infinite; */
+  /* animation: growOrbits 8s ease-in-out infinite; */
+}
+
+.orbit-dots {
+  transform-box: fill-box;
+  transform-origin: center;
+  /* rotate dots around center while the orbits grow */
+  /* animation: rotateOrbits 10s linear infinite; */
+}
+
+/* smooth color transitions when JS updates fills */
+.orbit-dot {
+  transition: fill 700ms ease, opacity 300ms ease;
+}
+
+.orbit-dot.dot1 { animation: orbitDot1 4s linear infinite; }
+.orbit-dot.dot2 { animation: orbitDot2 5.5s linear infinite; }
+.orbit-dot.dot3 { animation: orbitDot3 7s linear infinite; }
+/* animations orbitDot{1,2,3} are just like rotateOrbits, but with translateX(0); */
+
+@keyframes rotateOrbits {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes orbitDot1 {
+  /* from { transform: rotate(0deg) translateX(0); }
+  to { transform: rotate(360deg) translateX(0); } */
+  0%    { transform: rotate(0deg) translateX(0); opacity: 1; }
+  25%   { opacity: 0; }
+  75%   { opacity: 0; }
+  100%  { transform: rotate(360deg) translateX(0); opacity: 1; }
+}
+
+@keyframes orbitDot2 {
+  /* from { transform: rotate(0deg) translateX(0); }
+  to { transform: rotate(360deg) translateX(0); } */
+  0%    { transform: rotate(0deg) translateX(0); opacity: 0; }
+  25%   { opacity: 0; }
+  75%   { opacity: 1; }
+  100%  { transform: rotate(360deg) translateX(0); opacity: 0; }
+}
+
+@keyframes orbitDot3 {
+  /* from { transform: rotate(0deg) translateX(0); }
+  to { transform: rotate(360deg) translateX(0); } */
+  0%    { transform: rotate(0deg) translateX(0); opacity: 0; }
+  25%   { opacity: 1; }
+  75%   { opacity: 0; }
+  100%  { transform: rotate(360deg) translateX(0); opacity: 0; }
+}
+
+/* @keyframes rotateOrbits {
+  from { transform: rotate(0deg) translateX(0); }
+  to { transform: rotate(360deg) translateX(0); }
+} */
+
+@keyframes growOrbits {
+  /* scale from ~45/80 = 0.5625 up to 1.0; fade in at the start and fade out at the end */
+  0%   { transform: scale(0.5625); opacity: 0; }
+  25%  { opacity: 1; }
+  75%  { opacity: 1; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+/* @keyframes float {
+  0% { transform: translateY(0) rotate(0.5deg); }
+  50% { transform: translateY(-6px) rotate(-0.5deg); }
+  100% { transform: translateY(0) rotate(0.5deg); }
+} */
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(90deg); }
+  50% { transform: rotate(180deg); }
+  75% { transform: rotate(270deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes spiral {
+  0% { transform: translateY(5px) translateX(0); }
+  25% { transform: translateY(0) translateX(5px); }
+  50% { transform: translateY(-5px) translateX(0); }
+  75% { transform: translateY(0) translateX(-5px); }
+  100% { transform: translateY(5px) translateX(0); }    
+}
+
+/* small responsive tweak */
+@media (max-width: 600px) {
+  .animated-logo { width: 120px; height: 120px; }
+}
