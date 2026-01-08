@@ -25,9 +25,9 @@ class Board extends React.Component<BoardProps, BoardState> {
     // this.handleResetClick = this.handleResetClick.bind(this);
   }
 
-  handlePromotion = (squareId: number, pieceSelected: string, event?: Event) => {
+  handlePromotion = (pieceSelected: string) => {
     // console.log(`Handling promotion from Board: squareId: ${squareId}; pieceSelected: ${pieceSelected}; event: ${event}`);
-    if (this.props.onPromote && event) this.props.onPromote(squareId, pieceSelected, event);
+    if (this.props.onPromote) this.props.onPromote(pieceSelected);
   }
 
   render() {

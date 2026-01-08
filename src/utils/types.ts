@@ -107,7 +107,7 @@ export interface BoardProps {
     squareProps: SquareProp[];
     handleSquareClick: (squareId: number, event?: Event) => void; // (event: Event) => void; // (squareId: number, event?: Event) => Promise<void>;
     handleSquareRightClick: (event: React.MouseEvent | null, squareId: number) => void; // (event: Event) => void; // ={this.handleSquareRightClick}
-    onPromote?: (squareId: number, pieceSelected: string, event?: Event) => void; // MouseEventHandler;
+    onPromote?: (pieceSelected: string) => void; // MouseEventHandler;
     boardSize: number; // ={this.boardSize}
     isBoardFlipped: boolean;
     enableDragAndDrop: boolean;
@@ -158,7 +158,7 @@ export interface SquareProp {
     onContextMenu?: (event: React.MouseEvent | null, squareId: number) => void; // not in Game SquareProp ?? 
     onMouseEnter?: (event: Event) => void;
     onMouseLeave?: (event: Event) => void;
-    onPromote?: (squareId: number, pieceSelected: string, event?: Event) => void; // MouseEventHandler;
+    onPromote?: (pieceSelected: string) => void; // MouseEventHandler;
     // [propName: string]: unknown;
 }
 

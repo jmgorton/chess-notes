@@ -504,7 +504,7 @@ export default class Game extends React.Component<GameProps, GameState> {
     // this is the second stage of pawn promotion, after the user selected which piece to promote to. 
     // these squares have a different onSquareClick handler that propagates back up here 
     // first stage is displaying the piece picker, or auto-queening if the setting is configured
-    handlePawnPromotionPieceSelected = (squareId: number, pieceSelected: string, event?: Event) => {
+    handlePawnPromotionPieceSelected = (pieceSelected: string) => {
         // console.log(`Handling promotion from Game: squareId: ${squareId}; pieceSelected: ${pieceSelected}; event: ${event}`);
         // treat this as a move as is done above in handleSquareClick, updating all necessary state 
         // squareId is NOT relevant info... // TODO remove squareId and event from passed parameters 
@@ -601,8 +601,9 @@ export default class Game extends React.Component<GameProps, GameState> {
         event.preventDefault();
         event.stopPropagation();
         }
-        // if (this.props.handleGetFENClick) this.props.handleGetFENClick(event); // , this.props.id); // add Event to type desc. 
-        helpers.generateFENFromGameState(this);
+
+        // helpers.generateFENFromGameState(this);
+        // TODO popup 
     }
 
     flipBoard: MouseEventHandler<HTMLButtonElement> = (event) => { // (event: Event) {
@@ -610,7 +611,7 @@ export default class Game extends React.Component<GameProps, GameState> {
             event.preventDefault();
             event.stopPropagation();
         }
-        console.log("Flipping board...");
+        // console.log("Flipping board...");
         this.setState({
             ...this.state,
             isBoardFlipped: !this.state.isBoardFlipped, 
@@ -642,10 +643,6 @@ export default class Game extends React.Component<GameProps, GameState> {
                 });
             }
         }
-        // how to get value from state based on dynamic key?? we don't have an index signature ...
-        // and i'm not sure we want one either 
-        // helpers.updateState(this, key, )
-        // if (typeof this.state[key] === 'boolean') // toggle 
     }
 
     // handleGoToMoveClick
@@ -667,7 +664,8 @@ export default class Game extends React.Component<GameProps, GameState> {
         boardPropVars.boardSize = 'boardSize' in this ? this.boardSize as number : 8;
         boardPropVars.isBoardFlipped = this.state.isBoardFlipped;
         boardPropVars.enableDragAndDrop = this.state.enableDragAndDrop;
-        const boardProps: BoardProps = { ...boardPropHandlers, ...boardPropVars } as BoardProps; // turn partials back into whole ... TODO always verify all props are present... 
+        const boardProps: BoardProps = { ...boardPropHandlers, ...boardPropVars } as BoardProps; 
+        // turn partials back into whole ... TODO always verify all props are present... 
         // const boardToRender: Element = this.state.enableDragAndDrop ? DraggableDroppableBoard(boardProps) : React.createElement(Board, boardProps); // new Board(boardProps); // Board | typeof DraggableDroppableBoard (Element) ?? 
         return (
             <div className="game">
@@ -678,22 +676,6 @@ export default class Game extends React.Component<GameProps, GameState> {
                     {
                         this.state.enableDragAndDrop ? (<DraggableDroppableBoard {...boardProps} />) : (<Board {...boardProps}/>)
                     }
-                    {/* <DraggableDroppableBoard // DraggableDroppableBoard vs. Board
-                        // if we pass enableDragAndDrop prop as false, this acts as a regular Board ... not quite, cause Pieces are all draggable by default
-                        // while we figure out the dang type casting between the base React.Element and the HOCs going to a Node to render 
-                        // pieceKeys={this.state.pieceKeys} // WAS passing this down, but it's not necessary. Info is contained in squareProps
-                        squareProps={this.state.squareProps}
-                        handleSquareClick={this.handleSquareClick}
-                        handleSquareRightClick={this.handleSquareRightClick}
-                        onPromote={this.handlePawnPromotionPieceSelected}
-                        boardSize={'boardSize' in this ? this.boardSize as number : 8}
-                        isBoardFlipped={this.state.isBoardFlipped}
-                        handleUndoClick={this.handleUndoClick} // TODO these aren't accurate anymore 
-                        handleRedoClick={this.handleRedoClick} // not accurate
-                        handleResetClick={this.handleResetClick} // update these TODO 
-                        handleGetFENClick={() => helpers.generateFENFromGameState(this)}
-                        enableDragAndDrop={this.state.enableDragAndDrop || false}
-                    /> */}
                     <BoardControlPanel
                         onGetInfoClick={this.handleGetInfoClick}
                         onUpdateSettings={this.handleUpdateSettings}

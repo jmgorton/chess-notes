@@ -15,7 +15,7 @@ interface PawnPromotionPiecePickerProps {
     anchorProp?: HTMLButtonElement;
     player?: string;
     // handlePromotion?: MouseEventHandler | ((event: Event) => void);
-    handlePromotion?: (squareId: number, pieceSelected: string, event?: Event) => void;
+    handlePromotion?: (pieceSelected: string) => void;
 }
 
 // const handlePromotionPieceSelected = (squareId: number, event?: Event | undefined) => {
@@ -32,7 +32,7 @@ const PawnPromotionPiecePicker: React.FC<PawnPromotionPiecePickerProps> = ({
     anchorProp?: HTMLButtonElement;
     player?: string;
     // handlePromotion?: MouseEventHandler | ((event: Event) => void);
-    handlePromotion?: (squareId: number, pieceSelected: string, event?: Event) => void;
+    handlePromotion?: (pieceSelected: string) => void;
 }) => {
     const pieces = [
         { notation: 'Q', name: 'Queen', symbol: '♕' },
@@ -41,10 +41,10 @@ const PawnPromotionPiecePicker: React.FC<PawnPromotionPiecePickerProps> = ({
         { notation: 'B', name: 'Bishop', symbol: '♗' },
     ];
 
-    const handlePromotionPieceSelected = (squareId: number, pieceSelected: string, event?: Event | undefined) => {
+    const handlePromotionPieceSelected = (pieceSelected: string) => {
         // console.log(`Handling promotion from PawnPromotionPiecePicker: squareId: ${squareId}; pieceSelected: ${pieceSelected}; event: ${event}`);
-        if (handlePromotion && event) {
-            handlePromotion(squareId, pieceSelected, event);
+        if (handlePromotion) {
+            handlePromotion(pieceSelected);
         }
     }
 
@@ -104,11 +104,9 @@ const PawnPromotionPiecePicker: React.FC<PawnPromotionPiecePickerProps> = ({
                                                     // onMouseEnter={(e: Event) => (e.currentTarget.style.backgroundColor = '#e0e0e0')}
                                                     // onMouseLeave={(e: Event) => (e.currentTarget.style.backgroundColor = '#fff')}
                                                     // onSquareClick={(index: number, pieceSelected: string, event?: Event) => handlePromotionPieceSelected(index, piece.notation, event)}
-                                                    onSquareClick={
-                                                        (index: number, event?: Event) => // , pieceSelected: string) => 
-                                                            handlePromotionPieceSelected(index, piece.notation, event)
+                                                    onSquareClick={() => handlePromotionPieceSelected(piece.notation)}
                                                         // TODO research this more ... because they both only return void, args don't have to match? 
-                                                    }
+                                                    
                                                 />
                                             </div>
                                         )

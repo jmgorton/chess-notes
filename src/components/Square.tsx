@@ -88,9 +88,9 @@ class Square extends React.Component<SquareProp, SquareState> {
   }
 
   // handleClickPromotion: MouseEventHandler = (event) => {
-  handleClickPromotion = (squareId: number, pieceSelected: string, event?: Event) => {
+  handleClickPromotion = (pieceSelected: string) => {
     // console.log(`Handling promotion from Square: squareId: ${squareId}; pieceSelected: ${pieceSelected}; event: ${event}`);
-    if (this.props.onPromote && event) this.props.onPromote(squareId, pieceSelected, event);
+    if (this.props.onPromote) this.props.onPromote(pieceSelected);
   }
 
   render() {

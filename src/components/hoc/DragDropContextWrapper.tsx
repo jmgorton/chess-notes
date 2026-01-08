@@ -1,15 +1,15 @@
 import React, { useState } from 'react';
 import {
-  DndContext,
-  useSensor,
-  MouseSensor,
-  TouchSensor,
-  KeyboardSensor,
-  useSensors,
-  DragEndEvent,
-  pointerWithin,
-  DragStartEvent,
-  DragOverlay,
+    DndContext,
+    useSensor,
+    MouseSensor,
+    TouchSensor,
+    KeyboardSensor,
+    useSensors,
+    DragEndEvent,
+    pointerWithin,
+    DragStartEvent,
+    DragOverlay,
 } from '@dnd-kit/core';
 import { snapCenterToCursor } from '@dnd-kit/modifiers';
 // import type { ActivationConstraint } from '@dnd-kit/core'; // DNE 
@@ -18,19 +18,14 @@ import { getPieceElementByKeycode } from '../Piece';
 
 function handleDragEnd(event: DragEndEvent) { // React.SyntheticEvent? any? Drag{Start,End}Event from dnd-kit 
     // console.log(`DragDropContextWrapper#handleDragEnd(${event})`);
-    const {over} = event;
-
-    // if the item is dropped over a Droppable container, set it as the parent;
-    //   otherwise, set it back to XX~~null~~XX what it was before, not null ... 
-    //   we have multiple Draggables and multiple Droppables on the board 
-    // it almost might be preferable to use the sorted packages
+    const { over } = event;
 
     if (over) {
         // console.log(over.id);
-        if (typeof over.id === 'number') return over.id;
+        if (typeof over.id === 'number') return over.id; // square's id property should be set
         // this.props.handleSquareClick(over.id);
         const droppableWrapperId = over.id as string;
-        const droppableIdMatcher: RegExp = /droppable-(\d+)/;
+        const droppableIdMatcher: RegExp = /droppable-(\d+)/; // if square id isn't a number, we try to look for this 
 
         const matchResult = droppableWrapperId.match(droppableIdMatcher);
         if (matchResult && matchResult[1]) {
@@ -54,13 +49,10 @@ function handleDragStart(event: DragStartEvent) {
         console.warn("Could not locate the squareId where this drag started.");
     } else {
         // console.log(`Drag started on square: ${squareIdOfDragStart}`);
-        // if (this.props.handleSquareClick) this.props.handleSquareClick(squareIdOfDragStart);
     }
-    
+
     // if (active) {
     //     console.log(activatorEvent);
-    //     // this.props.handleSquareClick(over.id); 
-    //     // // just imagine it as a click??? is it that easy? meh - yes and no
     // }
 
     // this and props are not accessible here
@@ -72,7 +64,7 @@ function handleDragStart(event: DragStartEvent) {
 //   ... EUHGH brother 
 //   but it works, so whatever 
 function getSquareIdWhereDragBegan(event: DragStartEvent, includeLogging: boolean = false): number | undefined {
-    const {activatorEvent} = event; // destructure for the property we want 
+    const { activatorEvent } = event; // destructure for the property we want 
 
     // srcElement, target, toElement might be useful properties of activatorEvent 
     //   they point to <img class="piece"> which is our Piece component ... 
@@ -117,100 +109,96 @@ function getSquareIdWhereDragBegan(event: DragStartEvent, includeLogging: boolea
 
 // Define the HOC with a generic type for the wrapped component's props
 export const withDndContext = <P extends {}>(
-  WrappedComponent: React.ComponentType<P>
+    WrappedComponent: React.ComponentType<P>
 ) => {
-  const ComponentWithDnd = (props: P) => {
-    // Configure activation constraints (e.g., a distance of 10 pixels)
-    // const activationConstraint: ActivationConstraint = {
-    const activationConstraint = {
-      distance: 6, // Require the pointer to move some pixels before dragging starts
-    };
+    const ComponentWithDnd = (props: P) => {
+        // Configure activation constraints (e.g., a distance of 10 pixels)
+        // const activationConstraint: ActivationConstraint = {
+        const activationConstraint = {
+            distance: 6, // Require the pointer to move some pixels before dragging starts
+        };
 
-    const [squareIdOfPieceBeingDragged, setSquareIdOfPieceBeingDragged] = useState<number | undefined>(undefined);
-    const [pieceBeingDragged, setPieceBeingDragged] = useState<React.ReactElement<any, any> | undefined>(undefined); // TODO type annotate this 
+        const [squareIdOfPieceBeingDragged, setSquareIdOfPieceBeingDragged] = useState<number | undefined>(undefined);
+        const [pieceBeingDragged, setPieceBeingDragged] = useState<React.ReactElement<any, any> | undefined>(undefined); // TODO type annotate this 
 
-    const sensors = useSensors(
-      useSensor(MouseSensor, { activationConstraint }),
-      useSensor(TouchSensor, { activationConstraint }),
-      useSensor(KeyboardSensor, {
-        // Keyboard sensor activation can have its own constraints if needed
-      })
-    );
+        const sensors = useSensors(
+            useSensor(MouseSensor, { activationConstraint }),
+            useSensor(TouchSensor, { activationConstraint }),
+            useSensor(KeyboardSensor, {
+                // Keyboard sensor activation can have its own constraints if needed
+            })
+        );
 
-    // logging event here actually logs the event details in the console 
-    // whereas in the handleDragStart function above, it just logs an [object Object] 
-    // why is that?? TODO research that more 
-    const onDragStart = (event: DragStartEvent) => {
-        console.log('Drag started:', event);
-        // event === DragStartEvent
-        // event.activatorEvent === MouseEvent
-        
-        const squareIdOfDragStart = handleDragStart(event);
-        console.log('Drag started on square ' + squareIdOfDragStart);
-        if (
-            'handleSquareClick' in props && 
-            typeof props.handleSquareClick === 'function' && 
-            squareIdOfDragStart
-        ) {
-            // TODO refactor and also clear any existing highlighting first
-            //   treat as a brand new click
-            //   if squares are highlighted and we try to drag the piece,
-            //   it is considered a second click and unhighlights the squares 
-            props.handleSquareClick(squareIdOfDragStart);
-        }
+        // logging event here actually logs the event details in the console 
+        // whereas in the handleDragStart function above, it just logs an [object Object] 
+        // why is that?? TODO research that more 
+        const onDragStart = (event: DragStartEvent) => {
+            // console.log('Drag started:', event);
+            // event === DragStartEvent
+            // event.activatorEvent === MouseEvent
 
-        if (squareIdOfDragStart && 'squareProps' in props && Array.isArray(props.squareProps)) {
-            setSquareIdOfPieceBeingDragged(squareIdOfDragStart);
-            const pieceKeycode = props.squareProps[squareIdOfDragStart].keycode;
-            if (pieceKeycode !== '') {
-                // console.log(`Piece keycode: ${pieceKeycode}`);
-                setPieceBeingDragged(getPieceElementByKeycode(pieceKeycode)); 
-                // unfortunately, for now, this is still going to return a draggable piece... NEED to get that wrapper to work 
-                // TODO is this necessary 
-                // setPieceBeingDragged(getPieceElementByKeycode(pieceKeycode, false, `piece-${squareIdOfDragStart}`));
+            const squareIdOfDragStart = handleDragStart(event);
+            // console.log('Drag started on square ' + squareIdOfDragStart);
+            if (
+                'handleSquareClick' in props &&
+                typeof props.handleSquareClick === 'function' &&
+                squareIdOfDragStart
+            ) {
+                // TODO refactor and also clear any existing highlighting first
+                //   treat as a brand new click
+                //   if squares are highlighted and we try to drag the piece,
+                //   it is considered a second click and unhighlights the squares 
+                props.handleSquareClick(squareIdOfDragStart);
+            }
+
+            if (squareIdOfDragStart && 'squareProps' in props && Array.isArray(props.squareProps)) {
+                setSquareIdOfPieceBeingDragged(squareIdOfDragStart);
+                const pieceKeycode = props.squareProps[squareIdOfDragStart].keycode;
+                if (pieceKeycode !== '') {
+                    setPieceBeingDragged(getPieceElementByKeycode(pieceKeycode));
+                }
             }
         }
-    }
 
-    const onDragEnd = (event: DragEndEvent) => {
-        console.log('Drag ended:', event);
-        const squareIdOfDragEnd = handleDragEnd(event);
-        console.log('Drag ended on square ' + squareIdOfDragEnd);
+        const onDragEnd = (event: DragEndEvent) => {
+            // console.log('Drag ended:', event);
+            const squareIdOfDragEnd = handleDragEnd(event);
+            // console.log('Drag ended on square ' + squareIdOfDragEnd);
 
-        if (
-            'handleSquareClick' in props && 
-            typeof props.handleSquareClick === 'function' && 
-            squareIdOfDragEnd
-        ) {
-            props.handleSquareClick(squareIdOfDragEnd);
-        }
-
-        setSquareIdOfPieceBeingDragged(undefined);
-        setPieceBeingDragged(undefined);
-    };
-
-    return (
-      <DndContext
-        sensors={sensors}
-        collisionDetection={pointerWithin}
-        onDragStart={onDragStart}
-        onDragEnd={onDragEnd}
-        // onDragAbort={}
-        // onDragCancel={}
-        // onDragMove={}
-        // onDragOver={}
-        // onDragPending={}
-      >
-        <WrappedComponent {...props} />
-        <DragOverlay 
-            modifiers={[snapCenterToCursor]}
-        >
-            {
-                squareIdOfPieceBeingDragged && pieceBeingDragged
+            if (
+                'handleSquareClick' in props &&
+                typeof props.handleSquareClick === 'function' &&
+                squareIdOfDragEnd
+            ) {
+                props.handleSquareClick(squareIdOfDragEnd);
             }
-        </DragOverlay>
-      </DndContext>
-    );
-  };
-  return ComponentWithDnd;
+
+            setSquareIdOfPieceBeingDragged(undefined);
+            setPieceBeingDragged(undefined);
+        };
+
+        return (
+            <DndContext
+                sensors={sensors}
+                collisionDetection={pointerWithin}
+                onDragStart={onDragStart}
+                onDragEnd={onDragEnd}
+            // onDragAbort={}
+            // onDragCancel={}
+            // onDragMove={}
+            // onDragOver={}
+            // onDragPending={}
+            >
+                <WrappedComponent {...props} />
+                <DragOverlay
+                    modifiers={[snapCenterToCursor]}
+                >
+                    {
+                        squareIdOfPieceBeingDragged && pieceBeingDragged
+                    }
+                </DragOverlay>
+            </DndContext>
+        );
+    };
+    return ComponentWithDnd;
 };
