@@ -109,8 +109,8 @@ class Square extends React.Component<SquareProp, SquareState> {
     handlers.onContextMenu = this.handleRightClick;
     // or do () => this.handleClick() to *not* pass event arg 
 
-    let childType: typeof Piece | undefined = undefined;
-    if (this.props.keycode !== '') childType = getPieceTypeByKeycode(this.props.keycode as keyof typeof keycodeToComponent);
+    // let childType: typeof Piece | undefined = undefined;
+    // if (this.props.keycode !== '') childType = getPieceTypeByKeycode(this.props.keycode as keyof typeof keycodeToComponent);
     // // let draggableChildType
     // // // let childType;
     // // // if (this.props.enableDragAndDrop) 
@@ -118,6 +118,7 @@ class Square extends React.Component<SquareProp, SquareState> {
     // // if (childType) {
 
     // }
+    const child = getPieceElementByKeycode(this.props.keycode, this.props.enableDragAndDrop, `piece-${this.props.id}`);
     // let child = undefined;
     // if (this.props.keycode !== '') child = getPieceElementByKeycode(this.props.keycode, this.props.enableDragAndDrop); 
     // THIS IS A HOOK?? Ugh... Oh, no it's not, but it calls a hook ... instead of that, let's use DraggableGenericPiece here?? 
@@ -140,12 +141,12 @@ class Square extends React.Component<SquareProp, SquareState> {
 
           {...handlers}
         >
-          {
+          {/* {
             childType && React.createElement(childType) // , this.props) // we actually currently don't use any props for piece... 
             // squares are what handles logic, just rendering a "new" static piece based on squareProps ... although we could 
             // supply a prop to child to determine whether to render a draggable piece or not, while we figure out this class casting up here 
             // right now all pieces are draggable by default 
-          }
+          } */}
           {/* {
             childType ? (
               this.props.enableDragAndDrop ? (
@@ -157,9 +158,9 @@ class Square extends React.Component<SquareProp, SquareState> {
               ) : React.createElement(childType)
             ) : undefined
           } */}
-          {/* {
+          {
             child
-          } */}
+          }
         </button>
 
         {

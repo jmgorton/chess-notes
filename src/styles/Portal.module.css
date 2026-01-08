@@ -1,6 +1,6 @@
 /* Modal styling */
 /* Outside of .App */
-.modal-overlay {
+.modalOverlay {
   position: fixed;
   top: 0;
   left: 0;
@@ -13,7 +13,7 @@
   z-index: 2000;           /* Ensure it stays on top */
 }
 
-.modal-content {
+.modalContent {
   /* display: flex inline-block; */
   display: flex; 
   flex-direction: column;
@@ -39,7 +39,7 @@
       bottom: 6px;
     }
 
-    .settings-toggle-button {
+    .settingsToggleButton {
       margin-left: auto;
       /* flex-grow: 1; */
     }

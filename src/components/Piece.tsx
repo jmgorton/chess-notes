@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import DraggableWrapper, { withDraggable } from './hoc/DraggableWrapper.tsx';
+import { withDraggable } from './hoc/DraggableWrapper.tsx';
 
 import Game from './Game.tsx';
 
@@ -113,39 +113,27 @@ class Piece extends React.Component<PieceProps, PieceState> {
   }
 
   render() {
+    // Render a plain image for the non-draggable Piece.
+    // Draggable behavior is applied by the `withDraggable` HOC which
+    // will pass `forwardedRef`, `transform`, `style`, and event listeners
+    // as props onto this component.
+    const { forwardedRef, transform, style, droppableId, enableDragAndDrop, ...rest } = this.props as any;
 
-    // TODO unique id for pieces without relying on dnd-utilities ... EUGH
+    const mergedStyle = {
+      ...(style || {}),
+      ...(transform ? { transform } : {}),
+    };
+
     return (
-      <DraggableWrapper 
-        // id={`draggable-${useUniqueId('', String(Math.random() * 100))}`} 
-        id={`draggable-${Math.random() * 100}`}
-      > 
-        {
-          (attributes, listeners, setNodeRef, transform, isDragging) => (
-          <img 
-            src={this.icon} 
-            alt={this.alt} 
-            className="piece" 
-            onClick={this.handleClick} 
-            // zindex={10}
-
-            // onClick={() => props.onClick(props.id)} // commented out to avoid piece click interfering with square click for now ...
-            // both Piece and Square have the same onClick prop passed down from Board via Square
-            // onClick={props.onClick} // i think this would pass the event object, not the square id ...
-
-            // DRAGGABLE attributes
-            zindex={transform ? '11' : '10'}
-            style={{opacity: isDragging ? 0.5 : 1}}
-            // DRAGGABLE attributes
-            ref={setNodeRef}
-            {...attributes}
-            {...listeners}
-            transform={transform ? `translate3d(${transform.x}px ${transform.y}px, 0)` : undefined}
-            // ref={this.props.forwardedRef}
-          />
-          )
-        }
-      </DraggableWrapper>
+      <img
+        src={this.icon}
+        alt={this.alt}
+        className="piece"
+        onClick={this.handleClick}
+        ref={forwardedRef} // as any?? 
+        style={mergedStyle}
+        {...rest}
+      />
     );
   }
 }
@@ -1344,37 +1332,37 @@ const withClassInstance = <T extends Piece>( // no-unused-vars
   };
 };
 
-// A component designed to receive an 'instance' prop of a generic type that extends BaseClass
-// eslint-disable-next-line 
-const DraggableGenericPiece = ({ instance, ...props }: { instance: Piece }) => { // no-unused-vars
-  return (
-    <DraggableWrapper 
-      // id={`draggable-${useUniqueId('', String(Math.random() * 100))}`} 
-      id={`draggable-${Math.random() * 100}`}
-    > 
-      {
-        (attributes, listeners, setNodeRef, transform, isDragging) => (
-          <img 
-            src={instance.icon} 
-            alt={instance.alt} 
-            className="piece" 
-            // onClick={instance.handleClick} 
-            // zindex={10}
+// // A component designed to receive an 'instance' prop of a generic type that extends BaseClass
+// // eslint-disable-next-line 
+// const DraggableGenericPiece = ({ instance, ...props }: { instance: Piece }) => { // no-unused-vars
+//   return (
+//     <DraggableWrapper 
+//       // id={`draggable-${useUniqueId('', String(Math.random() * 100))}`} 
+//       id={`draggable-${Math.random() * 100}`}
+//     > 
+//       {
+//         (attributes, listeners, setNodeRef, transform, isDragging) => (
+//           <img 
+//             src={instance.icon} 
+//             alt={instance.alt} 
+//             className="piece" 
+//             // onClick={instance.handleClick} 
+//             // zindex={10}
 
-            // DRAGGABLE attributes
-            zindex={transform ? '11' : '10'}
-            style={{opacity: isDragging ? 0.5 : 1}}
-            ref={setNodeRef}
-            {...attributes}
-            {...listeners}
-            transform={transform ? `translate3d(${transform.x}px ${transform.y}px, 0)` : undefined}
-            // ref={instance.props.forwardedRef}
-          />
-        )
-      }
-    </DraggableWrapper>
-  );
-};
+//             // DRAGGABLE attributes
+//             zindex={transform ? '11' : '10'}
+//             style={{opacity: isDragging ? 0.5 : 1}}
+//             ref={setNodeRef}
+//             {...attributes}
+//             {...listeners}
+//             transform={transform ? `translate3d(${transform.x}px ${transform.y}px, 0)` : undefined}
+//             // ref={instance.props.forwardedRef}
+//           />
+//         )
+//       }
+//     </DraggableWrapper>
+//   );
+// };
 
 export function getPieceTypeByKeycode(keycode: keyof typeof keycodeToComponent): typeof Piece {
   return keycodeToComponent[keycode as keyof typeof keycodeToComponent];
@@ -1382,18 +1370,23 @@ export function getPieceTypeByKeycode(keycode: keyof typeof keycodeToComponent):
 
 // end of AI slop, back to my slop... get this method to return draggable piece 
 // export function getPieceComponentByKeycode<P extends Piece>(keycode: string, getDraggablePiece: boolean): React.Component<P> {
-export function getPieceElementByKeycode(keycode: string, getDraggablePiece: boolean = false): React.ReactElement<any, any> { // | ((props: any) => React.JSX.Element) {
+export function getPieceElementByKeycode(keycode: string, getDraggablePiece: boolean = false, draggableId?: string): React.ReactElement<any, any> { // | ((props: any) => React.JSX.Element) {
   if (!(keycode in keycodeToComponent)) {
-    throw Error('Invalid keycode provided!');
+    return <></>
+    // throw Error('Invalid keycode provided!');
     // return undefined;
   }
 
   const componentTypeToReturn = keycodeToComponent[keycode as keyof typeof keycodeToComponent];
   if (getDraggablePiece) {
-    // return withDraggable(keycodeToComponent[keycode as keyof typeof keycodeToComponent]);
-    throw Error("Fix implementation before using...");
-    // return withClassInstance(DraggableGenericPiece, componentTypeToReturn)({}); // pass no props 
-    // withClassInstance is a hook, and it also uses a hook (useState) inside 
+    // Return the `WrappedComponent` wrapped with the `withDraggable` HOC.
+    // We create the wrapped component type and return an element instance.
+    const Wrapped = withDraggable(componentTypeToReturn);
+    // the above from Copilot... componentTypeToReturn as any?? 
+    // withDraggable(...) as React.ComponentType<any> ??? TODO validate ...
+    // return React.createElement(Wrapped);
+    const props = draggableId ? { draggableId } : undefined;
+    return React.createElement(Wrapped, props);
   } else {
     return React.createElement(componentTypeToReturn);
   }

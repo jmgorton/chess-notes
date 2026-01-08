@@ -141,12 +141,12 @@ export const withDndContext = <P extends {}>(
     // whereas in the handleDragStart function above, it just logs an [object Object] 
     // why is that?? TODO research that more 
     const onDragStart = (event: DragStartEvent) => {
-        // console.log('Drag started:', event);
+        console.log('Drag started:', event);
         // event === DragStartEvent
         // event.activatorEvent === MouseEvent
         
         const squareIdOfDragStart = handleDragStart(event);
-        // console.log('Drag started on square ' + squareIdOfDragStart);
+        console.log('Drag started on square ' + squareIdOfDragStart);
         if (
             'handleSquareClick' in props && 
             typeof props.handleSquareClick === 'function' && 
@@ -166,14 +166,16 @@ export const withDndContext = <P extends {}>(
                 // console.log(`Piece keycode: ${pieceKeycode}`);
                 setPieceBeingDragged(getPieceElementByKeycode(pieceKeycode)); 
                 // unfortunately, for now, this is still going to return a draggable piece... NEED to get that wrapper to work 
+                // TODO is this necessary 
+                // setPieceBeingDragged(getPieceElementByKeycode(pieceKeycode, false, `piece-${squareIdOfDragStart}`));
             }
         }
     }
 
     const onDragEnd = (event: DragEndEvent) => {
-        // console.log('Drag ended:', event);
+        console.log('Drag ended:', event);
         const squareIdOfDragEnd = handleDragEnd(event);
-        // console.log('Drag ended on square ' + squareIdOfDragEnd);
+        console.log('Drag ended on square ' + squareIdOfDragEnd);
 
         if (
             'handleSquareClick' in props && 
@@ -201,7 +203,7 @@ export const withDndContext = <P extends {}>(
       >
         <WrappedComponent {...props} />
         <DragOverlay 
-            // modifiers={[snapCenterToCursor]}
+            modifiers={[snapCenterToCursor]}
         >
             {
                 squareIdOfPieceBeingDragged && pieceBeingDragged

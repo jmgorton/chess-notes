@@ -6,8 +6,8 @@ import CheckIcon from '@mui/icons-material/Check';
 
 import { useCloseOnClickOutside } from '../utils/hooks';
 
-import '../styles/Portal.module.css';
-// import styles from '../styles/Portal.module.css';
+// import '../styles/Portal.module.css';
+import styles from '../styles/Portal.module.css';
 
 interface SettingsProps {
     onCloseSettings: () => void; // MouseEventHandler<HTMLDivElement>;
@@ -39,7 +39,8 @@ const SettingsContent: React.FC<SettingsProps> = (props: SettingsProps) => {
                                 value="check" 
                                 selected={value} 
                                 onChange={() => handleToggleSetting(key, !value)}
-                                className="settings-toggle-button"
+                                // className="settings-toggle-button"
+                                className={styles.settingsToggleButton}
                                 // sx={[
                                 //     {
                                 //         marginLeft: 'auto',
@@ -81,11 +82,13 @@ const CustomSettingsModal: React.FC<SettingsProps> = (props: SettingsProps) => {
         // next, try creating a custom hook useCloseOnClickOutside
         // that works 
         <div 
-            className="modal-overlay" 
+            // className="modal-overlay" 
+            className={styles.modalOverlay}
             // onClick={props.onCloseSettings}
         >
             <div 
-                className="modal-content" 
+                // className="modal-content" 
+                className={styles.modalContent}
                 // onClick={(e) => e.stopPropagation()}
                 ref={modalContentRef}
             > 
