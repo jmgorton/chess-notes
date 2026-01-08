@@ -3,7 +3,7 @@ import {
     BoardControlPanelProps, 
     BoardControlPanelState,
 } from '../utils/types';
-import CustomSettingsModal from './Settings';
+import SettingsDialog from './Dialogs';
 
 import UploadIcon from '@mui/icons-material/Upload';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -11,31 +11,52 @@ import SendIcon from '@mui/icons-material/Send';
 // import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { ClickAwayListener } from '@mui/material';
 
 export default class BoardControlPanel extends React.Component<BoardControlPanelProps, BoardControlPanelState> {
 
   constructor(props: BoardControlPanelProps) {
     super(props);
     this.state = {
-      showSettings: false,
+      showSettingsModal: false,
+      showUploadModal: false,
     }
   }
 
   handleShowSettings = (event: React.MouseEvent<HTMLButtonElement>) => {
     this.setState({
       ...this.state,
-      showSettings: !this.state.showSettings,
+      showSettingsModal: !this.state.showSettingsModal,
     });
 
     // if (event instanceof React.MouseEvent) 
     this.props.onGetInfoClick(event);
   }
 
-  handleCloseSettings = () => {
+  handleShowUploadModal = () => {
+    // this.state.
+    console.log(this.state);
+    const newState = Object.entries(this.state).map((item, index) => {
+      const [key, value] = item;
+      if (typeof value === 'boolean') {
+        if (key === "showUploadModal") return {[key]: true};
+        return {[key]: false};
+      } else {
+        return {[key]: value};
+      }
+    });
+    console.log(newState);
     this.setState({
       ...this.state,
-      showSettings: false,
+      showUploadModal: true,
+    })
+  }
+
+  handleCloseSettings = () => {
+    // TODO just close all portals... we should probably make sure only one portal is ever open at a time,
+    // shouldn't even really be possible to open more than one in regular use due to the onClickOutside hook, but users can be crafty 
+    this.setState({
+      ...this.state,
+      showSettingsModal: false,
     })
   }
 
@@ -55,14 +76,19 @@ export default class BoardControlPanel extends React.Component<BoardControlPanel
               <button onClick={this.props.onSendGameClick}><SendIcon fontSize='small'/></button>
             </div>
             {
-              this.state.showSettings && (
-                <CustomSettingsModal 
+              this.state.showSettingsModal && (
+                <SettingsDialog 
                   onClosePortal={this.handleCloseSettings}
                   onUpdateSettings={this.props.onUpdateSettings}
                   // enableDragAndDrop={this.props.enableDragAndDrop}
                   // highlightLegalMoves={this.props.highlightLegalMoves}
                   {...modifiableSettings}
                 />
+              )
+            }
+            {
+              this.state.showUploadModal && (
+                <></>
               )
             }
           </>

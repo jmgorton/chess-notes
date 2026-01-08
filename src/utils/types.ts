@@ -135,7 +135,8 @@ export interface BoardControlPanelProps {
 }
 
 export interface BoardControlPanelState {
-    showSettings: boolean;
+    showSettingsModal: boolean;
+    showUploadModal: boolean;
 }
 
 // extends HTMLButtonElement
