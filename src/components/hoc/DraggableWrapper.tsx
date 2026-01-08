@@ -28,8 +28,9 @@ export default DraggableWrapper;
 // only Pieces are draggable here ... but this doesn't work for me <P extends Piece>
 // what about DraggableDroppableChild<T> or <T extends HTMLAllCollection> or smth... 
 // ok, we got it with <T, P extends DraggableDroppableChild<T>> 
-export const withDraggable = <T, P extends DraggableDroppableChild<T>>(WrappedComponent: React.ComponentType<P>) => {
-  const Wrapper = (props: any) => {
+// export const withDraggable = <T, P extends DraggableDroppableChild<T>>(WrappedComponent: React.ComponentType<P>) => {
+export const withDraggable = <P extends {}>(WrappedComponent: React.ComponentType<P>) => {
+  const Wrapper = (props: any) => { // then try props: P?? 
     const {attributes, listeners, setNodeRef, transform, isDragging} = useDraggable({
       id: props.draggableId || 'draggable', // Allow ID to be passed
     });

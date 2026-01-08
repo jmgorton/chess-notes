@@ -123,7 +123,7 @@ export const withDndContext = <P extends {}>(
     // Configure activation constraints (e.g., a distance of 10 pixels)
     // const activationConstraint: ActivationConstraint = {
     const activationConstraint = {
-      distance: 10, // Require the pointer to move 10px before dragging starts
+      distance: 6, // Require the pointer to move some pixels before dragging starts
     };
 
     const [squareIdOfPieceBeingDragged, setSquareIdOfPieceBeingDragged] = useState<number | undefined>(undefined);
@@ -200,7 +200,9 @@ export const withDndContext = <P extends {}>(
         // onDragPending={}
       >
         <WrappedComponent {...props} />
-        <DragOverlay modifiers={[snapCenterToCursor]}>
+        <DragOverlay 
+            // modifiers={[snapCenterToCursor]}
+        >
             {
                 squareIdOfPieceBeingDragged && pieceBeingDragged
             }

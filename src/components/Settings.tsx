@@ -6,7 +6,8 @@ import CheckIcon from '@mui/icons-material/Check';
 
 import { useCloseOnClickOutside } from '../utils/hooks';
 
-import '../styles/Portal.css';
+import '../styles/Portal.module.css';
+// import styles from '../styles/Portal.module.css';
 
 interface SettingsProps {
     onCloseSettings: () => void; // MouseEventHandler<HTMLDivElement>;
