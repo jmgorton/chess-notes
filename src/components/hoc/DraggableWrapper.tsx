@@ -29,6 +29,8 @@ export default DraggableWrapper;
 // what about DraggableDroppableChild<T> or <T extends HTMLAllCollection> or smth... 
 // ok, we got it with <T, P extends DraggableDroppableChild<T>> 
 // export const withDraggable = <T, P extends DraggableDroppableChild<T>>(WrappedComponent: React.ComponentType<P>) => {
+// this is working now... but TODO try this: <T, P extends {} & DraggableDroppableChild<T>> to enforce the draggableId prop value ...
+//   am testing something similar in PortalWrapper right now 
 export const withDraggable = <P extends {}>(WrappedComponent: React.ComponentType<P>) => {
   const Wrapper = (props: any) => { // then try props: P?? 
     const {attributes, listeners, setNodeRef, transform, isDragging} = useDraggable({

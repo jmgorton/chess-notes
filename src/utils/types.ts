@@ -199,6 +199,10 @@ export interface DraggableDroppableChild<T> {
     forwardedRef?: Ref<T>;
 }
 
+export interface PortalProps {
+    onClosePortal: () => void;
+}
+
 // export interface PieceProps {
 //     forwardedRef: Ref<HTMLImageElement>;
 // }

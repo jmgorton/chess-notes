@@ -4,20 +4,22 @@ import { createPortal } from 'react-dom';
 import { ToggleButton } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 
+import { usePortal } from './hoc/PortalWrapper';
+import { PortalProps } from '../utils/types';
 import { useCloseOnClickOutside } from '../utils/hooks';
 
 // import '../styles/Portal.module.css';
 import styles from '../styles/Portal.module.css';
 
 interface SettingsProps {
-    onCloseSettings: () => void; // MouseEventHandler<HTMLDivElement>;
+    onClosePortal: () => void; // MouseEventHandler<HTMLDivElement>;
     onUpdateSettings: (key: string, newValue?: any) => void;
     // put togglable settings here 
-    enableDragAndDrop: boolean;
-    highlightLegalMoves: boolean;
+    enableDragAndDrop?: boolean;
+    highlightLegalMoves?: boolean;
 }
 
-const SettingsContent: React.FC<SettingsProps> = (props: SettingsProps) => {
+export const SettingsContent: React.FC<SettingsProps> = (props: SettingsProps) => {
 
     const handleToggleSetting = (setting: string, newValue?: any) => {
         console.log(`Toggle setting for: ${setting}`);
@@ -58,45 +60,54 @@ const SettingsContent: React.FC<SettingsProps> = (props: SettingsProps) => {
 }
 
 
-// using React Portals to create my own dialog/modal
-// see: https://react.dev/reference/react-dom/createPortal
-// TODO extend this to other types of children/props 
-const CustomSettingsModal: React.FC<SettingsProps> = (props: SettingsProps) => {
-    const [modalRoot, setModalRoot] = useState<HTMLElement | null>(null);
+// // using React Portals to create my own dialog/modal
+// // see: https://react.dev/reference/react-dom/createPortal
+// // TODO extend this to other types of children/props 
+// const CustomSettingsModal: React.FC<SettingsProps> = (props: SettingsProps) => {
+//     const [modalRoot, setModalRoot] = useState<HTMLElement | null>(null);
 
-    useEffect(() => {
-        // runs after the DOM is ready, similar to componentDidMount in class components 
-        setModalRoot(document.body); // document.getElementById('modal-root')); // for this, add modal-root div to index.html under root 
-    }, []);
+//     useEffect(() => {
+//         // runs after the DOM is ready, similar to componentDidMount in class components 
+//         setModalRoot(document.body); // document.getElementById('modal-root')); // for this, add modal-root div to index.html under root 
+//     }, []);
 
-    const modalContentRef = useCloseOnClickOutside<HTMLDivElement>(props.onCloseSettings);
+//     const modalContentRef = useCloseOnClickOutside<HTMLDivElement>(props.onCloseSettings);
 
-    if (!modalRoot) return null;
+//     if (!modalRoot) return null;
 
-    return createPortal(
-        // try onClick modal-overlay closes settings, 
-        // and onClick modal-content stopPropagation to keep settings open.
-        // this method of closing on click away does not work ... 
-        // depends on DOM heirarchy, may be unreliable 
+//     return createPortal(
+//         // try onClick modal-overlay closes settings, 
+//         // and onClick modal-content stopPropagation to keep settings open.
+//         // this method of closing on click away does not work ... 
+//         // depends on DOM heirarchy, may be unreliable 
 
-        // next, try creating a custom hook useCloseOnClickOutside
-        // that works 
-        <div 
-            // className="modal-overlay" 
-            className={styles.modalOverlay}
-            // onClick={props.onCloseSettings}
-        >
-            <div 
-                // className="modal-content" 
-                className={styles.modalContent}
-                // onClick={(e) => e.stopPropagation()}
-                ref={modalContentRef}
-            > 
-                <SettingsContent {...props} />
-            </div>
-        </div>,
-        modalRoot 
-    )
+//         // next, try creating a custom hook useCloseOnClickOutside
+//         // that works 
+//         <div 
+//             // className="modal-overlay" 
+//             className={styles.modalOverlay}
+//             // onClick={props.onCloseSettings}
+//         >
+//             <div 
+//                 // className="modal-content" 
+//                 className={styles.modalContent}
+//                 // onClick={(e) => e.stopPropagation()}
+//                 ref={modalContentRef}
+//             > 
+//                 <SettingsContent {...props} />
+//             </div>
+//         </div>,
+//         modalRoot 
+//     )
+// }
+
+
+// export default SettingsContent;
+
+const CustomSettingsModal = (props: SettingsProps) => {
+    const SettingsModal = usePortal(SettingsContent);
+
+    return <SettingsModal {...props} />;
 }
 
 export default CustomSettingsModal;

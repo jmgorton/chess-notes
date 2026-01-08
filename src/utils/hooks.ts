@@ -1,7 +1,7 @@
 import { useEffect, useRef, RefObject } from 'react';
 
 export function useCloseOnClickOutside<T extends HTMLElement>(
-    handler: () => void // MouseEventHandler?? 
+  handler: () => void // MouseEventHandler?? 
 ): RefObject<T | null> { // MouseEventHandler ?? 
   const domNodeRef = useRef<T>(null);
 

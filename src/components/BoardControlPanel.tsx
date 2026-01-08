@@ -40,6 +40,9 @@ export default class BoardControlPanel extends React.Component<BoardControlPanel
   }
 
   render() {
+    let modifiableSettings: Partial<BoardControlPanelProps> = {};
+    modifiableSettings.enableDragAndDrop = this.props.enableDragAndDrop;
+    modifiableSettings.highlightLegalMoves = this.props.highlightLegalMoves;
     return (
       <>
         {/* <ClickAwayListener onClickAway={this.handleCloseSettings}> */}
@@ -54,10 +57,11 @@ export default class BoardControlPanel extends React.Component<BoardControlPanel
             {
               this.state.showSettings && (
                 <CustomSettingsModal 
-                  onCloseSettings={this.handleCloseSettings}
+                  onClosePortal={this.handleCloseSettings}
                   onUpdateSettings={this.props.onUpdateSettings}
-                  enableDragAndDrop={this.props.enableDragAndDrop}
-                  highlightLegalMoves={this.props.highlightLegalMoves}
+                  // enableDragAndDrop={this.props.enableDragAndDrop}
+                  // highlightLegalMoves={this.props.highlightLegalMoves}
+                  {...modifiableSettings}
                 />
               )
             }
