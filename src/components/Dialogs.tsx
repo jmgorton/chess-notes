@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { ToggleButton } from '@mui/material';
+import { Input, ToggleButton } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 
 import { usePortal } from './hoc/PortalWrapper';
@@ -59,8 +59,6 @@ export const SettingsContent: React.FC<SettingsProps> = (props: SettingsProps) =
     )
 }
 
-// export default SettingsContent;
-
 const SettingsDialog = (props: SettingsProps) => {
     const SettingsModal = usePortal(SettingsContent);
 
@@ -68,3 +66,50 @@ const SettingsDialog = (props: SettingsProps) => {
 }
 
 export default SettingsDialog;
+
+interface UploadModalProps {
+    onClosePortal: () => void; // MouseEventHandler<HTMLDivElement>;
+    // onUpdateSettings: (key: string, newValue?: any) => void;
+    onSubmitNewFEN: (newFEN: string, event?: React.SyntheticEvent) => void;
+    // put togglable settings here 
+    // enableDragAndDrop?: boolean;
+    // highlightLegalMoves?: boolean;
+}
+
+export const UploadContent: React.FC<UploadModalProps> = (props: UploadModalProps) => {
+    const [fenToUpload, setFenToUpload] = React.useState<string>('');
+
+    const handleUploadNewFEN = (newFEN: string, event?: React.SyntheticEvent) => {
+        console.log(`Uploading new FEN: ${newFEN}`);
+        if (props.onSubmitNewFEN) props.onSubmitNewFEN(newFEN, event);
+    }
+
+    return (
+        <>
+            <div>
+                <strong>FEN:</strong> 
+                {/* style={{marginRight: 'auto'}} */}
+                <Input 
+                    value={fenToUpload} 
+                    onChange={(e) => setFenToUpload(e.target.value)}
+                    className={styles.settingsToggleButton}
+                    // sx={[
+                    //     {
+                    //         marginLeft: 'auto',
+                    //     },
+                    // ]}
+                >
+                </Input>
+                <button type="submit" onClick={(e) => handleUploadNewFEN(fenToUpload, e)}>
+                    <CheckIcon fontSize='small'/>
+                </button>
+            </div>
+        </>
+    )
+}
+
+export const UploadDialog = (props: UploadModalProps) => {
+    const UploadModal = usePortal(UploadContent);
+
+    return <UploadModal {...props} />;
+}

@@ -3,7 +3,7 @@ import {
     BoardControlPanelProps, 
     BoardControlPanelState,
 } from '../utils/types';
-import SettingsDialog from './Dialogs';
+import SettingsDialog, { UploadDialog } from './Dialogs';
 
 import UploadIcon from '@mui/icons-material/Upload';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -22,7 +22,7 @@ export default class BoardControlPanel extends React.Component<BoardControlPanel
     }
   }
 
-  handleShowSettings = (event: React.MouseEvent<HTMLButtonElement>) => {
+  handleShowSettingsModal = (event: React.MouseEvent<HTMLButtonElement>) => {
     this.setState({
       ...this.state,
       showSettingsModal: !this.state.showSettingsModal,
@@ -51,6 +51,13 @@ export default class BoardControlPanel extends React.Component<BoardControlPanel
     })
   }
 
+  handleUploadFEN = (fenToUpload: string, event?: React.SyntheticEvent) => {
+    if (event && event instanceof MouseEvent) {
+      console.log(`FEN to upload: ${fenToUpload}`);
+      // this.props.onUploadClick(event)
+    }
+  }
+
   handleCloseSettings = () => {
     // TODO just close all portals... we should probably make sure only one portal is ever open at a time,
     // shouldn't even really be possible to open more than one in regular use due to the onClickOutside hook, but users can be crafty 
@@ -60,8 +67,17 @@ export default class BoardControlPanel extends React.Component<BoardControlPanel
     })
   }
 
+  handleCloseUpload = () => {
+    // TODO just close all portals... we should probably make sure only one portal is ever open at a time,
+    // shouldn't even really be possible to open more than one in regular use due to the onClickOutside hook, but users can be crafty 
+    this.setState({
+      ...this.state,
+      showSettingsModal: false,
+    })
+  }
+
   render() {
-    let modifiableSettings: Partial<BoardControlPanelProps> = {};
+    let modifiableSettings: Partial<BoardControlPanelProps> = {}; // TODO get all the props in common between BoardControlPanel and SettingsDialog
     modifiableSettings.enableDragAndDrop = this.props.enableDragAndDrop;
     modifiableSettings.highlightLegalMoves = this.props.highlightLegalMoves;
     return (
@@ -69,8 +85,8 @@ export default class BoardControlPanel extends React.Component<BoardControlPanel
         {/* <ClickAwayListener onClickAway={this.handleCloseSettings}> */}
           <>
             <div className="board-control-panel">
-              <button onClick={this.handleShowSettings}><SettingsIcon fontSize='small'/></button>
-              <button onClick={this.props.onUploadClick}><UploadIcon fontSize='small'/></button>
+              <button onClick={this.handleShowSettingsModal}><SettingsIcon fontSize='small'/></button>
+              <button onClick={this.handleShowUploadModal}><UploadIcon fontSize='small'/></button>
               <button onClick={this.props.onFlipBoard}><SwapVertIcon fontSize='small'/></button>
               <button onClick={this.props.onDownloadClick}><DownloadIcon fontSize='small'/></button>
               <button onClick={this.props.onSendGameClick}><SendIcon fontSize='small'/></button>
@@ -88,7 +104,7 @@ export default class BoardControlPanel extends React.Component<BoardControlPanel
             }
             {
               this.state.showUploadModal && (
-                <></>
+                <UploadDialog onClosePortal={this.handleCloseUpload} onSubmitNewFEN={this.handleUploadFEN}/>
               )
             }
           </>
