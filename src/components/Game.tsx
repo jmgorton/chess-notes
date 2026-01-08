@@ -204,7 +204,8 @@ export default class Game extends React.Component<GameProps, GameState> {
     }
 
     getNewGameHistoryItem = (movePlayed: Move): HistoryItem => { // void 
-        const { squareProps, history, squareSelected, squareSelectedLegalMoves, squareAltSelected, FEN, ...filteredGameState} = this.state; // destructure state to take snapshot of partial state
+        const { squareProps, history, squareSelected, squareSelectedLegalMoves, squareAltSelected, ...filteredGameState} = this.state; // destructure state to take snapshot of partial state
+        // removed FEN from filtered props 
         const { squareMovedFrom, squareMovedTo } = movePlayed;
         const newGameHistoryItem: HistoryItem = {
             gameStateSnapshot: { ...filteredGameState },
@@ -338,6 +339,8 @@ export default class Game extends React.Component<GameProps, GameState> {
     applyMoveAndUpdateState = (move: Move) => {
         const { squareMovedFrom, squareMovedTo, pieceMoving } = move;
         const newPieceKeys = helpers.getNewPieceKeysCopyWithMoveApplied(this.state.pieceKeys, move);
+        // const newFEN = helpers.generateFENFromGameState()
+        // TODO be able to generate FEN from relevant state objects, allow method to use future board state 
         // TODO try removing castlingRights argument below 
         const { castlingRights, kingPositions } = this.getNewKingPositionsAndCastlingRights(move); 
         
@@ -539,7 +542,7 @@ export default class Game extends React.Component<GameProps, GameState> {
             squareSelected: null,
             squareSelectedLegalMoves: undefined,
             squareAltSelected: null,
-            FEN: '', // TODO generate FEN? Or only when user asks for it... 
+            // FEN: '',
             squareProps: lastHistoryItem.gameStateSnapshot.pieceKeys.map((keycode, index) => {
                 return {
                     keycode: keycode,
@@ -586,8 +589,16 @@ export default class Game extends React.Component<GameProps, GameState> {
     }
 
     // handleRedoClick(event: Event) {
-    handleUploadClick: MouseEventHandler<HTMLButtonElement> = (event) => {
-
+    // handleUploadClick: MouseEventHandler<HTMLButtonElement> = (event) => {
+    handleUploadClick = (FENstring: string, event?: React.SyntheticEvent) => {
+        if (FENstring && helpers.doesStringMatchPatternFEN(FENstring)) {
+            const newStateKVPs = helpers.getNewBoardStateKVPsFromFen(FENstring);
+            this.setState({
+                ...newStateKVPs as GameState, // TODO use Partial?? 
+            })
+        } else {
+            console.warn(`Invalid FEN string provided: ${FENstring}`);
+        }
     }
 
     handleDownloadClick: MouseEventHandler<HTMLButtonElement> = (event) => { // (event: Event) {
@@ -681,6 +692,7 @@ export default class Game extends React.Component<GameProps, GameState> {
                         onUpdateSettings={this.handleUpdateSettings}
                         onUploadClick={this.handleUploadClick}
                         onDownloadClick={this.handleDownloadClick}
+                        currentFEN={this.state.FEN}
                         onSendGameClick={this.handleSendGameClick}
                         onFlipBoard={this.flipBoard}
                         enableDragAndDrop={this.state.enableDragAndDrop}

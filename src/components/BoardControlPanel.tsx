@@ -1,9 +1,9 @@
-import React from 'react';
+import React, { MouseEventHandler } from 'react';
 import { 
     BoardControlPanelProps, 
     BoardControlPanelState,
 } from '../utils/types';
-import SettingsDialog, { UploadDialog } from './Dialogs';
+import SettingsDialog, { DownloadDialog, UploadDialog } from './Dialogs';
 
 import UploadIcon from '@mui/icons-material/Upload';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -19,6 +19,8 @@ export default class BoardControlPanel extends React.Component<BoardControlPanel
     this.state = {
       showSettingsModal: false,
       showUploadModal: false,
+      showDownloadModal: false,
+      showShareModal: false,
     }
   }
 
@@ -34,7 +36,7 @@ export default class BoardControlPanel extends React.Component<BoardControlPanel
 
   handleShowUploadModal = () => {
     // this.state.
-    console.log(this.state);
+    // console.log(this.state);
     const newState = Object.entries(this.state).map((item, index) => {
       const [key, value] = item;
       if (typeof value === 'boolean') {
@@ -44,18 +46,41 @@ export default class BoardControlPanel extends React.Component<BoardControlPanel
         return {[key]: value};
       }
     });
-    console.log(newState);
+    // console.log(newState);
+    // Object.assign(this.state, ) // merge list of newState objects into one, spread op? 
     this.setState({
       ...this.state,
       showUploadModal: true,
     })
   }
 
+  handleShowDownloadModal = () => {
+    this.setState({
+      ...this.state,
+      showDownloadModal: true,
+    })
+  }
+
+  handleShowShareModal = () => {
+    this.setState({
+      ...this.state,
+      showShareModal: true,
+    })
+  }
+
   handleUploadFEN = (fenToUpload: string, event?: React.SyntheticEvent) => {
     if (event && event instanceof MouseEvent) {
       console.log(`FEN to upload: ${fenToUpload}`);
-      // this.props.onUploadClick(event)
+      this.props.onUploadClick(fenToUpload, event);
     }
+  }
+
+  handleDownloadFEN: MouseEventHandler<HTMLButtonElement> = (event) => {
+    // don't have to call prop, just do the logic here 
+  }
+
+  handleShare: MouseEventHandler<HTMLButtonElement> = (event?) => {
+
   }
 
   handleCloseSettings = () => {
@@ -72,7 +97,25 @@ export default class BoardControlPanel extends React.Component<BoardControlPanel
     // shouldn't even really be possible to open more than one in regular use due to the onClickOutside hook, but users can be crafty 
     this.setState({
       ...this.state,
-      showSettingsModal: false,
+      showUploadModal: false,
+    })
+  }
+
+  handleCloseDownload = () => {
+    // TODO just close all portals... we should probably make sure only one portal is ever open at a time,
+    // shouldn't even really be possible to open more than one in regular use due to the onClickOutside hook, but users can be crafty 
+    this.setState({
+      ...this.state,
+      showDownloadModal: false,
+    })
+  }
+
+  handleCloseShare = () => {
+    // TODO just close all portals... we should probably make sure only one portal is ever open at a time,
+    // shouldn't even really be possible to open more than one in regular use due to the onClickOutside hook, but users can be crafty 
+    this.setState({
+      ...this.state,
+      showShareModal: false,
     })
   }
 
@@ -88,8 +131,8 @@ export default class BoardControlPanel extends React.Component<BoardControlPanel
               <button onClick={this.handleShowSettingsModal}><SettingsIcon fontSize='small'/></button>
               <button onClick={this.handleShowUploadModal}><UploadIcon fontSize='small'/></button>
               <button onClick={this.props.onFlipBoard}><SwapVertIcon fontSize='small'/></button>
-              <button onClick={this.props.onDownloadClick}><DownloadIcon fontSize='small'/></button>
-              <button onClick={this.props.onSendGameClick}><SendIcon fontSize='small'/></button>
+              <button onClick={this.handleShowDownloadModal}><DownloadIcon fontSize='small'/></button>
+              <button onClick={this.handleShowShareModal}><SendIcon fontSize='small'/></button>
             </div>
             {
               this.state.showSettingsModal && (
@@ -104,7 +147,18 @@ export default class BoardControlPanel extends React.Component<BoardControlPanel
             }
             {
               this.state.showUploadModal && (
-                <UploadDialog onClosePortal={this.handleCloseUpload} onSubmitNewFEN={this.handleUploadFEN}/>
+                <UploadDialog onClosePortal={this.handleCloseUpload} onSubmitNewFEN={this.handleUploadFEN} currentFEN={this.props.currentFEN}/>
+              )
+            }
+            {
+              this.state.showDownloadModal && (
+                <DownloadDialog onClosePortal={this.handleCloseDownload} currentFEN={this.props.currentFEN}/>
+              )
+            }
+            {
+              this.state.showShareModal && (
+                // <UploadDialog onClosePortal={this.handleCloseShare} onSubmitNewFEN={this.handleUploadFEN}/>
+                <></>
               )
             }
           </>

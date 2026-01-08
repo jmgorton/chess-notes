@@ -2,6 +2,7 @@ import React from 'react';
 
 import { Input, ToggleButton } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
+import { ContentCopy } from '@mui/icons-material';
 
 import { usePortal } from './hoc/PortalWrapper';
 
@@ -71,13 +72,14 @@ interface UploadModalProps {
     onClosePortal: () => void; // MouseEventHandler<HTMLDivElement>;
     // onUpdateSettings: (key: string, newValue?: any) => void;
     onSubmitNewFEN: (newFEN: string, event?: React.SyntheticEvent) => void;
+    currentFEN: string;
     // put togglable settings here 
     // enableDragAndDrop?: boolean;
     // highlightLegalMoves?: boolean;
 }
 
 export const UploadContent: React.FC<UploadModalProps> = (props: UploadModalProps) => {
-    const [fenToUpload, setFenToUpload] = React.useState<string>('');
+    const [fenToUpload, setFenToUpload] = React.useState<string>(props.currentFEN);
 
     const handleUploadNewFEN = (newFEN: string, event?: React.SyntheticEvent) => {
         console.log(`Uploading new FEN: ${newFEN}`);
@@ -112,4 +114,55 @@ export const UploadDialog = (props: UploadModalProps) => {
     const UploadModal = usePortal(UploadContent);
 
     return <UploadModal {...props} />;
+}
+
+interface DownloadModalProps {
+    onClosePortal: () => void; // MouseEventHandler<HTMLDivElement>;
+    // onUpdateSettings: (key: string, newValue?: any) => void;
+    // onSubmitNewFEN: (newFEN: string, event?: React.SyntheticEvent) => void;
+    // put togglable settings here 
+    // enableDragAndDrop?: boolean;
+    // highlightLegalMoves?: boolean;
+    currentFEN: string;
+}
+
+export const DownloadContent: React.FC<DownloadModalProps> = (props: DownloadModalProps) => {
+    // const [fenToUpload, setFenToUpload] = React.useState<string>('');
+
+    const handleDownloadNewFEN = (event?: React.SyntheticEvent) => {
+        console.log(`Downloading current FEN: ${props.currentFEN}`);
+        // if (props.onSubmitNewFEN) props.onSubmitNewFEN(newFEN, event);
+    }
+
+    return (
+        <>
+            <div>
+                <strong>Current FEN:</strong> 
+                {/* style={{marginRight: 'auto'}} */}
+                <span>
+                    <pre 
+                        // value={fenToUpload} 
+                        // onChange={(e) => setFenToUpload(e.target.value)}
+                        className={styles.settingsToggleButton}
+                        // sx={[
+                        //     {
+                        //         marginLeft: 'auto',
+                        //     },
+                        // ]}
+                    >
+                        {props.currentFEN}
+                    </pre>
+                </span>
+                <button type="submit" onClick={() => handleDownloadNewFEN()}>
+                    <ContentCopy fontSize='small'/>
+                </button>
+            </div>
+        </>
+    )
+}
+
+export const DownloadDialog = (props: DownloadModalProps) => {
+    const DownloadModal = usePortal(DownloadContent);
+
+    return <DownloadModal {...props} />;
 }

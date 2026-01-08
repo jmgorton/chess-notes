@@ -125,8 +125,10 @@ export interface BoardState {
 
 export interface BoardControlPanelProps {
     onGetInfoClick: MouseEventHandler<HTMLButtonElement>; // | ((event: Event) => void) | undefined; 
-    onUploadClick: MouseEventHandler<HTMLButtonElement>; // (event: Event) => void; 
+    // onUploadClick: MouseEventHandler<HTMLButtonElement>; // (event: Event) => void; 
+    onUploadClick: (fenToUpload: string, event?: React.SyntheticEvent) => void;
     onDownloadClick: MouseEventHandler<HTMLButtonElement>; // (event: Event) => void; 
+    currentFEN: string;
     onSendGameClick: MouseEventHandler<HTMLButtonElement>; // (event: Event) => void;
     onFlipBoard: MouseEventHandler<HTMLButtonElement>;
     onUpdateSettings: (key: string, newValue: any) => void;
@@ -137,6 +139,8 @@ export interface BoardControlPanelProps {
 export interface BoardControlPanelState {
     showSettingsModal: boolean;
     showUploadModal: boolean;
+    showDownloadModal: boolean;
+    showShareModal: boolean;
 }
 
 // extends HTMLButtonElement
