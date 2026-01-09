@@ -349,8 +349,21 @@ export default class Game extends React.Component<GameProps, GameState> {
             enPassantTargetSquare = Math.floor((squareMovedFrom! + squareMovedTo) / 2);
         }
 
+        let newHalfmoveClock = this.state.halfmoveClock + 1;
+        if (pieceMoving === 'P' || this.state.pieceKeys[squareMovedTo] !== '') {
+            newHalfmoveClock = 0;
+        }
+
         const newHistoryItem = this.getNewGameHistoryItem(move);
 
+        const newFEN = helpers.generateFENFromGameState({
+            pieceKeys: newPieceKeys,
+            whiteToPlay: !this.state.whiteToPlay,
+            castlingRights,
+            enPassantTargetSquare,
+            halfmoveClock: newHalfmoveClock,
+            plyNumber: this.state.plyNumber + 1,
+        })
         // TODO maintain piecePositions, bitmaps etc. and be sure to factor in pawn promotions to new pieces 
 
         this.setState({
@@ -370,6 +383,7 @@ export default class Game extends React.Component<GameProps, GameState> {
                     promotionSquare: undefined, 
                 }
             }),
+            FEN: newFEN,
             castlingRights, // we already based our input on this.state.castlingRights, no worry of lost info here?? 
             kingPositions: kingPositions || this.state.kingPositions,
             squareSelected: null,
@@ -378,6 +392,7 @@ export default class Game extends React.Component<GameProps, GameState> {
             squareIdOfPawnPromotion: undefined,
             whiteToPlay: !this.state.whiteToPlay,
             plyNumber: this.state.plyNumber + 1,
+            halfmoveClock: newHalfmoveClock,
             enPassantTargetSquare, // when you use the same name as the state variable, it automatically unwraps 
             history: this.state.history.concat([newHistoryItem]),
         });

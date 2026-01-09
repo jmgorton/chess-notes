@@ -1,12 +1,12 @@
 import React from 'react';
 
 import Game from '../components/Game.tsx';
-// import GameProps from '../components/Game.tsx';
-import GameState from '../components/Game.tsx';
+// // import GameProps from '../components/Game.tsx';
+// import GameState from '../components/Game.tsx';
 
 import * as constants from './constants.ts';
 import * as functions from './functions.ts';
-import { KingPositions, Move, PlayerKey, PieceKey, RoyalKeycode } from './types.ts';
+import { GameState, KingPositions, Move, PlayerKey, PieceKey, RoyalKeycode, CastlingRights } from './types.ts';
 
 import { keycodeToComponent } from '../components/Piece.tsx';
 
@@ -494,6 +494,20 @@ export function wouldOwnKingBeInCheckAfterMove(movePlayed: Move, currentGame: un
         } else if (currentGame instanceof Game) {
             boardState = currentGame.state.pieceKeys;
             ownKingPosition = currentGame.state.kingPositions[playerMoving as PlayerKey]
+        } else if (
+            typeof currentGame === 'object' && 
+            'state' in currentGame && 
+            currentGame.state &&
+            typeof currentGame.state === 'object' &&
+            'pieceKeys' in currentGame.state &&
+            currentGame.state.pieceKeys
+        ) {
+            boardState = currentGame.state.pieceKeys as string[]; // TODO validate, add more safeguards 
+            if ('kingPositions' in currentGame.state && typeof currentGame.state.kingPositions === 'object') {
+                ownKingPosition = (currentGame.state.kingPositions as KingPositions)[playerMoving]
+            } else {
+                ownKingPosition = boardState.indexOf(`${playerMoving}K`);
+            }
         } else {
             throw Error("Invalid argument type for currentGame: " + typeof currentGame);
         }
@@ -607,7 +621,21 @@ export function doesStringMatchPatternFEN(input: string): boolean {
 // generateBoardStateFromFen = async (inputFEN: string): Promise<void> => { // { [key: string]: any } => {
 export function getNewBoardStateKVPsFromFen(inputFEN: string): { [key: string]: any } { // { [key in GameState]: any } {
     // console.log("Generating board state from FEN: " + inputFEN)
-    const [piecePlacement, sideToMove, castlingAbility, enPassantTargetSquare, halfmoveClock, fullmoveCounter] = inputFEN.split(' ');
+    // const [piecePlacement, sideToMove, castlingAbility, enPassantTargetSquare, halfmoveClock, fullmoveCounter] = inputFEN.split(' ');
+    const FENComponents = inputFEN.match(constants.googleGeminiMatcher);
+    if (!FENComponents) {
+        throw Error("Invalid FEN provided.");
+        // return {};
+    }
+    const [
+        fullMatch, 
+        piecePlacement, 
+        sideToMove, 
+        castlingAbility, 
+        enPassantTargetSquare, 
+        halfmoveClock, 
+        fullmoveCounter
+    ] = FENComponents;
 
     // about halfmoveClock and fullmoveCounter:
     // The halfmove clock specifies a decimal number of half moves with respect to the 50 move draw rule.
@@ -619,30 +647,38 @@ export function getNewBoardStateKVPsFromFen(inputFEN: string): { [key: string]: 
     let newPieceKeys = Array(64).fill("");
     let newLightKingPosition = null;
     let newDarkKingPosition = null;
+    let newKingPositions: Partial<KingPositions> = {};
 
     let pki = 0;
     for (const rank of rankPiecePlacements) { // REMEMBER: of, not in 
-            for (const char of rank) {
+        let squaresOnThisRank = 0
+        for (const char of rank) {
         // for (let i: number = 0; i < rank.length; i++) {
         //     const char = rank.charAt(i);
             if (char.match(/[1-8]/)) {
                 let numEmptySquares = Number(char);
                 pki += numEmptySquares;
+                squaresOnThisRank += numEmptySquares;
             } else {
                 const pieceCode = char.toUpperCase();
                 const playerCode = (char === pieceCode) ? 'L' : 'D';
                 newPieceKeys[pki] = `${playerCode}${pieceCode}`;
                 if (pieceCode === 'K') {
-                    if (playerCode === 'L') newLightKingPosition = pki;
-                    else if (playerCode === 'D') newDarkKingPosition = pki;
+                    // if (playerCode === 'L') newLightKingPosition = pki;
+                    // else if (playerCode === 'D') newDarkKingPosition = pki;
+                    newKingPositions[playerCode] = pki;
                 }
                 pki += 1;
+                squaresOnThisRank += 1;
             }
+        }
+        if (squaresOnThisRank !== 8) { // TODO boardSize prop/state? 
+            throw Error("Invalid FEN provided.", { cause: `Rank: ${rank}: Contains an invalid number of characters.` });
         }
     }
 
     // TODO make this the correct type 
-    const newStateKVPs = {
+    const newStateKVPs: Partial<GameState> = {
         pieceKeys: newPieceKeys,
         piecePositions: {},
         squareProps: newPieceKeys.map((pieceKey, squareId) => {
@@ -656,10 +692,11 @@ export function getNewBoardStateKVPsFromFen(inputFEN: string): { [key: string]: 
                 isPromoting: false,
             }
         }),
-        kingPositions: {
-            'L': newLightKingPosition,
-            'D': newDarkKingPosition,
-        },
+        // kingPositions: {
+        //     'L': newLightKingPosition,
+        //     'D': newDarkKingPosition,
+        // },
+        kingPositions: newKingPositions as KingPositions, 
         // piecePositions: {}, // TODO fill out all piece positions from FEN input 
         whiteToPlay: sideToMove === 'w',
         castlingRights: {
@@ -684,67 +721,97 @@ export function getNewBoardStateKVPsFromFen(inputFEN: string): { [key: string]: 
 // export function generateFENFromGameState(event?: React.SyntheticEvent | null, boardState?: string[]): string {
 export function generateFENFromGameState(gameState: GameState): string;
 export function generateFENFromGameState(gameState: { [key: string]: any }): string;
+export function generateFENFromGameState(gameState: {
+    pieceKeys: string[],
+    whiteToPlay: boolean,
+    castlingRights: CastlingRights,
+    enPassantTargetSquare: number,
+    halfmoveClock: number,
+    // fullmoveCounter: number, // or plyNumber 
+}): string;
 export function generateFENFromGameState(gameState: unknown): string {
     // if (event && typeof event.preventDefault === 'function') event.preventDefault();
 
-    let boardState: string[];
-    // let castlingRightsState: { [key: string]: any} = {};
-    let castlingRightsState: { [key in RoyalKeycode]: boolean } = {
-        LK: false,
-        LQ: false,
-        DK: false,
-        DQ: false,
-    };
-    let whiteToPlay: boolean;
-    let enPassantTargetSquareId: number | null = null;
-    let halfmoveClock: number;
-    let fullmoveCounter: number;
+    // let boardState: string[];
+    // // let castlingRightsState: { [key: string]: any} = {};
+    // let castlingRightsState: { [key in RoyalKeycode]: boolean } = {
+    //     LK: false,
+    //     LQ: false,
+    //     DK: false,
+    //     DQ: false,
+    // };
+    // let whiteToPlay: boolean;
+    // let enPassantTargetSquareId: number | null = null;
+    // let halfmoveClock: number;
+    // let fullmoveCounter: number;
 
-    const requiredKeys: string[] = ['pieceKeys','whiteToPlay','enPassantTargetSquare','halfmoveClock','fullmoveCounter'];
+    const requiredKeys: string[] = ['pieceKeys','whiteToPlay','enPassantTargetSquare','halfmoveClock','castlingRights']; // 'fullmoveCounter'
     // TODO remove and refactor when gameState is supplied as a dictionary 
-    const moreRequiredKeys: string[] = [
-        'lightKingHasShortCastlingRights',
-        'lightKingHasLongCastlingRights',
-        'darkKingHasShortCastlingRights',
-        'darkKingHasLongCastlingRights'
-    ];
+    // const moreRequiredKeys: string[] = [
+    //     'lightKingHasShortCastlingRights',
+    //     'lightKingHasLongCastlingRights',
+    //     'darkKingHasShortCastlingRights',
+    //     'darkKingHasLongCastlingRights'
+    // ];
 
-    if (gameState instanceof GameState) {
-        boardState = gameState.state.pieceKeys; // || gameState.pieceKeys;
-        whiteToPlay = gameState.state.whiteToPlay;
-        enPassantTargetSquareId = gameState.state.enPassantTargetSquare;
-        halfmoveClock = gameState.state.halfmoveClock;
-        fullmoveCounter = Math.floor(gameState.state.plyNumber / 2);
-        if ('castlingRights' in gameState.state && gameState.state.castlingRights) {
-            // const castlingRightsInput = (gameState.state.castlingRights as { [key: string]: any });
-            const castlingRightsInput = gameState.state.castlingRights;
-            castlingRightsState = castlingRightsInput;
-        }
-    } else if (functions.isArgumentDictionary(gameState)) {
-        // TODO FIX THIS, entire castlingRights section is done incorrectly 
-        // gameState = (gameState as { [key: string]: any });
-        if (requiredKeys.some(key => !(key in gameState))) return '';
-        if (moreRequiredKeys.some(key => !(key in gameState))) {
-            if ('castlingRights' in gameState) {
-                if (moreRequiredKeys.some(key => !(key in (gameState.castlingRights as Record<string, boolean>)))) {
-                    return '';
-                } else {
-                    // TODO refactor and fix this before using this with a dictionary arg (not full GameState)
-                    const castlingRightsInput = (gameState.castlingRights as { [key: string]: any });
-                    castlingRightsState.DQ = castlingRightsInput.darkKingHasLongCastlingRights;
-                    castlingRightsState.DK = castlingRightsInput.darkKingHasShortCastlingRights;
-                    castlingRightsState.LQ = castlingRightsInput.lightKingHasLongCastlingRights;
-                    castlingRightsState.LK = castlingRightsInput.lightKingHasShortCastlingRights;
-                }
-            } else return '';
-        }
-        boardState = gameState.pieceKeys as string[]; // TODO validate these 
-        whiteToPlay = gameState.whiteToPlay as boolean;
-        halfmoveClock = gameState.halfmoveClock as number;
-        fullmoveCounter = gameState.fullmoveCounter as number;
-        enPassantTargetSquareId = gameState.enPassantTargetSquare as number;
-    } else {
+    if (!gameState || typeof gameState !== 'object') {
+        console.warn(`Invalid gameState input provided.`)
+        return '';
+    }
+
+    if (requiredKeys.some(key => !(key in gameState))) {
         console.error("Unsupported gameState argument supplied.");
+        return '';
+    }
+    // if (gameState instanceof GameState) {
+    //     boardState = gameState.state.pieceKeys; // || gameState.pieceKeys;
+    //     whiteToPlay = gameState.state.whiteToPlay;
+    //     enPassantTargetSquareId = gameState.state.enPassantTargetSquare;
+    //     halfmoveClock = gameState.state.halfmoveClock;
+    //     fullmoveCounter = Math.floor(gameState.state.plyNumber / 2);
+    //     if ('castlingRights' in gameState.state && gameState.state.castlingRights) {
+    //         // const castlingRightsInput = (gameState.state.castlingRights as { [key: string]: any });
+    //         const castlingRightsInput = gameState.state.castlingRights;
+    //         castlingRightsState = castlingRightsInput;
+    //     }
+    // } else if (functions.isArgumentDictionary(gameState)) {
+    //     // TODO FIX THIS, entire castlingRights section is done incorrectly 
+    //     // gameState = (gameState as { [key: string]: any });
+    //     if (requiredKeys.some(key => !(key in gameState))) return '';
+    //     if (moreRequiredKeys.some(key => !(key in gameState))) {
+    //         if ('castlingRights' in gameState) {
+    //             if (moreRequiredKeys.some(key => !(key in (gameState.castlingRights as Record<string, boolean>)))) {
+    //                 return '';
+    //             } else {
+    //                 // TODO refactor and fix this before using this with a dictionary arg (not full GameState)
+    //                 const castlingRightsInput = (gameState.castlingRights as { [key: string]: any });
+    //                 castlingRightsState.DQ = castlingRightsInput.darkKingHasLongCastlingRights;
+    //                 castlingRightsState.DK = castlingRightsInput.darkKingHasShortCastlingRights;
+    //                 castlingRightsState.LQ = castlingRightsInput.lightKingHasLongCastlingRights;
+    //                 castlingRightsState.LK = castlingRightsInput.lightKingHasShortCastlingRights;
+    //             }
+    //         } else return '';
+    //     }
+    //     boardState = gameState.pieceKeys as string[]; // TODO validate these 
+    //     whiteToPlay = gameState.whiteToPlay as boolean;
+    //     halfmoveClock = gameState.halfmoveClock as number;
+    //     fullmoveCounter = gameState.fullmoveCounter as number;
+    //     enPassantTargetSquareId = gameState.enPassantTargetSquare as number;
+    // } else {
+    //     console.error("Unsupported gameState argument supplied.");
+    //     return '';
+    // }
+
+    const {
+        pieceKeys: boardState, 
+        whiteToPlay, 
+        enPassantTargetSquare: enPassantTargetSquareId, 
+        halfmoveClock, 
+        castlingRights: castlingRightsState 
+    } = gameState as Partial<GameState>;
+
+    if (!boardState || !whiteToPlay || !halfmoveClock || !castlingRightsState) {
+        console.warn(`Insufficient gameState information provided.`)
         return '';
     }
 
@@ -789,8 +856,8 @@ export function generateFENFromGameState(gameState: unknown): string {
     // console.log(newPiecePlacement);
 
     const castlingRights = `${castlingRightsState.LK ? 'K' : ''}${castlingRightsState.LQ ? 'Q' : ''}${castlingRightsState.DK ? 'k' : ''}${castlingRightsState.DQ ? 'q' : ''}`;
-
     const enPassantTargetSquare = enPassantTargetSquareId ? `${'abcdefgh'.charAt(enPassantTargetSquareId % 8)}${8 - Math.floor(enPassantTargetSquareId / 8)}` : "-";
+    const fullmoveCounter = 'fullmoveCounter' in gameState ? gameState.fullmoveCounter : 'plyNumber' in gameState ? Math.floor(gameState.plyNumber as number / 2) : '?';
 
     const fullFEN = `${newPiecePlacement} ${whiteToPlay ? 'w' : 'b'} ${castlingRights} ${enPassantTargetSquare} ${halfmoveClock} ${fullmoveCounter}`;
     console.log(`Full FEN: ${fullFEN}`);
