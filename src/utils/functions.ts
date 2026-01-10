@@ -23,9 +23,15 @@ export function isArgumentDictionary(arg: any): arg is Record<string, unknown> {
     // common types of objects: literal types, interfaces, type aliases, general object types 
     // special type object refers to any non-primitive type (string, number, bigint, boolean, symbol, null, undefined)
     // utility types: Partial<T> (all properties optional), Required<T> (all properties required),
-    //   Pick<T, K> (selects subset of properties), Record<K, T> (object w specified key-value types) 
+    //   Pick<T, K> (selects subset of properties) Omit<T, K> (opposite of Pick), Record<K, T> (object w specified key-value types) 
     if (Array.isArray(arg)) return false; 
     return true;
+}
+
+export function doesArgumentDictionaryContainKeys(arg: any, requiredKeys: string[]): boolean {
+    if (!isArgumentDictionary(arg)) return false;
+    // TODO more type validation? Can't iterate through interfaces though 
+    return requiredKeys.every(key => key in arg); //  && arg[key] !== null && arg[key] !== undefined);
 }
 
 export const isArgumentReactComponent = (arg: any): boolean => {

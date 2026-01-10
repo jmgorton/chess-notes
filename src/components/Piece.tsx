@@ -34,9 +34,7 @@ class Piece extends React.Component<PieceProps, PieceState> {
 
   constructor(props: PieceProps) {
     super(props);
-    // this.state = {
-    //   ...this.state,
-    // }
+
     this.handleClick = this.handleClick.bind(this);
   }
 
@@ -146,17 +144,14 @@ class Pawn extends Piece {
 
   constructor(props: PieceProps) {
     super(props);
-    // this.state = {
-    //   ...this.state,
-    //   hasMoved: false,
-    // }
+
     this.handleClick = this.handleClick.bind(this);
   }
 
   static generatePieceValidMoveTargets = (
     squareId: number,
-    boardState: string[], // = this.state.pieceKeys,
-    directions?: number[], // can modify directions of the knight with input 
+    boardState: string[],
+    directions?: number[],
     {
       distance = 1,
       nextMoveValidators = [],
@@ -170,13 +165,8 @@ class Pawn extends Piece {
       includeNonCaptures?: boolean;
       includeCapturesOf?: string[];
     } = {},
-    // moveDirections?: number[], // = this.moveDirections,
-    // captureDirections?: number[], // = this.captureDirections,
-    // startingRank: number | null = null,
   ) => {
-    // if (squareId === 27) console.log(`In Pawn#generatePieceValidMoveTargets: captureValidators: ${captureValidators}`);
     // // Legal pawn moves   
-    // const currRank = Math.floor(squareId / 8);
     let pawnMoves: number[] = [];
 
     // adding pawn moves (non-captures)
@@ -200,11 +190,11 @@ class Pawn extends Piece {
     // ts/js creates a closure and retains a reference to the variable's state, not lost as long as a reference to the lambda is retained 
     // helpers.isMoveEnPassant only works *after* the move's been played
     // captureValidators.push(((squareFrom: number, squareTo: number) => helpers.isMoveEnPassant(squareFrom, squareTo, boardState)));
-    // // We need to generate the option to play it. That means we need access to history or enPassantTargetSquare Game state
 
     let nextSquareValidators = [((squareFrom: number, squareTo: number) => Math.abs(squareFrom % 8 - squareTo % 8) === 1)];
 
-    // adding more pawn moves (captures) // TODO is this necessary if we're always calling this from LightPawn/DarkPawn which already calls 2x 
+    // adding more pawn moves (captures) 
+    // // TODO is this necessary if we're always calling this from LightPawn/DarkPawn which already calls 2x 
     // pawnMoves = pawnMoves.concat(super.generatePieceValidMoveTargets(
     pawnMoves = pawnMoves.concat(Piece.generatePieceValidMoveTargets(
       squareId,
@@ -232,27 +222,18 @@ class LightPawn extends Pawn {
   static moveDirections = [-8];
   static captureDirections = [-7, -9];
 
-  // moveDistance = 2; // depends on board state
   static startingRank = 6;
 
   constructor(props: PieceProps) {
     super(props);
-    // this.state = {
-    //   ...this.state,
-    //   // hasMoved: false,
-    //   // moveDistance: 2,
-    //   moves: [-8],
-    //   // playercode: "L",
-    //   // keycode: "LP",
-    //   // icon: keycodeToIcon["LP"],
-    // }
+
     this.handleClick = this.handleClick.bind(this);
   }
 
   static generatePieceValidMoveTargets = (
     squareId: number,
-    boardState: string[], // = this.state.pieceKeys,
-    directions?: number[], // can modify directions of the knight with input 
+    boardState: string[],
+    directions?: number[],
     {
       distance = 1,
       nextMoveValidators = [],
@@ -273,7 +254,7 @@ class LightPawn extends Pawn {
     //   squareId,
     //   boardState,
     //   directions, // null
-    //   { // investigate: what happens if these are not named? No KVPs, just CSVs ...
+    //   { // what happens if these are not named? No KVPs, just CSVs ...
     //     includeNonCaptures: includeNonCaptures, // Object literal may only specify known properties
     //     includeCapturesOf: includeCapturesOf, // So variable must be named like the key of the KVP 
     //   },
@@ -335,9 +316,6 @@ class LightPawn extends Pawn {
   }
 
   handleClick() {
-    // // highlight two squares in front, if legal moves 
-    // const squareId = this.props.id;
-    // this.props.onPawnClick(squareId);
     super.handleClick();
   }
 }
@@ -351,7 +329,6 @@ class DarkPawn extends Pawn {
   static moveDirections = [8];
   static captureDirections = [7, 9];
 
-  // moveDistance = 2; // put in state and alter after first move 
   static startingRank = 1;
 
   // unlike nextSquareValidators, which require all conditions to be true, 
@@ -360,18 +337,14 @@ class DarkPawn extends Pawn {
 
   constructor(props: PieceProps) {
     super(props);
-    // this.state = {
-    //   ...this.state,
-    //   playercode: "D",
-    //   icon: keycodeToIcon["DP"],
-    // }
+
     this.handleClick = this.handleClick.bind(this);
   }
 
   static generatePieceValidMoveTargets = (
     squareId: number,
-    boardState: string[], // = this.state.pieceKeys,
-    directions?: number[], // can modify directions of the knight with input 
+    boardState: string[],
+    directions?: number[],
     {
       distance = 1,
       nextMoveValidators = [],
@@ -387,20 +360,6 @@ class DarkPawn extends Pawn {
     } = {},
     enPassantTargetSquare?: number,
   ) => {
-    // // return super.generatePieceValidMoveTargets(
-    // return Pawn.generatePieceValidMoveTargets(
-    //   squareId,
-    //   boardState,
-    //   directions,
-    //   {
-    //     includeNonCaptures,
-    //     includeCapturesOf,
-    //   },
-    //   // this.moveDirections,
-    //   // this.captureDirections,
-    //   // this.startingRank,
-    // );
-
     // // Legal pawn moves   
     const currRank = Math.floor(squareId / 8);
     let pawnMoves: number[] = [];
@@ -446,9 +405,6 @@ class DarkPawn extends Pawn {
   }
 
   handleClick() {
-    // highlight two squares in front, if legal moves, considering orientation of board 
-    // get id of this piece
-    // set isHighlighted state of pieces with id+8, id+16 to true
     super.handleClick();
   }
 }
@@ -467,18 +423,14 @@ class Knight extends Piece {
 
   constructor(props: PieceProps) {
     super(props);
-    // this.state = {
-    //   ...this.state,
-    //   alt: "Knight",
-    //   piececode: "N",
-    // }
+
     this.handleClick = this.handleClick.bind(this);
   }
 
   static generatePieceValidMoveTargets = (
     squareId: number,
-    boardState: string[], // = this.state.pieceKeys,
-    directions?: number[], // can modify directions of the knight with input 
+    boardState: string[],
+    directions?: number[],
     {
       distance = 1,
       nextMoveValidators = [],
@@ -521,19 +473,10 @@ class LightKnight extends Knight {
   static keycode = "LN";
   icon = keycodeToIcon["LN"];
 
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   playercode: "L",
-  //   //   icon: keycodeToIcon["LN"],
-  //   // }
-  // }
-
   static generatePieceValidMoveTargets = (
     squareId: number,
-    boardState: string[], // = this.state.pieceKeys,
-    directions?: number[], // can modify directions of the knight with input 
+    boardState: string[],
+    directions?: number[],
     {
       distance = 1,
       nextMoveValidators = [],
@@ -566,20 +509,11 @@ class DarkKnight extends Knight {
   static playercode = "D";
   static keycode = "DN";
   icon = keycodeToIcon["DN"];
-  
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   playercode: "D",
-  //   //   icon: keycodeToIcon["DN"],
-  //   // }
-  // }
 
   static generatePieceValidMoveTargets = (
     squareId: number,
-    boardState: string[], // = this.state.pieceKeys,
-    directions?: number[], // can modify directions of the knight with input 
+    boardState: string[],
+    directions?: number[],
     {
       distance = 8,
       nextMoveValidators = [],
@@ -618,19 +552,10 @@ class Bishop extends Piece {
     (square: number, nextSquare: number) => Math.abs(square % 8 - nextSquare % 8) === 1,
   ]
 
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   alt: "Bishop",
-  //   //   piececode: "B",
-  //   // }
-  // }
-
   static generatePieceValidMoveTargets = (
     squareId: number,
-    boardState: string[], // = this.state.pieceKeys,
-    directions?: number[], // can modify directions of the knight with input 
+    boardState: string[],
+    directions?: number[],
     {
       distance = 8,
       nextMoveValidators = [],
@@ -668,19 +593,10 @@ class LightBishop extends Bishop {
   static keycode = "LB";
   icon = keycodeToIcon["LB"];
 
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   playercode: "L",
-  //   //   icon: keycodeToIcon["LB"],
-  //   // }
-  // }
-
   static generatePieceValidMoveTargets = (
     squareId: number,
-    boardState: string[], // = this.state.pieceKeys,
-    directions?: number[], // can modify directions of the knight with input 
+    boardState: string[],
+    directions?: number[],
     {
       distance = 8,
       nextMoveValidators = [],
@@ -715,19 +631,10 @@ class DarkBishop extends Bishop {
   static keycode = "DP";
   icon = keycodeToIcon["DB"];
 
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   playercode: "D",
-  //   //   icon: keycodeToIcon["DB"],
-  //   // }
-  // }
-
   static generatePieceValidMoveTargets = (
     squareId: number,
-    boardState: string[], // = this.state.pieceKeys,
-    directions?: number[], // can modify directions of the knight with input 
+    boardState: string[],
+    directions?: number[],
     {
       distance = 8,
       nextMoveValidators = [],
@@ -772,19 +679,10 @@ class Rook extends Piece {
     (square: number, nextSquare: number) => (Math.floor(nextSquare / 8) === Math.floor(square / 8)) !== (square % 8 === nextSquare % 8),
   ];
 
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   alt: "Rook",
-  //   //   piececode: "R",
-  //   // }
-  // }
-
   static generatePieceValidMoveTargets = (
     squareId: number,
-    boardState: string[], // = this.state.pieceKeys,
-    directions?: number[], // can modify directions of the knight with input 
+    boardState: string[],
+    directions?: number[],
     {
       distance = 8,
       nextMoveValidators = [],
@@ -822,19 +720,10 @@ class LightRook extends Rook {
   static keycode = "LR";
   icon = keycodeToIcon["LR"];
 
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   playercode: "L",
-  //   //   icon: keycodeToIcon["LR"],
-  //   // }
-  // }
-
   static generatePieceValidMoveTargets = (
     squareId: number,
-    boardState: string[], // = this.state.pieceKeys,
-    directions?: number[], // can modify directions of the knight with input 
+    boardState: string[],
+    directions?: number[],
     {
       distance = 8,
       nextMoveValidators = [],
@@ -869,19 +758,10 @@ class DarkRook extends Rook {
   static keycode = "DR";
   icon = keycodeToIcon["DR"];
 
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   playercode: "D",
-  //   //   icon: keycodeToIcon["DR"],
-  //   // }
-  // }
-
   static generatePieceValidMoveTargets = (
     squareId: number,
-    boardState: string[], // = this.state.pieceKeys,
-    directions?: number[], // can modify directions of the knight with input 
+    boardState: string[],
+    directions?: number[],
     {
       distance = 8,
       nextMoveValidators = [],
@@ -915,31 +795,16 @@ class Queen extends Piece {
   static piececode = "Q";
 
   static directions = [-9, -8, -7, -1, 1, 7, 8, 9];
-  static distance = 7; // or length of board 
+  static distance = 7;
 
   // TODO validate this
   // nextSquareValidators require all conditions to be true, so this doesn't work 
   // static nextSquareValidators = Rook.nextSquareValidators | Bishop.nextSquareValidators;
 
-  // possibleMoves = [-63, -56, -54, -49, -45, -36, -35, -28, -27, -21, -18, -14, -9, -7, 7, ]
-  // possibleMoves = [
-  //   [-63, -54, -45, -36, -27, -18, -9],
-  //   [-56, -48, -40, -32, -24, -16, -8],
-  //   [-49, -42, -35, -28, -21, -14, -7],
-  // ]
-
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   isSelected: false, // this.props.isSelected || false,
-  //   // }
-  // }
-
   static generatePieceValidMoveTargets = (
     squareId: number,
-    boardState: string[], // = this.state.pieceKeys,
-    directions?: number[], // can modify directions of the knight with input 
+    boardState: string[],
+    directions?: number[],
     {
       distance = 8,
       nextMoveValidators = [],
@@ -981,17 +846,10 @@ class LightQueen extends Queen {
   static keycode = "LQ";
   icon = keycodeToIcon["LQ"];
 
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   // }
-  // }
-
   static generatePieceValidMoveTargets = (
     squareId: number,
-    boardState: string[], // = this.state.pieceKeys,
-    directions?: number[], // can modify directions of the knight with input 
+    boardState: string[],
+    directions?: number[],
     {
       distance = 8,
       nextMoveValidators = [],
@@ -1032,20 +890,10 @@ class DarkQueen extends Queen {
   static keycode = "DQ";
   icon = keycodeToIcon["DQ"];
 
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   playercode: "D",
-  //   //   icon: keycodeToIcon["DQ"],
-  //   //   alt: "Dark Queen",
-  //   // }
-  // }
-
   static generatePieceValidMoveTargets = (
     squareId: number,
-    boardState: string[], // = this.state.pieceKeys,
-    directions?: number[], // can modify directions of the knight with input 
+    boardState: string[],
+    directions?: number[],
     {
       distance = 8,
       nextMoveValidators = [],
@@ -1058,7 +906,7 @@ class DarkQueen extends Queen {
       captureValidators?: ((oldSquare: number, newSquare: number) => boolean)[];
       includeNonCaptures?: boolean;
       includeCapturesOf?: string[];
-    } = {}
+    } = {},
   ) => {
     return DarkBishop.generatePieceValidMoveTargets(
       squareId, 
@@ -1092,19 +940,10 @@ class King extends Piece {
     (oldSquare: number, newSquare: number) => Math.abs(newSquare % 8 - oldSquare % 8) <= 1,
   ];
 
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   alt: "King",
-  //   //   piececode: "K",
-  //   // }
-  // }
-
   static generatePieceValidMoveTargets = (
     squareId: number,
-    boardState: string[], // = this.state.pieceKeys,
-    directions?: number[], // can modify directions of the knight with input 
+    boardState: string[],
+    directions?: number[], 
     {
       distance = 1,
       nextMoveValidators = [],
@@ -1117,14 +956,7 @@ class King extends Piece {
       captureValidators?: ((oldSquare: number, newSquare: number) => boolean)[];
       includeNonCaptures?: boolean;
       includeCapturesOf?: string[];
-    } = {}
-    // includeCastling = false,
-    // currentGameState = null,
-    // startingSquare = null,
-    // hasCastlingRights = {
-    //   qs = true,
-    //   ks = true,
-    // } = {},
+    } = {},
   ) => {
     // // Legal king moves   
     let kingMoves: number[] = [];
@@ -1155,15 +987,6 @@ class LightKing extends King {
 
   static startingSquare = 60;
 
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   playercode: "L",
-  //   //   icon: keycodeToIcon["LK"],
-  //   // }
-  // }
-
   static generatePieceValidMoveTargets = (
     squareId: number,
     boardState: string[], // = this.state.pieceKeys,
@@ -1183,11 +1006,6 @@ class LightKing extends King {
     } = {},
     includeCastling: boolean = false,
     currentGameState?: Game,
-    // startingSquare = null,
-    // hasCastlingRights = {
-    //   qs = true,
-    //   ks = true,
-    // } = {},
   ) => {
     // let kingMoves = super.generatePieceValidMoveTargets(
     let kingMoves = King.generatePieceValidMoveTargets(
@@ -1199,8 +1017,6 @@ class LightKing extends King {
         includeCapturesOf,
       },
     )
-
-    // console.log(`In LightKing#generatePieceValidMoveTargets\n\tFound regular moves valid: ${kingMoves}\n\tincludeCastling: ${includeCastling}\n\tcurrentGameState: ${currentGameState}`);
 
     if (includeCastling && currentGameState) {
       kingMoves = kingMoves.concat(helpers.getCastlingOptions(this.playercode as PlayerKey, currentGameState));
@@ -1218,25 +1034,10 @@ class DarkKing extends King {
 
   static startingSquare = 4;
 
-  // possibleMoves = [-9, -8, -7, -1, 1, 7, 8, 9];
-  // hmm... some of the validators need to know the layout of the other pieces on the board 
-  // moveValidators = [
-  //   (target) => target >= 0 && target < 64, // on board
-  // ];
-
-  // constructor(props) {
-  //   super(props);
-  //   // this.state = {
-  //   //   ...this.state,
-  //   //   playercode: "D",
-  //   //   icon: keycodeToIcon["DK"],
-  //   // }
-  // }
-
   static generatePieceValidMoveTargets = (
     squareId: number,
-    boardState: string[], // = this.state.pieceKeys,
-    directions?: number[], // can modify directions of the knight with input 
+    boardState: string[],
+    directions?: number[],
     {
       distance = 1,
       nextMoveValidators = [],
@@ -1251,12 +1052,7 @@ class DarkKing extends King {
       includeCapturesOf?: string[];
     } = {},
     includeCastling: boolean = false,
-    currentGameState?: Game,
-    // startingSquare = null,
-    // hasCastlingRights = {
-    //   qs = true,
-    //   ks = true,
-    // } = {},
+    currentGameState?: Game, // just need castlingRights, refactor getCastlingOptions, remove this large argument 
   ) => {
     // let kingMoves = super.generatePieceValidMoveTargets(
     let kingMoves = King.generatePieceValidMoveTargets(
@@ -1270,6 +1066,7 @@ class DarkKing extends King {
     )
 
     if (includeCastling && currentGameState) {
+      // from currentGameState, require castlingRights and pieceKeys (we already have boardState here)
       kingMoves = kingMoves.concat(helpers.getCastlingOptions(this.playercode as PlayerKey, currentGameState));
     }
 
@@ -1303,34 +1100,34 @@ export const keycodeToComponent = {
 
 // export const DraggablePiece<T extends Piece> = withDraggable(T);
 export const DraggablePiece = withDraggable(Piece); // This works here, but can't get it to work in Square... 
-// // try the below AI slop 
 
-// Define the type for the class constructor
-// new (...args: any[]) => T means it's a constructor function that returns an instance of T
-type PieceConstructor<T extends Piece> = new (...args: any[]) => T;
+// // Define the type for the class constructor
+// // new (...args: any[]) => T means it's a constructor function that returns an instance of T
+// type PieceConstructor<T extends Piece> = new (...args: any[]) => T;
 
-// HOC that takes a class constructor as an argument
-// eslint-disable-next-line 
-const withClassInstance = <T extends Piece>( // no-unused-vars 
-  WrappedComponent: React.ElementType<{ instance: T } & PieceProps>, // The component to wrap 
-  // // TODO what to put here? // ComponentType<{ instance: T } & any>
-  // Piece is not generic... for now just put React.ElementType, most generic i can find 
-  // React.ElementType<{ instance: T } & any>
-  ClassType: PieceConstructor<T> // The class constructor argument
-) => {
-  return (props: Omit<any, 'instance'>) => {
-    // Inside the HOC, you can create and use an instance of the class
-    const [instance] = useState(() => new ClassType('Dynamic Instance')); // TODO fix this? 
+// // HOC that takes a class constructor as an argument
+// // eslint-disable-next-line 
+// const withClassInstance = <T extends Piece>( // no-unused-vars 
+//   WrappedComponent: React.ElementType<{ instance: T } & PieceProps>, // The component to wrap 
+//   // // TODO what to put here? // ComponentType<{ instance: T } & any>
+//   // Piece is not generic... for now just put React.ElementType, most generic i can find 
+//   // React.ElementType<{ instance: T } & any>
+//   ClassType: PieceConstructor<T> // The class constructor argument
+// ) => {
+//   return (props: Omit<any, 'instance'>) => {
+//     // Inside the HOC, you can create and use an instance of the class
+//     const [instance] = useState(() => new ClassType('Dynamic Instance')); // TODO fix this? 
 
-    // // You can also perform operations with the instance
-    // React.useEffect(() => {
-    //   instance.greet();
-    // }, [instance]);
+//     // // You can also perform operations with the instance
+//     // React.useEffect(() => {
+//     //   instance.greet();
+//     // }, [instance]);
 
-    // Pass the instance as a prop to the wrapped component
-    return <WrappedComponent instance={instance} {...props} />;
-  };
-};
+//     // Pass the instance as a prop to the wrapped component
+//     return <WrappedComponent instance={instance} {...props} />;
+//   };
+// };
+
 
 // // A component designed to receive an 'instance' prop of a generic type that extends BaseClass
 // // eslint-disable-next-line 
@@ -1368,13 +1165,9 @@ export function getPieceTypeByKeycode(keycode: keyof typeof keycodeToComponent):
   return keycodeToComponent[keycode as keyof typeof keycodeToComponent];
 }
 
-// end of AI slop, back to my slop... get this method to return draggable piece 
-// export function getPieceComponentByKeycode<P extends Piece>(keycode: string, getDraggablePiece: boolean): React.Component<P> {
 export function getPieceElementByKeycode(keycode: string, getDraggablePiece: boolean = false, draggableId?: string): React.ReactElement<any, any> { // | ((props: any) => React.JSX.Element) {
   if (!(keycode in keycodeToComponent)) {
     return <></>
-    // throw Error('Invalid keycode provided!');
-    // return undefined;
   }
 
   const componentTypeToReturn = keycodeToComponent[keycode as keyof typeof keycodeToComponent];
@@ -1382,9 +1175,6 @@ export function getPieceElementByKeycode(keycode: string, getDraggablePiece: boo
     // Return the `WrappedComponent` wrapped with the `withDraggable` HOC.
     // We create the wrapped component type and return an element instance.
     const Wrapped = withDraggable(componentTypeToReturn);
-    // the above from Copilot... componentTypeToReturn as any?? 
-    // withDraggable(...) as React.ComponentType<any> ??? TODO validate ...
-    // return React.createElement(Wrapped);
     const props = draggableId ? { draggableId } : undefined;
     return React.createElement(Wrapped, props);
   } else {
