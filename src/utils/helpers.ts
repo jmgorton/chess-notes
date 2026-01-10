@@ -615,16 +615,18 @@ export function getNewStateAfterMoveIsApplied(currentState: object, moveToApply:
 }
 
 export function doesStringMatchPatternFEN(input: string): boolean {
-    const matcher = constants.googleGeminiMatcher;
+    const matcher = constants.fenStringMatcher;
     return input.match(matcher) !== null;
 }
 
 export function getNewBoardStateKVPsFromFen(inputFEN: string): { [key: string]: any } { // { [key in GameState]: any } {
     // const [piecePlacement, sideToMove, castlingAbility, enPassantTargetSquare, halfmoveClock, fullmoveCounter] = inputFEN.split(' ');
-    const FENComponents = inputFEN.match(constants.googleGeminiMatcher);
+    const FENComponents = inputFEN.match(constants.fenStringMatcher);
     if (!FENComponents) {
         throw Error("Invalid FEN provided.");
         // return {};
+    } else {
+        // console.log(FENComponents);
     }
     const [
         fullMatch, 
@@ -635,6 +637,12 @@ export function getNewBoardStateKVPsFromFen(inputFEN: string): { [key: string]: 
         halfmoveClock, 
         fullmoveCounter
     ] = FENComponents;
+
+    // console.log(FENComponents); 
+    // console.log(`fullMatch: ${fullMatch}\n\tpiecePlacement: ${piecePlacement}\n\tsideToMove: ${sideToMove}
+    //     castlingAbility: ${castlingAbility}
+    //     enPassantTargetSquare: ${enPassantTargetSquare}
+    //     halfmoveClock: ${halfmoveClock}\n\tfullmoveCounter: ${fullmoveCounter}`);
 
     // about halfmoveClock and fullmoveCounter:
     // The halfmove clock specifies a decimal number of half moves with respect to the 50 move draw rule.
@@ -666,7 +674,9 @@ export function getNewBoardStateKVPsFromFen(inputFEN: string): { [key: string]: 
             }
         }
         if (squaresOnThisRank !== 8) { // TODO boardSize prop/state? 
-            throw Error("Invalid FEN provided.", { cause: `Rank: ${rank}: Contains an invalid number of characters.` });
+            throw Error(`Invalid FEN provided. Rank: ${rank}: Contains invalid number of characters.`, 
+                { cause: `Rank: ${rank}: Contains an invalid number of characters.` });
+            // rnbqkbnr/pp1ppppp/8/2p5/4PP2/8/PPPP2PP/RNBQKBNR b KQkq f3 0 1
         }
     }
 

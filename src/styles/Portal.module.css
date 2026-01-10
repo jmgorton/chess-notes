@@ -47,10 +47,11 @@
     strong + span {
 
       pre {
-        flex-wrap: wrap;
-        text-overflow: ellipsis;
+        /* flex-wrap: wrap; */
+        /* text-overflow: ellipsis; */
+        overflow-wrap: anywhere;
       }
-      
+
     }
 
   }

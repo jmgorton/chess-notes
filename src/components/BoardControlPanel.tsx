@@ -69,9 +69,16 @@ export default class BoardControlPanel extends React.Component<BoardControlPanel
   }
 
   handleUploadFEN = (fenToUpload: string, event?: React.SyntheticEvent) => {
-    if (event && event instanceof MouseEvent) {
-      console.log(`FEN to upload: ${fenToUpload}`);
+    if (event) {
+      // if (event instanceof MouseEvent) {
+      //   console.log(`Mouse event: ${event}`);
+      // } else {
+      //   console.log(`Other type of event: ${event}`);
+      // }
+      // console.log(`FEN to upload: ${fenToUpload}`);
       this.props.onUploadClick(fenToUpload, event);
+    } else {
+      console.warn(`Input event not found or not applicable: ${event}`);
     }
   }
 

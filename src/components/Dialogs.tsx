@@ -82,8 +82,12 @@ export const UploadContent: React.FC<UploadModalProps> = (props: UploadModalProp
     const [fenToUpload, setFenToUpload] = React.useState<string>(props.currentFEN);
 
     const handleUploadNewFEN = (newFEN: string, event?: React.SyntheticEvent) => {
-        console.log(`Uploading new FEN: ${newFEN}`);
-        if (props.onSubmitNewFEN) props.onSubmitNewFEN(newFEN, event);
+        // console.log(`Uploading new FEN: ${newFEN}`);
+        if (props.onSubmitNewFEN) {
+            props.onSubmitNewFEN(newFEN, event);
+        } else {
+            // console.warn(`Prop not found. Props: ${props}`);
+        }
     }
 
     return (
@@ -95,11 +99,15 @@ export const UploadContent: React.FC<UploadModalProps> = (props: UploadModalProp
                     value={fenToUpload} 
                     onChange={(e) => setFenToUpload(e.target.value)}
                     className={styles.settingsToggleButton}
-                    // sx={[
-                    //     {
-                    //         marginLeft: 'auto',
-                    //     },
-                    // ]}
+                    sx={[
+                        {
+                            // marginLeft: 'auto',
+                            marginRight: 'auto',
+                        },
+                        {
+                            width: '70%',
+                        }
+                    ]}
                 >
                 </Input>
                 <button type="submit" onClick={(e) => handleUploadNewFEN(fenToUpload, e)}>
@@ -165,4 +173,55 @@ export const DownloadDialog = (props: DownloadModalProps) => {
     const DownloadModal = usePortal(DownloadContent);
 
     return <DownloadModal {...props} />;
+}
+
+interface SendGameModalProps {
+    onClosePortal: () => void; // MouseEventHandler<HTMLDivElement>;
+    // onUpdateSettings: (key: string, newValue?: any) => void;
+    // onSubmitNewFEN: (newFEN: string, event?: React.SyntheticEvent) => void;
+    // put togglable settings here 
+    // enableDragAndDrop?: boolean;
+    // highlightLegalMoves?: boolean;
+    // currentFEN: string;
+}
+
+export const SendGameContent: React.FC<SendGameModalProps> = (props: SendGameModalProps) => {
+    // const [fenToUpload, setFenToUpload] = React.useState<string>('');
+
+    const handleSendGame = (event?: React.SyntheticEvent) => {
+        // console.log(`Downloading current FEN: ${props.currentFEN}`);
+        // if (props.onSubmitNewFEN) props.onSubmitNewFEN(newFEN, event);
+    }
+
+    return (
+        <>
+            <div>
+                <strong>Current FEN:</strong> 
+                {/* style={{marginRight: 'auto'}} */}
+                <span>
+                    <pre 
+                        // value={fenToUpload} 
+                        // onChange={(e) => setFenToUpload(e.target.value)}
+                        className={styles.settingsToggleButton}
+                        // sx={[
+                        //     {
+                        //         marginLeft: 'auto',
+                        //     },
+                        // ]}
+                    >
+                        Do something
+                    </pre>
+                </span>
+                <button type="submit" onClick={() => handleSendGame()}>
+                    <ContentCopy fontSize='small'/>
+                </button>
+            </div>
+        </>
+    )
+}
+
+export const SendGameDialog = (props: SendGameModalProps) => {
+    const SendGameModal = usePortal(SendGameContent);
+
+    return <SendGameModal {...props} />;
 }
