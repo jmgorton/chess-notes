@@ -34,7 +34,7 @@ export default DraggableWrapper;
 export const withDraggable = <P extends {}>(WrappedComponent: React.ComponentType<P>) => {
   const Wrapper = (props: any) => { // then try props: P?? 
     const {attributes, listeners, setNodeRef, transform, isDragging} = useDraggable({
-      id: props.draggableId || 'draggable', // Allow ID to be passed
+      id: props.id || 'draggable', // Allow ID to be passed ... draggableId
     });
 
     return (

@@ -1175,7 +1175,7 @@ export function getPieceElementByKeycode(keycode: string, getDraggablePiece: boo
     // Return the `WrappedComponent` wrapped with the `withDraggable` HOC.
     // We create the wrapped component type and return an element instance.
     const Wrapped = withDraggable(componentTypeToReturn);
-    const props = draggableId ? { draggableId } : undefined;
+    const props = draggableId ? { id: draggableId } : undefined;
     return React.createElement(Wrapped, props);
   } else {
     return React.createElement(componentTypeToReturn);

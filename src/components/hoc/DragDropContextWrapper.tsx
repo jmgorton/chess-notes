@@ -15,6 +15,8 @@ import { snapCenterToCursor } from '@dnd-kit/modifiers';
 // import type { ActivationConstraint } from '@dnd-kit/core'; // DNE 
 
 import { getPieceElementByKeycode } from '../Piece';
+import { usePortal } from './PortalWrapper';
+import { createPortal } from 'react-dom';
 
 function handleDragEnd(event: DragEndEvent) { // React.SyntheticEvent? any? Drag{Start,End}Event from dnd-kit 
     // console.log(`DragDropContextWrapper#handleDragEnd(${event})`);
@@ -177,6 +179,16 @@ export const withDndContext = <P extends {}>(
             setPieceBeingDragged(undefined);
         };
 
+        // const DragOverlayWithPortal = usexxPortal(DragOverlay );
+        const DragOverlayPortal = createPortal(
+            <DragOverlay modifiers={[snapCenterToCursor]}>
+                {
+                    squareIdOfPieceBeingDragged && pieceBeingDragged
+                }
+            </DragOverlay>, 
+            document.body
+        );
+
         return (
             <DndContext
                 sensors={sensors}
@@ -190,13 +202,16 @@ export const withDndContext = <P extends {}>(
             // onDragPending={}
             >
                 <WrappedComponent {...props} />
-                <DragOverlay
+                {/* <DragOverlay
                     modifiers={[snapCenterToCursor]}
                 >
                     {
                         squareIdOfPieceBeingDragged && pieceBeingDragged
                     }
-                </DragOverlay>
+                </DragOverlay> */}
+                {
+                    DragOverlayPortal
+                }
             </DndContext>
         );
     };

@@ -118,7 +118,7 @@ class Square extends React.Component<SquareProp, SquareState> {
     // // if (childType) {
 
     // }
-    const child = getPieceElementByKeycode(this.props.keycode, this.props.enableDragAndDrop, `piece-${this.props.id}`);
+    const child = getPieceElementByKeycode(this.props.keycode, this.props.enableDragAndDrop, `draggable-piece-${this.props.id}`);
     // let child = undefined;
     // if (this.props.keycode !== '') child = getPieceElementByKeycode(this.props.keycode, this.props.enableDragAndDrop); 
     // THIS IS A HOOK?? Ugh... Oh, no it's not, but it calls a hook ... instead of that, let's use DraggableGenericPiece here?? 
