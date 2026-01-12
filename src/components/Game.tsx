@@ -22,6 +22,7 @@ import {
     PlayerKey,
     PromotionOptionsPieceKey,
     // HistoryItem,
+    SquareKeycode,
 } from '../utils/types.ts';
 import BoardControlPanel from './BoardControlPanel.tsx';
 import { keycodeToComponent, getPieceTypeByKeycode, getPieceElementByKeycode } from './Piece.tsx';
@@ -34,6 +35,7 @@ export default class Game extends React.Component<GameProps, GameState> {
     // testPawnPromotionFEN: string = 'r1bqkbnr/pppp2Pp/2n1p3/8/8/8/PPPP1PPP/RNBQKBNR w KQkq - 0 0';
     // testCheckmateFEN: string = '2kr3r/pp3ppp/nq2pn2/2b5/P2N1P2/2P5/1PQ1N1PP/R1B2R1K b  - 0 0';
     // TODO debug: Passed an un-parsable string stateToLoad argument: 2kr3r/pp3ppp/nq2pn2/2b5/P2N1P2/2P5/1PQ1N1PP/R1B2R1K b  - 0 0
+    // testPosition1FEN: string = 'r4rk1/pp1q1ppp/2np1n2/4p2b/2B1P3/PN2QP1P/1PPB2P1/R3K2R b KQ - 0 12'; 
     backrankStartingPositions: string[] = constants.defaultStartingBackRank;
     // startingFEN: string = this.testCheckmateFEN; // constants.defaultStartingFEN;
     startingFEN: string = '';
@@ -95,7 +97,7 @@ export default class Game extends React.Component<GameProps, GameState> {
             // },
             // TODO pieceIsAttackingMap,
             // TODO pieceIsAttackedByMap, 
-            pieceBitmaps: {},
+            // pieceBitmaps: {},
             squareProps: [],
             kingPositions: {
                 'L': -1,
@@ -103,6 +105,7 @@ export default class Game extends React.Component<GameProps, GameState> {
             },
             squaresAttackedByBlack: 0n,
             squaresAttackedByWhite: 0n,
+            attackerToDefenderMap: {},
             castlingRights: {
                 LK: false,
                 LQ: false,
@@ -368,7 +371,7 @@ export default class Game extends React.Component<GameProps, GameState> {
 
         this.setState({
             ...this.state,
-            pieceKeys: newPieceKeys,
+            pieceKeys: newPieceKeys as SquareKeycode[],
             squareProps: this.state.squareProps.map((squareProps, squareId) => {
                 const newKeycode = newPieceKeys[squareId];
                 return {

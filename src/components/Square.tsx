@@ -118,6 +118,9 @@ class Square extends React.Component<SquareProp, SquareState> {
     // // if (childType) {
 
     // }
+
+    // TODO now that we maintain access to the child, instead of regenerating and losing the reference each time...
+    //   we can use child state and pass props, use class methods, etc. 
     const child = getPieceElementByKeycode(this.props.keycode, this.props.enableDragAndDrop, `draggable-piece-${this.props.id}`);
     // let child = undefined;
     // if (this.props.keycode !== '') child = getPieceElementByKeycode(this.props.keycode, this.props.enableDragAndDrop); 

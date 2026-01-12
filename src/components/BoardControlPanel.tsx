@@ -11,6 +11,8 @@ import SendIcon from '@mui/icons-material/Send';
 // import InfoOutlineIcon from '@mui/icons-material/InfoOutline';
 import SwapVertIcon from '@mui/icons-material/SwapVert';
 import SettingsIcon from '@mui/icons-material/Settings';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 
 export default class BoardControlPanel extends React.Component<BoardControlPanelProps, BoardControlPanelState> {
 

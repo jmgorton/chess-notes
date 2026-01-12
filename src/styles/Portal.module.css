@@ -20,7 +20,7 @@
   background-color: lightgray;
   padding: 2rem;
   border-radius: 8px;
-  max-width: 500px;
+  max-width: 700px;       /* width of the modal */ 
   width: 90%;             /* Responsive width on small screens */
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   position: relative;     /* Context for close buttons if needed */

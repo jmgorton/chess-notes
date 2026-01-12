@@ -683,7 +683,7 @@ export function getNewBoardStateKVPsFromFen(inputFEN: string): { [key: string]: 
     // TODO make this the correct type 
     const newStateKVPs: Partial<GameState> = {
         pieceKeys: newPieceKeys,
-        piecePositions: {},
+        // piecePositions: {},
         squareProps: newPieceKeys.map((pieceKey, squareId) => {
             return {
                 keycode: pieceKey, // pieceId 

@@ -105,7 +105,7 @@ export const UploadContent: React.FC<UploadModalProps> = (props: UploadModalProp
                             marginRight: 'auto',
                         },
                         {
-                            width: '70%',
+                            width: '77%',
                         }
                     ]}
                 >

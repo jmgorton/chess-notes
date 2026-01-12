@@ -2,6 +2,7 @@
 
 import React, { MouseEventHandler, Ref } from 'react';
 import Piece from '../components/Piece';
+import Square from '../components/Square';
 
 export type GameProps = Record<string, unknown>;
 
@@ -17,6 +18,9 @@ export type RoyalPieceKey = 'K' | 'Q';
 export type RoyalKeycode = `${PlayerKey}${RoyalPieceKey}`;
 
 export type PieceKey = 'K' | 'Q' | 'R' | 'B' | 'N' | 'P';
+export type PieceKeycode = `${PlayerKey}${PieceKey}`;
+export type SquareKeycode = PieceKeycode | '';
+
 // export type NonKingPieceKey = 'Q' | 'R' | 'B' | 'N' | 'P';
 export type NonKingPieceKey = Exclude<PieceKey, KingPieceKey>;
 // export type NonPawnPieceKey = 'K' | 'Q' | 'R' | 'B' | 'N';
@@ -37,6 +41,10 @@ export type PiecePositions = {
     }
 }
 
+export type PiecePositionsMap<T> = {
+    [key in PlayerKey]: { [key in NonKingPieceKey]: T }
+}
+
 export type KingPositions = {
     // L: number;
     // D: number;
@@ -47,19 +55,29 @@ export type CastlingRights = {
     [key in RoyalKeycode]: boolean;
 }
 
+// TODO maybe maintain a map for each state variable to have some related utility info and functions; 
+//   for example: small, isolated, idempotent methods for getting updated state value to replace just that property after some move 
+
+// a lot of the props/state used in Board, Square, BoardControlPanel, etc. will be able to be removed 
+//   after we start using a React Context for the Game we're playing 
 export interface GameState {
-    pieceKeys: string[];
+    // pieceKeys: string[];
+    pieceKeys: SquareKeycode[];
     // piecePositions: Map<string, Map<string, number[]>>;
-    piecePositions?: { [player: string]: { [piece: string]: Set<number> }}; // number[] not as good 
+    // piecePositions?: { [player: string]: { [piece: string]: Set<number> }}; // number[] not as good 
+    piecePositions?: PiecePositionsMap<Set<number>>;
     // piecePositions: PiecePositions;
-    // kingPositions: KingPositions;
-    kingPositions: { [key in PlayerKey]: number };
-    pieceBitmaps?: { [player: string]: bigint };
+    kingPositions: KingPositions;
+    // kingPositions: { [key in PlayerKey]: number };
+    // pieceBitmaps?: { [player: string]: bigint };
+    pieceBitmaps?: PiecePositionsMap<bigint>;
+
+    // look to get rid of most of this, between context and storing that information at top-level and not per-square 
     squareProps: SquareProp[];
 
-    // castlingRights: { [key: 'LK' | 'LQ' | 'DK' | 'DQ']: boolean }; // This doesn't work
-    castlingRights?: { [key in RoyalKeycode]: boolean }; // This does work 
-    // castlingRights: CastlingRights;
+    // castlingRights?: { [key: 'LK' | 'LQ' | 'DK' | 'DQ']: boolean }; // This doesn't work
+    // castlingRights?: { [key in RoyalKeycode]: boolean }; // This does work 
+    castlingRights?: CastlingRights;
 
     // squares under attack by side
     // is it worth separating this further into squares attacked by piece? 
@@ -70,8 +88,11 @@ export interface GameState {
     // maintaining this can actually get fairly complicated when you include 
     // weird moves like en-passant, promotions, and castling 
 
+    // TODO after implementing react context for shared state, update this from Piece movement generation class methods
     squaresAttackedByWhite?: bigint;
     squaresAttackedByBlack?: bigint;
+    attackerToDefenderMap?: { [key: number]: Set<number>}; // maybe don't use set, list of lists perhaps? to show all pieces on row/file, pins against king etc. 
+    defenderToAttackerMap?: { [key: number]: Set<number>}; //   or that can be a separate state map, with a position and a direction as keys, or some kind of linked list 
 
     enPassantTargetSquare: number | null;
     whiteToPlay: boolean;
@@ -80,6 +101,7 @@ export interface GameState {
     plyNumber: number;
     halfmoveClock: number;
 
+
     squareSelected?: number | null;
     squareSelectedLegalMoves?: Set<number>;
     squareAltSelected?: number | null;
@@ -87,7 +109,8 @@ export interface GameState {
     enableDragAndDrop: boolean;
     highlightLegalMoves: boolean;
     loseOnIllegalMoveAttempted?: boolean;
-    gameOptions?: { [key: string]: boolean }; // TODO put options like enableDragAndDrop, highlightLegalMoves, etc. in here 
+    gamePlayOptions?: { [key: string]: boolean }; // TODO put options like enableDragAndDrop, highlightLegalMoves, etc. in here 
+    gameAppearanceOptions?: { [key: string]: any }; // put stuff like isBoardFlipped, highlighted/selected squares?, hide/show board, history, or board notes, etc. 
     isBoardFlipped: boolean;
 }
 
