@@ -1,12 +1,14 @@
 import React from 'react';
 
-import { Input, ToggleButton } from '@mui/material';
+import { IconButton, Input, InputAdornment, SvgIconTypeMap, TextField, ToggleButton } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import { ContentCopy } from '@mui/icons-material';
+import DoneAllIcon from '@mui/icons-material/DoneAll';
 
 import { usePortal } from './hoc/PortalWrapper';
 
 import styles from '../styles/Portal.module.css';
+import { OverridableComponent } from '@mui/material/OverridableComponent';
 
 interface PortalProps {
     onClosePortal: () => void;
@@ -88,14 +90,16 @@ export const UploadContent: React.FC<UploadModalProps> = (props: UploadModalProp
         } else {
             // console.warn(`Prop not found. Props: ${props}`);
         }
+
+        props.onClosePortal();
     }
 
     return (
         <>
             <div>
-                <strong>FEN:</strong> 
+                {/* <strong>FEN:</strong>  */}
                 {/* style={{marginRight: 'auto'}} */}
-                <Input 
+                {/* <Input 
                     value={fenToUpload} 
                     onChange={(e) => setFenToUpload(e.target.value)}
                     className={styles.settingsToggleButton}
@@ -109,10 +113,40 @@ export const UploadContent: React.FC<UploadModalProps> = (props: UploadModalProp
                         }
                     ]}
                 >
-                </Input>
-                <button type="submit" onClick={(e) => handleUploadNewFEN(fenToUpload, e)}>
+                </Input> */}
+                {/* Input is more bare-bones and low-level, TextField recommended for most common use-cases */}
+                {/* Controlling the HTML input:
+                    Use slotProps.htmlInput to pass attributes to the underlying <input> element.
+                        <TextField slotProps={{ htmlInput: { 'data-testid': '…' } }} />
+                    slotProps.htmlInput is not the same as slotProps.input. 
+                    slotProps.input refers to the React <Input /> component that's rendered 
+                        based on the specified variant prop. 
+                    slotProps.htmlInput refers to the HTML <input> element rendered 
+                        within that Input component, regardless of the variant. */}
+                <TextField 
+                    label='FEN (Forsyth-Edwards Notation)'
+                    color='secondary'
+                    variant='outlined'
+                    focused
+                    value={fenToUpload} 
+                    slotProps={{
+                        input: {
+                            endAdornment: 
+                                <InputAdornment position="end">
+                                    <IconButton onClick={(e) => handleUploadNewFEN(fenToUpload, e)}>
+                                        <CheckIcon fontSize='small'/>
+                                    </IconButton>
+                                </InputAdornment>,
+                        },
+                    }}
+                    // disabled
+                    onChange={(e) => setFenToUpload(e.target.value)}
+                    // className={styles.settingsToggleButton}
+                    fullWidth
+                /> 
+                {/* <button type="submit" onClick={(e) => handleUploadNewFEN(fenToUpload, e)}>
                     <CheckIcon fontSize='small'/>
-                </button>
+                </button> */}
             </div>
         </>
     )
@@ -136,18 +170,49 @@ interface DownloadModalProps {
 
 export const DownloadContent: React.FC<DownloadModalProps> = (props: DownloadModalProps) => {
     // const [fenToUpload, setFenToUpload] = React.useState<string>('');
+    const [copyIcon, setCopyIcon] = React.useState<OverridableComponent<SvgIconTypeMap>>(ContentCopy); // <SvgIconTypeMap<{}, "svg">
 
-    const handleDownloadNewFEN = (event?: React.SyntheticEvent) => {
-        console.log(`Downloading current FEN: ${props.currentFEN}`);
+    const handleDownloadNewFEN = async (event?: React.SyntheticEvent) => {
+        // console.log(`Downloading current FEN: ${props.currentFEN}`);
         // if (props.onSubmitNewFEN) props.onSubmitNewFEN(newFEN, event);
+        try {
+            await navigator.clipboard.writeText(props.currentFEN);
+            setCopyIcon(DoneAllIcon);
+
+            setTimeout(() => {
+                // turn the copy button label from ContentCopy to a success indicator 
+                // TODO: and then after a second or two, **fade** back into ContentCopy (no fade currently)
+                setCopyIcon(ContentCopy);
+            }, 2000);
+        } catch (err) {
+            console.warn(`Failed to copy FEN:${props.currentFEN} to clipboard.`);
+        }
     }
+
+    // for FormControl > InputLabel ~ OutlinedInput 
+    // type={showPassword ? 'text' : 'password'}
+    // endAdornment={
+    //     <InputAdornment position="end">
+    //     <IconButton
+    //         aria-label={
+    //         showPassword ? 'hide the password' : 'display the password'
+    //         }
+    //         onClick={handleClickShowPassword}
+    //         onMouseDown={handleMouseDownPassword}
+    //         onMouseUp={handleMouseUpPassword}
+    //         edge="end"
+    //     >
+    //         {showPassword ? <VisibilityOff /> : <Visibility />}
+    //     </IconButton>
+    //     </InputAdornment>
+    // }
 
     return (
         <>
             <div>
-                <strong>Current FEN:</strong> 
+                {/* <strong>Current FEN:</strong>  */}
                 {/* style={{marginRight: 'auto'}} */}
-                <span>
+                {/* <span>
                     <pre 
                         // value={fenToUpload} 
                         // onChange={(e) => setFenToUpload(e.target.value)}
@@ -160,10 +225,32 @@ export const DownloadContent: React.FC<DownloadModalProps> = (props: DownloadMod
                     >
                         {props.currentFEN}
                     </pre>
-                </span>
-                <button type="submit" onClick={() => handleDownloadNewFEN()}>
+                </span> */}
+                {/* <button type="submit" onClick={() => handleDownloadNewFEN()}>
                     <ContentCopy fontSize='small'/>
-                </button>
+                </button> */}
+                <TextField 
+                    label='Current FEN (Forsyth-Edwards Notation)'
+                    color='secondary'
+                    variant='outlined'
+                    focused
+                    value={props.currentFEN} 
+                    slotProps={{
+                        input: {
+                            endAdornment: 
+                                <InputAdornment position="end">
+                                    <IconButton onClick={handleDownloadNewFEN}>
+                                        {/* <ContentCopy fontSize='small'/> */}
+                                        {React.createElement(copyIcon, { fontSize: 'small' })}
+                                    </IconButton>
+                                </InputAdornment>,
+                        },
+                    }}
+                    disabled
+                    // onChange={(e) => setFenToUpload(e.target.value)}
+                    // className={styles.settingsToggleButton}
+                    fullWidth
+                /> 
             </div>
         </>
     )
